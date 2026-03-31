@@ -3,5 +3,5 @@
 // This file provides a data-layer import path for components that
 // don't need the full theme system.
 
-export { classDefinitions } from "@/lib/theme";
+export { classDefinitions, classDefinitions as classes } from "@/lib/theme";
 export type { ClassDefinition } from "@/lib/theme";
