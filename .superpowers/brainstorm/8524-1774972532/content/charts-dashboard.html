@@ -1,0 +1,187 @@
+<h2>Profile Dashboard — Chart Designs</h2>
+<p class="subtitle">What the student sees after Block 2 and Block 3 complete</p>
+
+<div class="section">
+  <h3>Dashboard Layout</h3>
+  <div class="mockup">
+    <div class="mockup-header">Your Quest Profile</div>
+    <div class="mockup-body" style="padding: 24px; font-family: system-ui; background: #faf5ff;">
+
+      <!-- Badge bar -->
+      <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center;">
+        <div style="background: #8b5cf6; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🚀</div>
+        <div style="background: #8b5cf6; color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🔍</div>
+        <div style="background: #e5e7eb; color: #9ca3af; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🔒</div>
+        <div style="background: #e5e7eb; color: #9ca3af; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🔒</div>
+        <div style="background: #e5e7eb; color: #9ca3af; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🔒</div>
+        <div style="background: #e5e7eb; color: #9ca3af; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px;">🔒</div>
+      </div>
+
+      <!-- Two column chart layout -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+        <!-- RIASEC Hexagon -->
+        <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+          <div style="font-weight: 600; font-size: 14px; color: #7c3aed; margin-bottom: 4px;">Your Interest Profile</div>
+          <div style="font-size: 12px; color: #9ca3af; margin-bottom: 16px;">RIASEC Holland Code</div>
+          <!-- SVG Hexagon -->
+          <svg viewBox="0 0 200 200" style="width: 100%; max-width: 220px; margin: 0 auto; display: block;">
+            <!-- Grid hexagon -->
+            <polygon points="100,20 170,55 170,125 100,160 30,125 30,55" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+            <polygon points="100,45 152,67 152,113 100,135 48,113 48,67" fill="none" stroke="#f3f0ff" stroke-width="1"/>
+            <polygon points="100,70 135,82 135,102 100,115 65,102 65,82" fill="none" stroke="#f3f0ff" stroke-width="1"/>
+            <!-- Data hexagon -->
+            <polygon points="100,32 158,62 165,118 100,148 42,105 38,58" fill="rgba(139,92,246,0.15)" stroke="#8b5cf6" stroke-width="2"/>
+            <!-- Labels -->
+            <text x="100" y="14" text-anchor="middle" font-size="11" font-weight="600" fill="#4b5563">R</text>
+            <text x="180" y="52" text-anchor="start" font-size="11" font-weight="600" fill="#4b5563">I</text>
+            <text x="180" y="132" text-anchor="start" font-size="11" font-weight="600" fill="#4b5563">A</text>
+            <text x="100" y="178" text-anchor="middle" font-size="11" font-weight="600" fill="#4b5563">S</text>
+            <text x="16" y="132" text-anchor="start" font-size="11" font-weight="600" fill="#4b5563">E</text>
+            <text x="16" y="52" text-anchor="start" font-size="11" font-weight="600" fill="#4b5563">C</text>
+            <!-- Dots on vertices -->
+            <circle cx="100" cy="32" r="4" fill="#8b5cf6"/>
+            <circle cx="158" cy="62" r="4" fill="#8b5cf6"/>
+            <circle cx="165" cy="118" r="4" fill="#8b5cf6"/>
+            <circle cx="100" cy="148" r="4" fill="#8b5cf6"/>
+            <circle cx="42" cy="105" r="4" fill="#8b5cf6"/>
+            <circle cx="38" cy="58" r="4" fill="#8b5cf6"/>
+          </svg>
+          <div style="text-align: center; margin-top: 12px;">
+            <span style="background: #f3f0ff; color: #7c3aed; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600;">Top: Investigative & Artistic</span>
+          </div>
+        </div>
+
+        <!-- MBTI Sliders -->
+        <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+          <div style="font-weight: 600; font-size: 14px; color: #7c3aed; margin-bottom: 4px;">Personality Tendencies</div>
+          <div style="font-size: 12px; color: #9ca3af; margin-bottom: 20px;">Emerging indicators (refines over time)</div>
+
+          <!-- E/I -->
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px;">
+              <span>Extraversion</span><span>Introversion</span>
+            </div>
+            <div style="background: #f3f0ff; border-radius: 8px; height: 8px; position: relative;">
+              <div style="position: absolute; left: 65%; top: -4px; width: 16px; height: 16px; background: #8b5cf6; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+            </div>
+          </div>
+
+          <!-- S/N -->
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px;">
+              <span>Sensing</span><span>Intuition</span>
+            </div>
+            <div style="background: #f3f0ff; border-radius: 8px; height: 8px; position: relative;">
+              <div style="position: absolute; left: 72%; top: -4px; width: 16px; height: 16px; background: #8b5cf6; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+            </div>
+          </div>
+
+          <!-- T/F -->
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px;">
+              <span>Thinking</span><span>Feeling</span>
+            </div>
+            <div style="background: #f3f0ff; border-radius: 8px; height: 8px; position: relative;">
+              <div style="position: absolute; left: 45%; top: -4px; width: 16px; height: 16px; background: #d4d4d8; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+            </div>
+            <div style="text-align: center; font-size: 11px; color: #9ca3af; margin-top: 4px;">Still emerging</div>
+          </div>
+
+          <!-- J/P -->
+          <div style="margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px;">
+              <span>Judging</span><span>Perceiving</span>
+            </div>
+            <div style="background: #f3f0ff; border-radius: 8px; height: 8px; position: relative;">
+              <div style="position: absolute; left: 30%; top: -4px; width: 16px; height: 16px; background: #8b5cf6; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Locked sections -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+        <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); opacity: 0.5; position: relative;">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #f3f0ff; color: #7c3aed; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 1;">🔒 Unlocks in Session 2</div>
+          <div style="font-weight: 600; font-size: 14px; color: #7c3aed; margin-bottom: 4px;">Multiple Intelligences</div>
+          <div style="font-size: 12px; color: #9ca3af; margin-bottom: 16px;">MI Profile</div>
+          <div style="display: flex; gap: 4px; align-items: end; height: 80px;">
+            <div style="flex: 1; background: #e5e7eb; border-radius: 4px 4px 0 0; height: 60%;"></div>
+            <div style="flex: 1; background: #e5e7eb; border-radius: 4px 4px 0 0; height: 40%;"></div>
+            <div style="flex: 1; background: #e5e7eb; border-radius: 4px 4px 0 0; height: 80%;"></div>
+            <div style="flex: 1; background: #e5e7eb; border-radius: 4px 4px 0 0; height: 30%;"></div>
+            <div style="flex: 1; background: #e5e7eb; border-radius: 4px 4px 0 0; height: 50%;"></div>
+            <div style="flex: 1; background: #e5e7eb; border-radius: 4px 4px 0 0; height: 70%;"></div>
+            <div style="flex: 1; background: #e5e7eb; border-radius: 4px 4px 0 0; height: 45%;"></div>
+            <div style="flex: 1; background: #e5e7eb; border-radius: 4px 4px 0 0; height: 55%;"></div>
+          </div>
+        </div>
+        <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); opacity: 0.5; position: relative;">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #f3f0ff; color: #7c3aed; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 1;">🔒 Unlocks in Session 2</div>
+          <div style="font-weight: 600; font-size: 14px; color: #7c3aed; margin-bottom: 4px;">Values Compass</div>
+          <div style="font-size: 12px; color: #9ca3af; margin-bottom: 16px;">Work values</div>
+          <div style="display: flex; align-items: center; justify-content: center; height: 80px;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid #e5e7eb; position: relative;">
+              <div style="position: absolute; top: 50%; left: 50%; width: 2px; height: 30px; background: #e5e7eb; transform: translate(-50%,-100%) rotate(30deg); transform-origin: bottom;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Continue button -->
+      <div style="text-align: center; margin-top: 24px;">
+        <div style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 32px; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer;">Continue to Session 2 →</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Key Design Decisions</h3>
+  <div style="background: #f8fafc; border-radius: 12px; padding: 20px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: #7c3aed;">RIASEC Hexagon</div>
+        <ul style="font-size: 14px; color: #4b5563; margin: 0; padding-left: 16px;">
+          <li>Recharts RadarChart component</li>
+          <li>Purple theme with translucent fill</li>
+          <li>Dots on vertices for clarity</li>
+          <li>Top types labeled below chart</li>
+          <li>Animates from center on first reveal</li>
+          <li>Morphs smoothly during confirmatory round</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: #7c3aed;">MBTI Spectrum Sliders</div>
+        <ul style="font-size: 14px; color: #4b5563; margin: 0; padding-left: 16px;">
+          <li>Custom component (not Recharts)</li>
+          <li>Dot position = score on -100 to +100</li>
+          <li>Purple dot = clear tendency</li>
+          <li>Gray dot + "Still emerging" = near center</li>
+          <li>Slides in from edges on first reveal</li>
+          <li>Dot glides smoothly during confirmatory</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: #7c3aed;">Locked Charts</div>
+        <ul style="font-size: 14px; color: #4b5563; margin: 0; padding-left: 16px;">
+          <li>MI bar chart + Values compass shown grayed out</li>
+          <li>50% opacity with "Unlocks in Session 2" overlay</li>
+          <li>Creates anticipation without looking broken</li>
+          <li>Ghost data (gray placeholder bars/shapes)</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: #7c3aed;">Badge Row</div>
+        <ul style="font-size: 14px; color: #4b5563; margin: 0; padding-left: 16px;">
+          <li>Horizontal row at top of dashboard</li>
+          <li>Unlocked = purple circle with icon</li>
+          <li>Locked = gray circle with lock icon</li>
+          <li>Unlock animation: scale bounce + glow</li>
+          <li>2 badges unlockable in Phase 1</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

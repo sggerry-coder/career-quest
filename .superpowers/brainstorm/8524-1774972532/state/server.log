@@ -1,0 +1,8 @@
+{"type":"server-started","port":61083,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:61083","screen_dir":"/Users/gerrygan/Career Quest/.superpowers/brainstorm/8524-1774972532/content","state_dir":"/Users/gerrygan/Career Quest/.superpowers/brainstorm/8524-1774972532/state"}
+{"type":"screen-added","file":"/Users/gerrygan/Career Quest/.superpowers/brainstorm/8524-1774972532/content/card-ui-flow.html"}
+{"type":"screen-added","file":"/Users/gerrygan/Career Quest/.superpowers/brainstorm/8524-1774972532/content/charts-dashboard.html"}
+{"type":"screen-added","file":"/Users/gerrygan/Career Quest/.superpowers/brainstorm/8524-1774972532/content/rpg-design.html"}
+{"type":"screen-added","file":"/Users/gerrygan/Career Quest/.superpowers/brainstorm/8524-1774972532/content/character-avatars.html"}
+{"type":"screen-added","file":"/Users/gerrygan/Career Quest/.superpowers/brainstorm/8524-1774972532/content/character-creation-full.html"}
+{"type":"screen-added","file":"/Users/gerrygan/Career Quest/.superpowers/brainstorm/8524-1774972532/content/quest-destinations.html"}
+{"type":"server-stopped","reason":"idle timeout"}

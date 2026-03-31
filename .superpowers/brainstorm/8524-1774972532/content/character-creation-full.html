@@ -1,0 +1,239 @@
+<h2>Character Creation — Full Flow</h2>
+<p class="subtitle">After selecting avatar class, the adventurer fills in their quest profile</p>
+
+<div class="section">
+  <h3>Character Creation Form (Warrior Selected)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Create Your Character — ⚔️ Warrior</div>
+    <div class="mockup-body" style="padding: 0; background: linear-gradient(180deg, #0f0a1e 0%, #1a1035 100%); font-family: system-ui;">
+
+      <!-- Top bar -->
+      <div style="background: rgba(139,92,246,0.12); border-bottom: 1px solid rgba(139,92,246,0.2); padding: 12px 20px; display: flex; align-items: center; gap: 10px;">
+        <div style="font-size: 22px;">⚔️</div>
+        <div>
+          <div style="color: white; font-weight: 700; font-size: 14px;">Creating Your Warrior</div>
+          <div style="color: #a78bfa; font-size: 11px;">Step 1 of 1 — Character Profile</div>
+        </div>
+      </div>
+
+      <div style="padding: 24px; max-width: 480px; margin: 0 auto;">
+
+        <!-- Adventurer Name -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: #a78bfa; font-size: 11px; margin-bottom: 6px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">⚔️ Adventurer Name</div>
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.4); border-radius: 6px; padding: 12px 14px; color: white; font-size: 14px;">
+            Gerry
+          </div>
+        </div>
+
+        <!-- Level (Age) -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: #a78bfa; font-size: 11px; margin-bottom: 6px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">⚡ Level (Age)</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 6px; padding: 8px 14px; color: #71717a; font-size: 13px; cursor: pointer;">13</div>
+            <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 6px; padding: 8px 14px; color: #71717a; font-size: 13px; cursor: pointer;">14</div>
+            <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 6px; padding: 8px 14px; color: #71717a; font-size: 13px; cursor: pointer;">15</div>
+            <div style="background: rgba(139,92,246,0.2); border: 1px solid #8b5cf6; border-radius: 6px; padding: 8px 14px; color: white; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 0 10px rgba(139,92,246,0.3);">16</div>
+            <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 6px; padding: 8px 14px; color: #71717a; font-size: 13px; cursor: pointer;">17</div>
+            <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.2); border-radius: 6px; padding: 8px 14px; color: #71717a; font-size: 13px; cursor: pointer;">18</div>
+          </div>
+        </div>
+
+        <!-- Realm (Education System) with Oracle -->
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="color: #a78bfa; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🏰 Realm (Education System)</div>
+            <div style="background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.3); border-radius: 20px; padding: 3px 10px; cursor: pointer; display: flex; align-items: center; gap: 4px;" onmouseover="this.style.borderColor='#facc15'; this.style.boxShadow='0 0 12px rgba(250,204,21,0.2)'" onmouseout="this.style.borderColor='rgba(250,204,21,0.3)'; this.style.boxShadow='none'">
+              <span style="font-size: 13px;">🔮</span>
+              <span style="color: #facc15; font-size: 10px; font-weight: 600;">Consult the Oracle</span>
+            </div>
+          </div>
+
+          <!-- Selected value -->
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.4); border-radius: 6px; padding: 12px 14px; color: #71717a; font-size: 14px; margin-bottom: 10px;">
+            Select your education system...
+          </div>
+
+          <!-- Oracle panel (expanded) -->
+          <div style="background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.2); border-radius: 10px; padding: 16px; position: relative;">
+            <!-- Glow effect -->
+            <div style="position: absolute; top: -1px; left: 50%; transform: translateX(-50%); width: 60px; height: 2px; background: linear-gradient(90deg, transparent, #facc15, transparent); border-radius: 2px;"></div>
+
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+              <span style="font-size: 20px;">🔮</span>
+              <div>
+                <div style="color: #facc15; font-weight: 700; font-size: 13px;">The Oracle speaks...</div>
+                <div style="color: #a1a1aa; font-size: 11px; font-style: italic;">"Your education system is the path your school follows. Choose the one that matches your realm."</div>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="font-size: 13px; margin-bottom: 2px;">🇬🇧</div>
+                <div style="color: white; font-size: 12px; font-weight: 600;">GCSEs & A-Levels</div>
+                <div style="color: #71717a; font-size: 10px;">United Kingdom</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="font-size: 13px; margin-bottom: 2px;">🇺🇸</div>
+                <div style="color: white; font-size: 12px; font-weight: 600;">High School + AP/SAT</div>
+                <div style="color: #71717a; font-size: 10px;">United States</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="font-size: 13px; margin-bottom: 2px;">🌍</div>
+                <div style="color: white; font-size: 12px; font-weight: 600;">International Baccalaureate</div>
+                <div style="color: #71717a; font-size: 10px;">IB — Global</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="font-size: 13px; margin-bottom: 2px;">🇦🇺</div>
+                <div style="color: white; font-size: 12px; font-weight: 600;">HSC / ATAR</div>
+                <div style="color: #71717a; font-size: 10px;">Australia</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="font-size: 13px; margin-bottom: 2px;">🇲🇾</div>
+                <div style="color: white; font-size: 12px; font-weight: 600;">SPM / STPM</div>
+                <div style="color: #71717a; font-size: 10px;">Malaysia</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="font-size: 13px; margin-bottom: 2px;">🇸🇬</div>
+                <div style="color: white; font-size: 12px; font-weight: 600;">O-Levels / A-Levels</div>
+                <div style="color: #71717a; font-size: 10px;">Singapore</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="font-size: 13px; margin-bottom: 2px;">🇭🇰</div>
+                <div style="color: white; font-size: 12px; font-weight: 600;">HKDSE</div>
+                <div style="color: #71717a; font-size: 10px;">Hong Kong</div>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 8px 10px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+                <div style="font-size: 13px; margin-bottom: 2px;">📝</div>
+                <div style="color: white; font-size: 12px; font-weight: 600;">Other</div>
+                <div style="color: #71717a; font-size: 10px;">Type your own</div>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px; text-align: center;">
+              <div style="background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.15); border-radius: 6px; padding: 8px; cursor: pointer;">
+                <div style="color: #a1a1aa; font-size: 12px;">🤷 Not sure — <span style="color: #facc15;">and that's okay!</span></div>
+                <div style="color: #52525b; font-size: 10px;">The quest adapts to any path</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quest Destination (Country) -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: #a78bfa; font-size: 11px; margin-bottom: 6px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🗺️ Quest Destination (Preferred Country for University)</div>
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.4); border-radius: 6px; padding: 12px 14px; color: white; font-size: 14px;">
+            United Kingdom
+          </div>
+          <div style="color: #52525b; font-size: 11px; margin-top: 4px; font-style: italic;">Optional — you can change this later</div>
+        </div>
+
+        <!-- Self-Map Section -->
+        <div style="margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+            <div style="width: 100%; height: 1px; background: rgba(139,92,246,0.2);"></div>
+            <div style="color: #a78bfa; font-size: 10px; letter-spacing: 2px; white-space: nowrap; text-transform: uppercase; font-weight: 600;">🗺️ Self-Map</div>
+            <div style="width: 100%; height: 1px; background: rgba(139,92,246,0.2);"></div>
+          </div>
+          <div style="color: #71717a; font-size: 12px; margin-bottom: 14px; text-align: center; font-style: italic;">"Before the quest reveals your path, mark where you stand now."</div>
+
+          <!-- Direction Clarity -->
+          <div style="margin-bottom: 18px;">
+            <div style="color: #a78bfa; font-size: 11px; margin-bottom: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🧭 Direction Clarity</div>
+            <div style="color: #a1a1aa; font-size: 12px; margin-bottom: 8px;">How clear are you about what career you want?</div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+              <span style="color: #71717a; font-size: 11px; white-space: nowrap;">No idea</span>
+              <div style="flex: 1; background: rgba(255,255,255,0.08); border-radius: 6px; height: 10px; position: relative;">
+                <div style="position: absolute; left: 25%; top: -3px; width: 16px; height: 16px; background: #8b5cf6; border-radius: 50%; border: 2px solid #0f0a1e; box-shadow: 0 0 8px rgba(139,92,246,0.5); cursor: pointer;"></div>
+              </div>
+              <span style="color: #71717a; font-size: 11px; white-space: nowrap;">Very clear</span>
+            </div>
+          </div>
+
+          <!-- Interest Sources -->
+          <div style="margin-bottom: 18px;">
+            <div style="color: #a78bfa; font-size: 11px; margin-bottom: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">💡 Where Have Your Ideas Come From?</div>
+            <div style="color: #a1a1aa; font-size: 12px; margin-bottom: 8px;">Pick all that apply</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <div style="background: rgba(139,92,246,0.2); border: 1px solid #8b5cf6; border-radius: 20px; padding: 5px 12px; color: white; font-size: 11px; cursor: pointer;">🎮 My hobbies</div>
+              <div style="background: rgba(139,92,246,0.2); border: 1px solid #8b5cf6; border-radius: 20px; padding: 5px 12px; color: white; font-size: 11px; cursor: pointer;">👨‍👩‍👧 Family</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">👥 Friends</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">📱 Social media</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">📚 School subjects</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">👩‍🏫 A mentor</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">🤷 Haven't thought about it</div>
+            </div>
+          </div>
+
+          <!-- Perceived Strengths -->
+          <div style="margin-bottom: 18px;">
+            <div style="color: #a78bfa; font-size: 11px; margin-bottom: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">💪 Perceived Strengths (Pick 3)</div>
+            <div style="color: #a1a1aa; font-size: 12px; margin-bottom: 8px;">What do you think you're naturally good at?</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div style="background: rgba(139,92,246,0.15); border: 1px solid #8b5cf6; border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">🔧</span>
+                <span style="color: white; font-size: 12px;">Building / Fixing</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">🧩</span>
+                <span style="color: #a1a1aa; font-size: 12px;">Solving Puzzles</span>
+              </div>
+              <div style="background: rgba(139,92,246,0.15); border: 1px solid #8b5cf6; border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">🎨</span>
+                <span style="color: white; font-size: 12px;">Creating / Designing</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">🤝</span>
+                <span style="color: #a1a1aa; font-size: 12px;">Helping / Teaching</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">📢</span>
+                <span style="color: #a1a1aa; font-size: 12px;">Leading / Persuading</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">📋</span>
+                <span style="color: #a1a1aa; font-size: 12px;">Organizing / Planning</span>
+              </div>
+              <div style="background: rgba(139,92,246,0.15); border: 1px solid #8b5cf6; border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">💻</span>
+                <span style="color: white; font-size: 12px;">Tech / Coding</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 16px;">🎭</span>
+                <span style="color: #a1a1aa; font-size: 12px;">Performing / Presenting</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Career Curiosities -->
+          <div style="margin-bottom: 8px;">
+            <div style="color: #a78bfa; font-size: 11px; margin-bottom: 8px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🌟 Career Curiosities (Pick up to 3)</div>
+            <div style="color: #a1a1aa; font-size: 12px; margin-bottom: 8px;">Any career areas you're curious about? <span style="color: #52525b;">(optional)</span></div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <div style="background: rgba(139,92,246,0.15); border: 1px solid #8b5cf6; border-radius: 20px; padding: 5px 12px; color: white; font-size: 11px; cursor: pointer;">🏥 Health & Medicine</div>
+              <div style="background: rgba(139,92,246,0.15); border: 1px solid #8b5cf6; border-radius: 20px; padding: 5px 12px; color: white; font-size: 11px; cursor: pointer;">💻 Tech & Engineering</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">🎨 Creative Arts</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">💼 Business & Finance</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">🔬 Science & Research</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">📚 Education</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">⚖️ Law & Government</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">📺 Media</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">🌿 Environment</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">⚽ Sports & Fitness</div>
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 5px 12px; color: #a1a1aa; font-size: 11px; cursor: pointer;">🔨 Trades</div>
+              <div style="background: rgba(139,92,246,0.15); border: 1px solid #8b5cf6; border-radius: 20px; padding: 5px 12px; color: white; font-size: 11px; cursor: pointer;">🤷 Don't know yet</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Begin Quest Button -->
+        <div style="text-align: center; margin-top: 24px;">
+          <div style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 14px 40px; border-radius: 8px; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 0 24px rgba(139,92,246,0.5); cursor: pointer;">
+            ⚔️ Begin Quest
+          </div>
+          <div style="color: #52525b; font-size: 11px; margin-top: 8px;">Your answers shape the quest — trust your instincts</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

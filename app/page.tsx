@@ -216,7 +216,7 @@ export default function Home() {
             aria-label="Continue Quest"
           >
             {displayTone === "quest"
-              ? "Continue Quest \u2694\uFE0F"
+              ? "Continue Quest ⚔️"
               : "Continue"}
           </button>
 
@@ -337,7 +337,7 @@ export default function Home() {
           }}
           aria-label="Start Your Quest"
         >
-          Start Your Quest \u2694\uFE0F
+          Start Your Quest ⚔️
         </button>
       </motion.div>
 

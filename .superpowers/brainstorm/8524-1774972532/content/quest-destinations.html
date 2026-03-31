@@ -1,0 +1,179 @@
+<h2>Quest Destinations — Multi-Select</h2>
+<p class="subtitle">Students pick up to 3 destinations, ranked by preference</p>
+
+<div class="section">
+  <h3>Destination Selector (within Character Creation)</h3>
+  <div class="mockup">
+    <div class="mockup-header">⚔️ Warrior — Quest Destinations</div>
+    <div class="mockup-body" style="padding: 24px; background: linear-gradient(180deg, #0f0a1e 0%, #1a1035 100%); font-family: system-ui;">
+
+      <div style="max-width: 480px; margin: 0 auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div style="color: #a78bfa; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">🗺️ Quest Destinations</div>
+          <div style="color: #52525b; font-size: 11px;">Pick up to 3</div>
+        </div>
+        <div style="color: #a1a1aa; font-size: 12px; margin-bottom: 14px;">Where would you like to study? Order matters — drag to rank, or pick in order of preference.</div>
+
+        <!-- Selected destinations (ranked) -->
+        <div style="margin-bottom: 16px;">
+          <div style="color: #2dd4bf; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">🏆 Your Ranked Destinations</div>
+
+          <!-- 1st choice -->
+          <div style="background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.4); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
+            <div style="background: #2dd4bf; color: #0f0a1e; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">1</div>
+            <div style="font-size: 18px; flex-shrink: 0;">🇬🇧</div>
+            <div style="flex: 1;">
+              <div style="color: white; font-size: 13px; font-weight: 600;">United Kingdom</div>
+              <div style="color: #2dd4bf; font-size: 10px;">Primary destination</div>
+            </div>
+            <div style="color: #52525b; font-size: 16px; cursor: pointer; padding: 4px;">⋮⋮</div>
+            <div style="color: #ef4444; font-size: 12px; cursor: pointer; padding: 4px;">✕</div>
+          </div>
+
+          <!-- 2nd choice -->
+          <div style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
+            <div style="background: #8b5cf6; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">2</div>
+            <div style="font-size: 18px; flex-shrink: 0;">🇸🇬</div>
+            <div style="flex: 1;">
+              <div style="color: white; font-size: 13px; font-weight: 600;">Singapore</div>
+              <div style="color: #a78bfa; font-size: 10px;">Backup destination</div>
+            </div>
+            <div style="color: #52525b; font-size: 16px; cursor: pointer; padding: 4px;">⋮⋮</div>
+            <div style="color: #ef4444; font-size: 12px; cursor: pointer; padding: 4px;">✕</div>
+          </div>
+
+          <!-- 3rd choice -->
+          <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; margin-bottom: 6px; display: flex; align-items: center; gap: 10px;">
+            <div style="background: #52525b; color: white; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0;">3</div>
+            <div style="font-size: 18px; flex-shrink: 0;">🇦🇺</div>
+            <div style="flex: 1;">
+              <div style="color: white; font-size: 13px; font-weight: 600;">Australia</div>
+              <div style="color: #71717a; font-size: 10px;">Safety destination</div>
+            </div>
+            <div style="color: #52525b; font-size: 16px; cursor: pointer; padding: 4px;">⋮⋮</div>
+            <div style="color: #ef4444; font-size: 12px; cursor: pointer; padding: 4px;">✕</div>
+          </div>
+        </div>
+
+        <!-- Country browser -->
+        <div style="margin-bottom: 16px;">
+          <div style="color: #71717a; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;">🌍 Browse Destinations</div>
+
+          <!-- Search -->
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.3); border-radius: 6px; padding: 10px 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+            <span style="color: #52525b;">🔍</span>
+            <span style="color: #52525b; font-size: 13px;">Search countries...</span>
+          </div>
+
+          <!-- Popular regions -->
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+            <div style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 16px; padding: 4px 10px; color: #a78bfa; font-size: 10px; cursor: pointer; font-weight: 600;">Popular</div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 4px 10px; color: #71717a; font-size: 10px; cursor: pointer;">Europe</div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 4px 10px; color: #71717a; font-size: 10px; cursor: pointer;">Asia</div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 4px 10px; color: #71717a; font-size: 10px; cursor: pointer;">Americas</div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 4px 10px; color: #71717a; font-size: 10px; cursor: pointer;">Oceania</div>
+          </div>
+
+          <!-- Country grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+            <!-- Already selected — disabled -->
+            <div style="background: rgba(45,212,191,0.08); border: 1px solid rgba(45,212,191,0.2); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; opacity: 0.5;">
+              <span style="font-size: 16px;">🇬🇧</span>
+              <div>
+                <div style="color: #71717a; font-size: 12px; font-weight: 600;">United Kingdom</div>
+                <div style="color: #2dd4bf; font-size: 10px;">✓ Selected #1</div>
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+              <span style="font-size: 16px;">🇺🇸</span>
+              <div>
+                <div style="color: #e5e7eb; font-size: 12px; font-weight: 600;">United States</div>
+                <div style="color: #52525b; font-size: 10px;">Tap to add</div>
+              </div>
+            </div>
+            <div style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.2); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; opacity: 0.5;">
+              <span style="font-size: 16px;">🇸🇬</span>
+              <div>
+                <div style="color: #71717a; font-size: 12px; font-weight: 600;">Singapore</div>
+                <div style="color: #a78bfa; font-size: 10px;">✓ Selected #2</div>
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; opacity: 0.5;">
+              <span style="font-size: 16px;">🇦🇺</span>
+              <div>
+                <div style="color: #71717a; font-size: 12px; font-weight: 600;">Australia</div>
+                <div style="color: #52525b; font-size: 10px;">✓ Selected #3</div>
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+              <span style="font-size: 16px;">🇨🇦</span>
+              <div>
+                <div style="color: #e5e7eb; font-size: 12px; font-weight: 600;">Canada</div>
+                <div style="color: #52525b; font-size: 10px;">Tap to add</div>
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+              <span style="font-size: 16px;">🇳🇿</span>
+              <div>
+                <div style="color: #e5e7eb; font-size: 12px; font-weight: 600;">New Zealand</div>
+                <div style="color: #52525b; font-size: 10px;">Tap to add</div>
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+              <span style="font-size: 16px;">🇭🇰</span>
+              <div>
+                <div style="color: #e5e7eb; font-size: 12px; font-weight: 600;">Hong Kong</div>
+                <div style="color: #52525b; font-size: 10px;">Tap to add</div>
+              </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; cursor: pointer;" onmouseover="this.style.borderColor='rgba(139,92,246,0.5)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+              <span style="font-size: 16px;">🇲🇾</span>
+              <div>
+                <div style="color: #e5e7eb; font-size: 12px; font-weight: 600;">Malaysia</div>
+                <div style="color: #52525b; font-size: 10px;">Tap to add</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Not sure option -->
+        <div style="text-align: center;">
+          <div style="background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.15); border-radius: 8px; padding: 10px; cursor: pointer;">
+            <div style="color: #a1a1aa; font-size: 12px;">🌍 Open to anywhere — <span style="color: #facc15;">let the quest guide me</span></div>
+            <div style="color: #52525b; font-size: 10px;">AI will suggest destinations based on your profile</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>How Ranked Destinations Are Used</h3>
+  <div style="background: #f8fafc; border-radius: 12px; padding: 20px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: #7c3aed;">During the Quest</div>
+        <ul style="font-size: 14px; color: #4b5563; margin: 0; padding-left: 16px;">
+          <li><strong>#1 Primary:</strong> Gets the most detailed programme matching and scholarship search</li>
+          <li><strong>#2 Backup:</strong> Gets programme suggestions and entry requirements comparison</li>
+          <li><strong>#3 Safety:</strong> Gets basic programme options and "compared to #1" analysis</li>
+          <li>All 3 appear in the final report side-by-side</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight: 600; margin-bottom: 8px; color: #7c3aed;">Data Model</div>
+        <div style="background: #1e1b4b; border-radius: 8px; padding: 14px; font-family: monospace; font-size: 12px; color: #c4b5fd;">
+          <div>preferred_destinations: [</div>
+          <div>&nbsp;&nbsp;{ country: "UK", rank: 1 },</div>
+          <div>&nbsp;&nbsp;{ country: "SG", rank: 2 },</div>
+          <div>&nbsp;&nbsp;{ country: "AU", rank: 3 }</div>
+          <div>]</div>
+          <div style="color: #52525b; margin-top: 8px;">// replaces single preferred_country</div>
+          <div style="color: #52525b;">// stored as JSONB on students table</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

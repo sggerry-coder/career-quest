@@ -9,7 +9,19 @@
       "Bash(npx create-next-app@latest career-quest --typescript --tailwind --eslint --app --src=no --import-alias=\"@/*\" --use-npm --yes)",
       "Bash(mv /tmp/career-quest-backup/career-quest-scope.md \"/Users/gerrygan/Career Quest/\")",
       "Bash(mv /tmp/career-quest-backup/docs \"/Users/gerrygan/Career Quest/\")",
-      "Bash(rmdir /tmp/career-quest-backup)"
+      "Bash(rmdir /tmp/career-quest-backup)",
+      "Bash(gh repo:*)",
+      "Bash(brew install:*)",
+      "Bash(gh auth:*)",
+      "Bash(mkdir -p data/questions data/scenarios components/ui components/quest components/charts components/badges lib/scoring hooks providers)",
+      "Bash(touch data/questions/.gitkeep data/scenarios/.gitkeep components/ui/.gitkeep components/quest/.gitkeep components/charts/.gitkeep components/badges/.gitkeep lib/scoring/.gitkeep hooks/.gitkeep providers/.gitkeep)",
+      "Bash(vercel link:*)",
+      "Bash(vercel env:*)",
+      "Bash(bash /Users/gerrygan/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.6/skills/brainstorming/scripts/start-server.sh --project-dir \"/Users/gerrygan/Career Quest\" 2>&1)",
+      "WebSearch",
+      "Bash(npx vitest:*)",
+      "Bash(vercel --prod --yes)",
+      "Bash(npx next:*)"
     ]
   }
 }

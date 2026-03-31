@@ -429,7 +429,7 @@ export default function CharacterCreation() {
           }}
         >
           <p style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.5rem" }}>
-            {tone === "quest" ? "\u2694\uFE0F" : "\u26A0\uFE0F"} {error}
+            {tone === "quest" ? "⚔️" : "⚠️"} {error}
           </p>
           <button
             onClick={() => {
@@ -439,7 +439,7 @@ export default function CharacterCreation() {
             className="cq-button cq-button-primary"
             style={{ marginTop: "0.5rem" }}
           >
-            {tone === "quest" ? "Try Again \u2694\uFE0F" : "Retry"}
+            {tone === "quest" ? "Try Again ⚔️" : "Retry"}
           </button>
         </motion.div>
       )}
@@ -491,7 +491,7 @@ export default function CharacterCreation() {
                 ? "Opening portal..."
                 : "Setting up..."
               : tone === "quest"
-                ? "Begin Quest \u2694\uFE0F"
+                ? "Begin Quest ⚔️"
                 : "Get Started"}
           </button>
         )}

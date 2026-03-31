@@ -72,10 +72,12 @@
 /* --- Base element styles --- */
 html {
   scroll-behavior: smooth;
+  background-color: var(--cq-bg-primary);
 }
 
+html,
 body {
-  background: linear-gradient(180deg, var(--cq-bg-primary), var(--cq-bg-secondary));
+  background: linear-gradient(180deg, var(--cq-bg-primary), var(--cq-bg-secondary)) !important;
   color: var(--cq-text-primary);
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   min-height: 100vh;

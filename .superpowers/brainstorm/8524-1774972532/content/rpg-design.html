@@ -1,0 +1,331 @@
+<h2>RPG-Style Design — Gender-Adaptive UI</h2>
+<p class="subtitle">The entire experience reframes as a quest with character stats, XP, and unlockable loot</p>
+
+<div class="section">
+  <h3>Character Selection Screen</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Choose Your Adventurer</div>
+      <div class="mockup-body" style="padding: 32px; background: linear-gradient(180deg, #0f0a1e 0%, #1a1035 100%); text-align: center; font-family: system-ui;">
+        <div style="color: #c4b5fd; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;">Select Your Character</div>
+        <div style="color: white; font-size: 22px; font-weight: 700; margin-bottom: 24px;">Who will embark on this quest?</div>
+        <div style="display: flex; gap: 20px; justify-content: center;">
+          <!-- Male -->
+          <div style="background: rgba(139,92,246,0.15); border: 2px solid #8b5cf6; border-radius: 16px; padding: 20px; width: 140px; cursor: pointer;">
+            <div style="font-size: 56px; margin-bottom: 8px;">⚔️</div>
+            <div style="color: white; font-weight: 600; font-size: 15px;">Adventurer</div>
+            <div style="color: #a78bfa; font-size: 12px;">He / Him</div>
+          </div>
+          <!-- Female -->
+          <div style="background: rgba(236,72,153,0.1); border: 2px solid rgba(236,72,153,0.3); border-radius: 16px; padding: 20px; width: 140px; cursor: pointer;">
+            <div style="font-size: 56px; margin-bottom: 8px;">🔮</div>
+            <div style="color: white; font-weight: 600; font-size: 15px;">Adventurer</div>
+            <div style="color: #f9a8d4; font-size: 12px;">She / Her</div>
+          </div>
+        </div>
+        <div style="margin-top: 16px;">
+          <div style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px; width: 140px; margin: 0 auto; cursor: pointer;">
+            <div style="color: #d4d4d8; font-weight: 500; font-size: 13px;">Prefer not to say</div>
+            <div style="color: #71717a; font-size: 11px;">Neutral theme</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Character Creation Form</div>
+      <div class="mockup-body" style="padding: 24px; background: linear-gradient(180deg, #0f0a1e 0%, #1a1035 100%); font-family: system-ui;">
+        <div style="color: #c4b5fd; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;">Create Your Character</div>
+        <!-- Name input -->
+        <div style="margin-bottom: 16px;">
+          <div style="color: #a78bfa; font-size: 12px; margin-bottom: 4px; font-weight: 600;">ADVENTURER NAME</div>
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.4); border-radius: 8px; padding: 10px 14px; color: white; font-size: 14px;">Gerry</div>
+        </div>
+        <!-- Age -->
+        <div style="margin-bottom: 16px;">
+          <div style="color: #a78bfa; font-size: 12px; margin-bottom: 4px; font-weight: 600;">LEVEL (AGE)</div>
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.4); border-radius: 8px; padding: 10px 14px; color: white; font-size: 14px;">16</div>
+        </div>
+        <!-- Education -->
+        <div style="margin-bottom: 16px;">
+          <div style="color: #a78bfa; font-size: 12px; margin-bottom: 4px; font-weight: 600;">REALM (EDUCATION SYSTEM)</div>
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.4); border-radius: 8px; padding: 10px 14px; color: white; font-size: 14px;">International Baccalaureate</div>
+        </div>
+        <!-- Country -->
+        <div style="margin-bottom: 16px;">
+          <div style="color: #a78bfa; font-size: 12px; margin-bottom: 4px; font-weight: 600;">QUEST DESTINATION (PREFERRED COUNTRY)</div>
+          <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.4); border-radius: 8px; padding: 10px 14px; color: white; font-size: 14px;">United Kingdom</div>
+        </div>
+        <!-- Begin button -->
+        <div style="text-align: center; margin-top: 20px;">
+          <div style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 12px 32px; border-radius: 8px; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 0 20px rgba(139,92,246,0.4);">⚔️ Begin Quest</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Theme Variants by Selection</h3>
+  <div class="cards">
+    <div class="card" data-choice="male" onclick="toggleSelect(this)">
+      <div class="card-body" style="background: linear-gradient(135deg, #0f0a1e, #1e1145); color: white; border-radius: 8px;">
+        <h3 style="color: #a78bfa;">⚔️ Adventurer (He/Him)</h3>
+        <div style="display: flex; gap: 8px; margin: 12px 0;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #8b5cf6;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #6d28d9;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #2dd4bf;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #0f0a1e;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #c4b5fd;"></div>
+        </div>
+        <p style="color: #c4b5fd; font-size: 13px;">Deep purple + teal accents. Sharp edges, angular borders. Sword/shield iconography. XP bar = electric teal.</p>
+      </div>
+    </div>
+    <div class="card" data-choice="female" onclick="toggleSelect(this)">
+      <div class="card-body" style="background: linear-gradient(135deg, #1a0a1e, #2d1045); color: white; border-radius: 8px;">
+        <h3 style="color: #f9a8d4;">🔮 Adventurer (She/Her)</h3>
+        <div style="display: flex; gap: 8px; margin: 12px 0;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #ec4899;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #a855f7;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #f0abfc;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #1a0a1e;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #fce7f3;"></div>
+        </div>
+        <p style="color: #f9a8d4; font-size: 13px;">Magenta + violet accents. Softer rounded edges, flowing borders. Crystal/orb iconography. XP bar = warm violet.</p>
+      </div>
+    </div>
+    <div class="card" data-choice="neutral" onclick="toggleSelect(this)">
+      <div class="card-body" style="background: linear-gradient(135deg, #0a0f1e, #101830); color: white; border-radius: 8px;">
+        <h3 style="color: #93c5fd;">✨ Neutral</h3>
+        <div style="display: flex; gap: 8px; margin: 12px 0;">
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #3b82f6;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #6366f1;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #38bdf8;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #0a0f1e;"></div>
+          <div style="width: 28px; height: 28px; border-radius: 6px; background: #bfdbfe;"></div>
+        </div>
+        <p style="color: #93c5fd; font-size: 13px;">Blue + indigo accents. Balanced geometry. Star/compass iconography. XP bar = sky blue.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>RPG Dashboard — Stats View (Male Theme)</h3>
+  <div class="mockup">
+    <div class="mockup-header">Quest Profile — Adventurer Dashboard</div>
+    <div class="mockup-body" style="padding: 0; background: #0f0a1e; font-family: system-ui;">
+
+      <!-- Top bar -->
+      <div style="background: rgba(139,92,246,0.15); border-bottom: 1px solid rgba(139,92,246,0.3); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px;">⚔️</div>
+          <div>
+            <div style="color: white; font-weight: 700; font-size: 15px;">Gerry</div>
+            <div style="color: #a78bfa; font-size: 11px;">Level 16 Adventurer</div>
+          </div>
+        </div>
+        <!-- XP bar -->
+        <div style="text-align: right;">
+          <div style="color: #2dd4bf; font-size: 11px; font-weight: 600; margin-bottom: 2px;">QUEST XP: 450 / 1000</div>
+          <div style="width: 160px; background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px;">
+            <div style="width: 45%; background: linear-gradient(90deg, #2dd4bf, #14b8a6); border-radius: 4px; height: 6px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 20px;">
+        <!-- Inventory (Badges) -->
+        <div style="margin-bottom: 20px;">
+          <div style="color: #a78bfa; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; font-weight: 600;">🎒 Inventory</div>
+          <div style="display: flex; gap: 10px;">
+            <div style="background: rgba(45,212,191,0.15); border: 1px solid #2dd4bf; border-radius: 10px; padding: 8px 12px; text-align: center;">
+              <div style="font-size: 20px;">🚀</div>
+              <div style="color: #2dd4bf; font-size: 10px; font-weight: 600;">Quest Started</div>
+            </div>
+            <div style="background: rgba(45,212,191,0.15); border: 1px solid #2dd4bf; border-radius: 10px; padding: 8px 12px; text-align: center;">
+              <div style="font-size: 20px;">🔍</div>
+              <div style="color: #2dd4bf; font-size: 10px; font-weight: 600;">Self-Discoverer</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; text-align: center; opacity: 0.4;">
+              <div style="font-size: 20px;">🔒</div>
+              <div style="color: #71717a; font-size: 10px; font-weight: 600;">???</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; text-align: center; opacity: 0.4;">
+              <div style="font-size: 20px;">🔒</div>
+              <div style="color: #71717a; font-size: 10px; font-weight: 600;">???</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; text-align: center; opacity: 0.4;">
+              <div style="font-size: 20px;">🔒</div>
+              <div style="color: #71717a; font-size: 10px; font-weight: 600;">???</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 8px 12px; text-align: center; opacity: 0.4;">
+              <div style="font-size: 20px;">🔒</div>
+              <div style="color: #71717a; font-size: 10px; font-weight: 600;">???</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <!-- RIASEC as Ability Scores -->
+          <div style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 12px; padding: 16px;">
+            <div style="color: #a78bfa; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">⚡ Ability Scores</div>
+            <!-- Stat bars -->
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; color: #e5e7eb; font-size: 12px; font-weight: 600; margin-bottom: 3px;">
+                <span>🔧 Realistic</span><span>72</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 4px; height: 8px;">
+                <div style="width: 72%; background: linear-gradient(90deg, #8b5cf6, #a78bfa); border-radius: 4px; height: 8px;"></div>
+              </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; color: #e5e7eb; font-size: 12px; font-weight: 600; margin-bottom: 3px;">
+                <span>🔬 Investigative</span><span>85</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 4px; height: 8px;">
+                <div style="width: 85%; background: linear-gradient(90deg, #2dd4bf, #14b8a6); border-radius: 4px; height: 8px;"></div>
+              </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; color: #e5e7eb; font-size: 12px; font-weight: 600; margin-bottom: 3px;">
+                <span>🎨 Artistic</span><span>68</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 4px; height: 8px;">
+                <div style="width: 68%; background: linear-gradient(90deg, #8b5cf6, #a78bfa); border-radius: 4px; height: 8px;"></div>
+              </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; color: #e5e7eb; font-size: 12px; font-weight: 600; margin-bottom: 3px;">
+                <span>🤝 Social</span><span>45</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 4px; height: 8px;">
+                <div style="width: 45%; background: linear-gradient(90deg, #6b7280, #9ca3af); border-radius: 4px; height: 8px;"></div>
+              </div>
+            </div>
+            <div style="margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; color: #e5e7eb; font-size: 12px; font-weight: 600; margin-bottom: 3px;">
+                <span>📢 Enterprising</span><span>38</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 4px; height: 8px;">
+                <div style="width: 38%; background: linear-gradient(90deg, #6b7280, #9ca3af); border-radius: 4px; height: 8px;"></div>
+              </div>
+            </div>
+            <div>
+              <div style="display: flex; justify-content: space-between; color: #e5e7eb; font-size: 12px; font-weight: 600; margin-bottom: 3px;">
+                <span>📋 Conventional</span><span>25</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 4px; height: 8px;">
+                <div style="width: 25%; background: linear-gradient(90deg, #6b7280, #9ca3af); border-radius: 4px; height: 8px;"></div>
+              </div>
+            </div>
+            <!-- Top class -->
+            <div style="margin-top: 12px; text-align: center;">
+              <span style="background: rgba(45,212,191,0.2); color: #2dd4bf; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 1px;">CLASS: INVESTIGATOR-ARTIST</span>
+            </div>
+          </div>
+
+          <!-- MBTI as Traits -->
+          <div style="background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 12px; padding: 16px;">
+            <div style="color: #a78bfa; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">🧬 Character Traits</div>
+
+            <!-- E/I -->
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-bottom: 4px;">
+                <span>⚡ Extraversion</span><span>🌙 Introversion</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 6px; height: 10px; position: relative;">
+                <div style="position: absolute; left: 65%; top: -3px; width: 16px; height: 16px; background: #8b5cf6; border-radius: 50%; border: 2px solid #0f0a1e; box-shadow: 0 0 8px rgba(139,92,246,0.6);"></div>
+              </div>
+              <div style="text-align: right; color: #a78bfa; font-size: 11px; font-weight: 600; margin-top: 2px;">Leaning Introvert</div>
+            </div>
+
+            <!-- S/N -->
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-bottom: 4px;">
+                <span>👁️ Sensing</span><span>💡 Intuition</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 6px; height: 10px; position: relative;">
+                <div style="position: absolute; left: 73%; top: -3px; width: 16px; height: 16px; background: #8b5cf6; border-radius: 50%; border: 2px solid #0f0a1e; box-shadow: 0 0 8px rgba(139,92,246,0.6);"></div>
+              </div>
+              <div style="text-align: right; color: #a78bfa; font-size: 11px; font-weight: 600; margin-top: 2px;">Leaning Intuitive</div>
+            </div>
+
+            <!-- T/F -->
+            <div style="margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-bottom: 4px;">
+                <span>🧠 Thinking</span><span>❤️ Feeling</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 6px; height: 10px; position: relative;">
+                <div style="position: absolute; left: 47%; top: -3px; width: 16px; height: 16px; background: #52525b; border-radius: 50%; border: 2px solid #0f0a1e; box-shadow: 0 0 8px rgba(82,82,91,0.4);"></div>
+              </div>
+              <div style="text-align: center; color: #71717a; font-size: 11px; font-style: italic; margin-top: 2px;">⚠️ Still emerging...</div>
+            </div>
+
+            <!-- J/P -->
+            <div style="margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; margin-bottom: 4px;">
+                <span>📐 Judging</span><span>🌊 Perceiving</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.08); border-radius: 6px; height: 10px; position: relative;">
+                <div style="position: absolute; left: 30%; top: -3px; width: 16px; height: 16px; background: #8b5cf6; border-radius: 50%; border: 2px solid #0f0a1e; box-shadow: 0 0 8px rgba(139,92,246,0.6);"></div>
+              </div>
+              <div style="text-align: left; color: #a78bfa; font-size: 11px; font-weight: 600; margin-top: 2px;">Leaning Judging</div>
+            </div>
+
+            <!-- Summary -->
+            <div style="margin-top: 16px; background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; text-align: center;">
+              <div style="color: #71717a; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Emerging Type</div>
+              <div style="color: white; font-size: 20px; font-weight: 800; letter-spacing: 3px; margin-top: 2px;">I N _ J</div>
+              <div style="color: #a78bfa; font-size: 11px; margin-top: 2px;">The Strategic Visionary</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Locked Skills -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; text-align: center;">
+            <div style="font-size: 28px; margin-bottom: 4px;">🔒</div>
+            <div style="color: #52525b; font-size: 12px; font-weight: 600;">Skill Tree</div>
+            <div style="color: #3f3f46; font-size: 11px;">Multiple Intelligences</div>
+            <div style="color: #a78bfa; font-size: 11px; margin-top: 6px;">Complete Session 2 to unlock</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; text-align: center;">
+            <div style="font-size: 28px; margin-bottom: 4px;">🔒</div>
+            <div style="color: #52525b; font-size: 12px; font-weight: 600;">Alignment Compass</div>
+            <div style="color: #3f3f46; font-size: 11px;">Work Values</div>
+            <div style="color: #a78bfa; font-size: 11px; margin-top: 6px;">Complete Session 2 to unlock</div>
+          </div>
+        </div>
+
+        <!-- Quest Log -->
+        <div style="margin-top: 16px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.3); border-radius: 12px; padding: 16px;">
+          <div style="color: #a78bfa; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; font-weight: 600;">📜 Quest Log</div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <div style="color: #2dd4bf; font-size: 14px;">✅</div>
+            <div style="color: #a1a1aa; font-size: 13px; text-decoration: line-through;">Session 1: Discovery Quest</div>
+            <div style="color: #2dd4bf; font-size: 11px; font-weight: 600;">+250 XP</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <div style="color: #facc15; font-size: 14px;">⭐</div>
+            <div style="color: white; font-size: 13px; font-weight: 600;">Session 2: Deep Dive Quest</div>
+            <div style="color: #facc15; font-size: 11px; font-weight: 600;">NEXT</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+            <div style="color: #52525b; font-size: 14px;">🔒</div>
+            <div style="color: #52525b; font-size: 13px;">Session 3: Career Explorer</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="color: #52525b; font-size: 14px;">🔒</div>
+            <div style="color: #52525b; font-size: 13px;">Session 4: Game Plan</div>
+          </div>
+        </div>
+
+        <!-- Action button -->
+        <div style="text-align: center; margin-top: 20px;">
+          <div style="display: inline-block; background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 14px 36px; border-radius: 8px; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; box-shadow: 0 0 24px rgba(139,92,246,0.5); cursor: pointer;">⚔️ Begin Session 2</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
