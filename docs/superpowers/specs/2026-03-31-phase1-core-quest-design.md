@@ -209,7 +209,7 @@ interface QuestionOption {
 
 **Files:**
 - `data/questions/session-1-core.ts` — 35 core sequence questions + 1 engagement checkpoint card
-- `data/questions/session-1-adaptive.ts` — 24 adaptive pool questions (12 RIASEC + 8 MBTI + 4 MI)
+- `data/questions/session-1-adaptive.ts` — 30 adaptive pool questions (18 RIASEC + 8 MBTI + 4 MI)
 
 **Pre-implementation requirement:** All question content MUST be written and reviewed before implementation begins. Questions are the product — the UI is the delivery mechanism. Aim for input from someone with psychometric assessment experience.
 
@@ -249,39 +249,45 @@ This forces signal from students who otherwise produce flat profiles. Common for
   - Questions describe concrete work activities, modeled on O*NET Interest Profiler approach
   - Skip allowed (scoring adjusts normalization denominator)
 
-- **2 ipsative questions:** "Which of these 3 activities would you enjoy MOST?"
-  - Each presents 3 options from different RIASEC types
+- **2 ipsative questions:** "Rank these 3 activities from most to least enjoyable"
+  - Each presents 3 activity cards from different RIASEC types
+  - **Interaction:** Tap-in-order. Tap favourite first (gets gold "1st" badge), second next (silver "2nd"), third auto-assigns (bronze "3rd"). Tap any assigned card to reset all selections.
   - Forces discrimination between types — eliminates "rate everything high" problem
-  - Top pick gets +2 signal for its type, middle gets +1, bottom gets 0
+  - **Scored separately** from Likert items (see Scoring Engine → Ipsative Scoring). Ipsative raw values are stored in `riasec_ipsative_raw`, NOT mixed into `riasec_raw`, because an ipsative "bottom pick" means "less preferred than these two" while a Likert 1 means "strongly dislike" — different scales.
 
 - Engagement checkpoint card after question 7:
   - "Nice progress, [class name]! Halfway there..."
   - Tap to continue (no auto-advance).
 
-- **One-step-back undo:** Student can undo their most recent answer (tap back arrow). Only the last question — earlier ones are locked. This catches fat-finger errors without enabling endless re-doing.
+- **One-step-back undo:** Back arrow button visible in top-left of question card when `last_response_undoable: true`. Tap reverts to previous card with previous answer pre-selected. Arrow disappears after next answer is submitted (only most recent is undoable). Not available on first question of a block.
 
 **Persistence checkpoint after Block 2:**
-Lightweight — write `assessment_scores.riasec_scores` only (single upsert). Protects the most data-rich block. If fails: non-blocking, continue.
+Lightweight — write `assessment_scores.riasec_scores` + `assessment_scores.mi_scores` (single upsert). Protects the most data-rich block. If fails: non-blocking, continue.
 
-### Block 3: MI Learning Styles (5 questions, ~2 min)
+### MI Section (within Block 2, after RIASEC questions)
+
+After the 14 RIASEC items, a brief visual divider (not a full block transition — just a subtle heading change: "Now let's see how you learn..."). Then 5 MI questions.
 
 - Format: Multiple choice (pick one)
-- Style: "When you need to learn something new, what works best for you?"
-- Each question presents 3-4 learning approaches, each mapping to 1-2 MI dimensions:
+- 3 questions use learning-preference format: "When you need to learn something new, what works best for you?"
   - "Read about it and take notes" → linguistic
-  - "Watch someone do it, then try" → bodily-kinesthetic
   - "Draw diagrams or mind-maps" → spatial
   - "Talk it through with someone" → interpersonal
   - "Figure it out on my own by experimenting" → logical-mathematical + intrapersonal
+- **2 questions use activity-based format** (to catch bodily, musical, naturalistic):
+  - "I tap rhythms or hum when I'm thinking" / "I learn best when I can move around or use my hands" / "I notice patterns in nature others miss" — pick most relatable
+  - This surfaces MI dimensions that teens don't naturally describe as "learning preferences"
 - Each response maps to 1-2 MI dimensions with weighted signals
 - 5 questions covering all 8 MI dimensions at least once
 - Produces preliminary MI scores — enough to flag major learning style preferences
 - Full MI assessment deepens in Session 2
+- One-step-back undo allowed, skip allowed
 
 **Why MI matters here:** Without MI, Session 3's programme matching can't flag learning style mismatches. A bodily-kinesthetic learner recommended for a pure lecture/exam programme is a failure case.
 
-### Block 4: MBTI Personality Indicators (8 questions, ~3 min)
+### Block 3: Personality & Values (11 questions, ~4 min)
 
+**MBTI section (8 questions):**
 - Format: Forced-choice spectrum slider
 - "Which sounds more like you?" with two options and a slider between them
 - Scale: -3 (strongly A) → 0 (neutral) → +3 (strongly B)
@@ -290,30 +296,30 @@ Lightweight — write `assessment_scores.riasec_scores` only (single upsert). Pr
 - No skipping (forced choice by design)
 - One-step-back undo allowed
 
-**Full persistence checkpoint after Block 4:**
-1. Write all `session_responses` from Blocks 1-4
-2. Write computed `assessment_scores` (RIASEC + MI + MBTI)
-3. Update `students.current_session` to 1
+Brief visual divider after MBTI: "One more thing — what drives you?"
 
-**Error handling:**
-- Retry with exponential backoff (3 attempts: 1s, 2s, 4s)
-- If all fail: show inline warning "Your progress couldn't be saved to the cloud. Keep going — we'll try again at the end."
-- Continue to Block 5 regardless — data is still in client state.
-- Flag `persistence_failed: true` for retry later.
-
-### Block 5: Values Probes (3 questions, ~1 min)
-
-- Format: Spectrum slider
+**Values section (3 questions):**
+- Format: Spectrum slider (same mechanics as MBTI)
 - Quick probes on 3 core value dimensions:
   1. Security ↔ Adventure: "Would you prefer a stable career with guaranteed income, or an exciting career with uncertain rewards?"
   2. Income ↔ Impact: "Would you rather earn the highest salary possible, or make the biggest positive difference?"
   3. Solo ↔ Team: "Would you rather work independently on your own projects, or collaborate closely with a team?"
 - Scale: -3 (strongly left) → 0 (neutral) → +3 (strongly right)
-- Same mechanics as MBTI forced-choice sliders
 - Produces initial Values Compass readings — enough to distinguish students with identical RIASEC/MBTI profiles
 - Full Values Compass (6 dimensions) assessed in Session 2
 
-### Self-Map Capture (After Block 5, before Reveal)
+**Full persistence checkpoint after Block 3:**
+1. Write all `session_responses` from Blocks 1-3
+2. Write computed `assessment_scores` (RIASEC + MI + MBTI + Values)
+3. Update `students.current_session` to 1
+
+**Error handling:**
+- Retry with exponential backoff (3 attempts: 1s, 2s, 4s)
+- If all fail: show inline warning "Your progress couldn't be saved to the cloud. Keep going — we'll try again at the end."
+- Continue to Reveal regardless — data is still in client state.
+- Flag `persistence_failed: true` for retry later.
+
+### Self-Map Capture (After Block 3, before Reveal)
 
 Brief interstitial — 3 quick questions before showing results:
 
@@ -323,19 +329,21 @@ Brief interstitial — 3 quick questions before showing results:
 
 Stored in `self_map`. The perceived strengths grid has hidden RIASEC mappings for before/after comparison in Session 3's AI analysis.
 
+**Testable decision:** If user testing shows dropoff, move Self-Map entirely to Session 2 start to shave ~1 minute.
+
 ### Block Transitions
 
 Between each block, a brief interstitial with class-flavored narration. 1.5 seconds, tap-to-skip on all.
-- Warm-Up → RIASEC: "The [class name] enters the Arena of Interests..."
-- RIASEC → MI: "Abilities revealed. Now, how does the [class name] learn?"
-- MI → MBTI: "Skills mapped. Let's discover your nature..."
-- MBTI → Values: "Personality taking shape. One last question about what drives you..."
-- Values → Self-Map: "Almost there... one moment of reflection."
+- Warm-Up → Block 2: "The [class name] enters the Arena of Interests..."
+- Block 2 → Block 3: "Abilities and learning styles mapped. Let's discover your nature..."
+- Block 3 → Self-Map: "Almost there... one moment of reflection."
 - Self-Map → Reveal: "The prophecy takes shape..."
+
+3 transitions total (down from 6 in previous version). Same questions, fewer interruptions.
 
 Animation: Fade out → narration card slides up → fade in. Respects `prefers-reduced-motion`.
 
-### Block 6: Reveal + Confirmatory (~4 min)
+### Block 4: Reveal + Confirmatory (~4 min)
 
 **Phase 1 — Chart Reveal:**
 1. Transition card: "Let's see what we've discovered, [class name]!"
@@ -349,7 +357,7 @@ Animation: Fade out → narration card slides up → fade in. Respects `prefers-
 
 **Phase 2 — Confirmatory Round:**
 1. Transition: "Want to sharpen your results? 5 quick questions."
-2. 5 adaptive questions selected from pool of 24 (see algorithm below)
+2. 5 adaptive questions selected from pool of 30 (see algorithm below)
 3. Charts visible and update live as each question is answered
 4. Same format as original blocks (Likert for RIASEC, forced-choice for MBTI, multiple-choice for MI)
 
@@ -371,7 +379,7 @@ Animation: Fade out → narration card slides up → fade in. Respects `prefers-
 ```
 Input: riasec_scores, riasec_raw, mi_scores, mi_raw,
        mbti_scores, mbti_raw,
-       riasec_pool (12), mbti_pool (8), mi_pool (4)
+       riasec_pool (18), mbti_pool (8), mi_pool (4)
 
 1. Calculate RIASEC ambiguity per type pair:
    - Sort types by score descending
@@ -398,7 +406,7 @@ Input: riasec_scores, riasec_raw, mi_scores, mi_raw,
 Output: 5 Question objects from combined pool
 ```
 
-### Final Persistence (After Block 6)
+### Final Persistence (After Block 4)
 
 1. Write confirmatory `session_responses` (5 rows)
 2. Write Self-Map data to `students.self_map`
@@ -421,22 +429,36 @@ raw_score = reverse_scored ? (6 - response) : response
 Append raw_score to riasec_raw[target_type]
 ```
 
-**Ipsative per-question processing:**
-```
-For each option in ranked order (most enjoyed → least):
-  rank 1 (top pick): append 5 to riasec_raw[option_type]
-  rank 2 (middle): append 3 to riasec_raw[option_type]
-  rank 3 (bottom): append 1 to riasec_raw[option_type]
-```
-
-**Per-type normalization:**
+**Likert per-type normalization:**
 ```
 count = riasec_raw[type].length
 sum = sum(riasec_raw[type])
-normalized = count > 0 ? ((sum - count) / (count * 4)) * 100 : 0
+likert_norm = count > 0 ? ((sum - count) / (count * 4)) * 100 : 0
 ```
 
-Normalizes correctly regardless of question count.
+**Ipsative scoring (separate from Likert):**
+Ipsative responses are stored in `riasec_ipsative_raw` — NOT mixed into `riasec_raw`. An ipsative "bottom pick" means "less preferred than these two" (relative ranking), while a Likert 1 means "strongly dislike" (absolute rating). Mixing these distorts normalization.
+
+```
+For each ipsative question, student taps in preference order:
+  rank 1 (tap first, gold badge): append 5 to riasec_ipsative_raw[option_type]
+  rank 2 (tap second, silver badge): append 3 to riasec_ipsative_raw[option_type]
+  rank 3 (auto-assigned, bronze badge): append 1 to riasec_ipsative_raw[option_type]
+
+Ipsative per-type normalization:
+  count = riasec_ipsative_raw[type].length
+  sum = sum(riasec_ipsative_raw[type])
+  ipsative_norm = count > 0 ? ((sum - count) / (count * 4)) * 100 : 0
+```
+
+**Final RIASEC score — weighted merge:**
+```
+final = has_ipsative_data
+  ? (likert_norm * 0.7) + (ipsative_norm * 0.3)
+  : likert_norm
+```
+
+Likert gets 70% weight (more data points, absolute scale). Ipsative gets 30% (fewer data points, but forces discrimination). If a type has no ipsative data (not all types appear in the 2 ipsative questions), use Likert alone for that type.
 
 **Acquiescence bias detection:**
 ```
@@ -479,7 +501,7 @@ normalized = count > 0 ? (sum / (count * 3)) * 100 : 0
 Range: -100 to +100
 ```
 
-**"Still emerging" threshold:** `abs(normalized) < 25` (with only 2 questions per dichotomy, this is appropriate)
+**"Still emerging" threshold:** `abs(normalized) < 35`. With only 2 questions per dichotomy, the possible normalized scores are: -100, -67, -33, 0, +33, +67, +100. The threshold catches -33, 0, and +33 as "still emerging" — a student who answers both questions even marginally the same way (-1 and -1 = -33) shouldn't get a definitive label from extremely weak signal. Only scores of ±67 or ±100 (clear agreement on both questions) produce a definitive tendency label.
 
 ### Values Scoring
 
@@ -530,9 +552,10 @@ RIASEC type display names: R = Maker, I = Investigator, A = Creator, S = Helper,
 
 ```typescript
 interface ScoreState {
-  riasec: Record<string, number>;         // normalized 0-100
-  riasec_raw: Record<string, number[]>;
-  mi: Record<string, number>;             // normalized 0-100 (preliminary)
+  riasec: Record<string, number>;               // final weighted 0-100
+  riasec_raw: Record<string, number[]>;         // Likert responses per type
+  riasec_ipsative_raw: Record<string, number[]>; // Ipsative responses per type (separate)
+  mi: Record<string, number>;                   // normalized 0-100 (preliminary)
   mi_raw: Record<string, number[]>;
   mbti: Record<string, number>;           // normalized -100 to +100
   mbti_raw: Record<string, number[]>;
@@ -545,7 +568,7 @@ interface ScoreState {
 }
 
 interface QuestState {
-  current_block: "warmup" | "riasec" | "mi" | "mbti" | "values" | "selfmap" | "reveal" | "confirmatory" | "complete";
+  current_block: "warmup" | "riasec" | "riasec_mi" | "mbti_values" | "selfmap" | "reveal" | "confirmatory" | "complete";
   current_question_index: number;
   questions_answered: number;
   responses: ClientResponse[];
@@ -727,9 +750,9 @@ Session 1 is client-side. Network only needed at: Begin Quest, 3 checkpoints, op
 
 ## 10. Navigation Policies
 
-- **One-step-back undo** in RIASEC, MI, MBTI, and Values blocks. Most recent answer only — earlier ones locked.
-- **No skipping** in Warm-Up, MBTI (forced choice), Confirmatory.
-- **Skip allowed** in RIASEC and MI. Scoring adjusts normalization denominator.
+- **One-step-back undo** in Blocks 2 and 3. Back arrow in top-left of question card, visible only when previous answer exists in current block. Tap reverts to previous card with answer pre-selected. Only most recent answer — earlier ones locked.
+- **No skipping** in Warm-Up (Block 1), MBTI section (forced choice), Confirmatory (Block 4).
+- **Skip allowed** in RIASEC and MI sections within Block 2. Scoring adjusts normalization denominator.
 - **Block transitions** are one-way. Cannot return to completed block.
 - **Discovery Mode override:** If triggered, remaining RIASEC questions switch to forced-choice format. Cannot switch back.
 - **Dashboard** is view-only after completion. No re-taking Session 1.
@@ -849,7 +872,7 @@ All questions are original, created following validated psychometric approaches:
 
 No copyrighted questions used. 4 of 12 RIASEC Likert items are reverse-scored for acquiescence bias detection. Ipsative questions force discrimination between types.
 
-**Pre-implementation requirement:** All 59 questions (35 core + 24 adaptive) must be written and reviewed before UI implementation begins.
+**Pre-implementation requirement:** All 65 questions (35 core + 30 adaptive) must be written and reviewed before UI implementation begins.
 
 ---
 
