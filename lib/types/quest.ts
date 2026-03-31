@@ -1,21 +1,52 @@
-export type QuestionType = "multiple_choice" | "free_text" | "scenario" | "spectrum";
+export type QuestionType =
+  | "multiple_choice"
+  | "likert"
+  | "forced_choice"
+  | "ipsative"
+  | "spectrum"
+  | "free_text"
+  | "scenario";
+
+export type QuestionBlock =
+  | "warmup"
+  | "riasec"
+  | "riasec_mi"
+  | "mbti_values"
+  | "selfmap"
+  | "reveal"
+  | "confirmatory";
+
+export type Framework = "none" | "riasec" | "mi" | "mbti" | "values" | "multi";
 
 export interface QuestionOption {
   label: string;
-  value: string;
+  value: string | number;
+  emoji?: string;
   framework_signals?: Record<string, number>;
+  strength_signal?: string;
 }
 
 export interface Question {
   id: string;
   session_number: number;
-  phase: string;
+  block: QuestionBlock;
   question_text: string;
   question_type: QuestionType;
-  options: QuestionOption[] | null;
-  framework_mapping: Record<string, string[]>;
-  age_range: "13-14" | "15-16" | "17-18" | "all";
-  follow_up_triggers: Record<string, unknown> | null;
+  options: QuestionOption[];
+  reverse_scored: boolean;
+  framework: Framework;
+  framework_target: string;
+  is_adaptive: boolean;
+  age_range?: "13-14" | "15-16" | "17-18" | "all";
+}
+
+export interface ClientResponse {
+  question_id: string;
+  response_value: number;
+  response_label: string;
+  framework: string;
+  framework_target: string;
+  answered_at: number;
 }
 
 export interface SessionResponse {

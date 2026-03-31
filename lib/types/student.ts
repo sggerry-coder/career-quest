@@ -3,8 +3,10 @@ export interface Student {
   name: string;
   age: number;
   education_system: string;
-  preferred_country: string | null;
-  preferred_universities: string[] | null;
+  avatar_class: string;
+  tone: "quest" | "explorer";
+  self_map: SelfMap | null;
+  preferred_destinations: string[];
   current_session: number;
   strong_subjects: string[] | null;
   weak_subjects: string[] | null;
@@ -14,6 +16,13 @@ export interface Student {
   facilitator_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface SelfMap {
+  clarity: number;               // 1-5 (direction clarity slider)
+  sources: string[];             // where career ideas come from
+  perceived_strengths: string[]; // 0-3 self-identified strengths
+  curiosities: string[];         // 0-3 career curiosity categories
 }
 
 export interface FamilyContext {
