@@ -125,11 +125,7 @@ export default function Home() {
   if (state.status === "returning") {
     const { student } = state;
     const classDef = classes.find((c) => c.id === student.avatar_class);
-    const tone = (student as Record<string, unknown>).tone as
-      | "quest"
-      | "explorer"
-      | undefined;
-    const displayTone = tone ?? "quest";
+    const displayTone = student.tone ?? "quest";
 
     return (
       <main

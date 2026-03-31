@@ -85,7 +85,7 @@ export function DestinationPicker({ value, onChange }: DestinationPickerProps) {
               whileTap={{ scale: 0.97 }}
               role="checkbox"
               aria-checked={isSelected}
-              aria-label={`${dest.flag} ${dest.label}`}
+              aria-label={`${dest.flag} ${dest.name}`}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -115,7 +115,7 @@ export function DestinationPicker({ value, onChange }: DestinationPickerProps) {
                     : "var(--cq-text-secondary)",
                 }}
               >
-                {dest.label}
+                {dest.name}
               </span>
             </motion.button>
           );

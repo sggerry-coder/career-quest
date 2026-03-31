@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback, useEffect, useMemo } from "react";
+import { use, useState, useCallback, useMemo } from "react";
 import QuestionCard from "@/components/quest/question-card";
 import LikertSlider from "@/components/quest/likert-slider";
 import SpectrumSlider from "@/components/quest/spectrum-slider";
@@ -14,6 +14,11 @@ import SelfMapCapture from "@/components/selfmap/self-map-capture";
 import RevealSequence from "@/components/quest/reveal-sequence";
 import { useQuestState } from "@/hooks/use-quest-state";
 import { useScores } from "@/hooks/use-scores";
+import { session1CoreQuestions } from "@/data/questions/session-1-core";
+import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
+import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
+import { classDefinitions } from "@/lib/theme";
+import type { Question, ClientResponse } from "@/lib/types/quest";
 
 // Block definitions with question index ranges
 interface BlockDef {
@@ -42,26 +47,37 @@ export default function Session({
 }) {
   const { id } = use(params);
   const {
-    questState,
-    submitResponse,
-    undoResponse,
-    skipQuestion,
-    setDiscoveryMode,
-    setSelfMap,
-    setPhaseComplete,
-    persistCheckpoint,
-    getQuestionsForSession,
-    getAdaptiveQuestions,
-    getClassName,
-    getNarration,
-    getTone,
+    state: questState,
+    answerQuestion,
+    undoLastAnswer,
+    triggerDiscoveryMode,
   } = useQuestState();
 
-  const { scoreState, processResponse, recalculateAll } = useScores();
+  const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse } = useScores();
 
-  const sessionQuestions = useMemo(
-    () => getQuestionsForSession(Number(id)),
-    [id, getQuestionsForSession]
+  // Get questions for the current session
+  const sessionQuestions = useMemo(() => {
+    const sessionNum = Number(id);
+    // Currently only session 1 is implemented
+    if (sessionNum === 1) return session1CoreQuestions;
+    return [];
+  }, [id]);
+
+  // Helper: get class name based on a hardcoded default (no student context here)
+  const avatarClassName = useMemo(() => {
+    // Default class for the session; actual class is determined by character selection
+    const classDef = classDefinitions.find((c) => c.id === "wanderer");
+    return classDef?.name.quest ?? "Wanderer";
+  }, []);
+
+  // Helper: get narration text for a block transition
+  const getNarration = useCallback(
+    (key: "riasec_intro" | "mbti_intro" | "reveal_intro") => {
+      const classDef = classDefinitions.find((c) => c.id === "wanderer");
+      if (!classDef) return "";
+      return classDef.narration[key]?.quest ?? "";
+    },
+    []
   );
 
   const [flowPhase, setFlowPhase] = useState<FlowPhase>("questions");
@@ -70,7 +86,7 @@ export default function Session({
   );
   const [direction, setDirection] = useState<"left" | "right">("right");
   const [transitionNarration, setTransitionNarration] = useState("");
-  const [adaptiveQuestions, setAdaptiveQuestions] = useState<typeof sessionQuestions>([]);
+  const [adaptiveQuestions, setAdaptiveQuestions] = useState<Question[]>([]);
   const [confirmIndex, setConfirmIndex] = useState(0);
 
   // Track consecutive neutral Likert responses for discovery mode trigger
@@ -128,16 +144,13 @@ export default function Session({
 
       if (!nextBlockKey || currentBlockKey === nextBlockKey) return false;
 
-      const tone = getTone();
       const transitions: Record<string, string> = {
         warmup_riasec: getNarration("riasec_intro"),
         warmup_riasec_mi: getNarration("riasec_intro"),
         riasec_mbti: getNarration("mbti_intro"),
         riasec_mi_mbti: getNarration("mbti_intro"),
         riasec_mbti_values: getNarration("mbti_intro"),
-        mbti_values: tone === "quest"
-          ? "One more thing \u2014 what drives you?"
-          : "Almost done \u2014 a few questions about what matters to you.",
+        mbti_values: "One more thing \u2014 what drives you?",
         values_selfmap: "Almost there... one moment of reflection.",
       };
 
@@ -150,7 +163,7 @@ export default function Session({
       }
       return false;
     },
-    [currentIndex, sessionQuestions, getTone, getNarration]
+    [currentIndex, sessionQuestions, getNarration]
   );
 
   // Check for engagement checkpoint (question 7 in RIASEC block)
@@ -192,18 +205,31 @@ export default function Session({
       const numericValue = typeof value === "string" ? 0 : value;
       const responseLabel = label ?? String(value);
 
-      // Submit to quest state
-      submitResponse({
+      const response: ClientResponse = {
         question_id: currentQuestion.id,
         response_value: numericValue,
         response_label: responseLabel,
         framework: currentQuestion.framework,
         framework_target: currentQuestion.framework_target,
         answered_at: Date.now(),
-      });
+      };
 
-      // Process scoring
-      processResponse(currentQuestion, numericValue);
+      // Submit to quest state
+      answerQuestion(response);
+
+      // Process scoring - use framework signals if available on the selected option
+      const selectedOption = currentQuestion.options.find(
+        (o) => String(o.value) === String(value) || o.label === label
+      );
+      if (selectedOption?.framework_signals) {
+        processResponseWithSignals(
+          response,
+          selectedOption.framework_signals,
+          selectedOption.strength_signal
+        );
+      } else {
+        processResponse(response);
+      }
 
       // Check discovery mode trigger (only for Likert in RIASEC block)
       if (
@@ -224,23 +250,6 @@ export default function Session({
         return;
       }
 
-      // Persistence checkpoints
-      const currentBlockKey = sessionQuestions[currentIndex]?.block;
-      const nextBlockKey = sessionQuestions[nextIndex]?.block;
-      if (
-        currentBlockKey === "riasec" &&
-        nextBlockKey !== "riasec" &&
-        nextBlockKey !== "riasec_mi"
-      ) {
-        persistCheckpoint("riasec");
-      }
-      if (
-        (currentBlockKey === "values" || currentBlockKey === "mbti_values") &&
-        nextBlockKey !== currentBlockKey
-      ) {
-        persistCheckpoint("full");
-      }
-
       // Check block transition
       if (checkBlockTransition(nextIndex)) {
         setCurrentIndex(nextIndex);
@@ -259,12 +268,12 @@ export default function Session({
       currentQuestion,
       currentIndex,
       sessionQuestions,
-      submitResponse,
+      answerQuestion,
       processResponse,
+      processResponseWithSignals,
       checkDiscoveryMode,
       checkBlockTransition,
       checkEngagement,
-      persistCheckpoint,
     ]
   );
 
@@ -273,25 +282,21 @@ export default function Session({
     (ranked: { value: string; rank: number }[]) => {
       if (!currentQuestion) return;
 
-      const rankToScore: Record<number, number> = { 1: 5, 2: 3, 3: 1 };
-      ranked.forEach((r) => {
-        processResponse(
-          {
-            ...currentQuestion,
-            framework_target: r.value,
-          },
-          rankToScore[r.rank]
-        );
-      });
+      // Process ipsative scores
+      processIpsativeResponse(
+        ranked.map((r) => ({ type: r.value, rank: r.rank }))
+      );
 
-      submitResponse({
+      const response: ClientResponse = {
         question_id: currentQuestion.id,
         response_value: 0,
         response_label: ranked.map((r) => `${r.rank}:${r.value}`).join(","),
         framework: currentQuestion.framework,
         framework_target: "ipsative",
         answered_at: Date.now(),
-      });
+      };
+
+      answerQuestion(response);
 
       // Advance
       const nextIndex = currentIndex + 1;
@@ -310,8 +315,8 @@ export default function Session({
       currentQuestion,
       currentIndex,
       sessionQuestions,
-      processResponse,
-      submitResponse,
+      processIpsativeResponse,
+      answerQuestion,
       checkBlockTransition,
     ]
   );
@@ -320,13 +325,12 @@ export default function Session({
   const handleUndo = useCallback(() => {
     if (currentIndex <= 0) return;
     setDirection("left");
-    undoResponse();
+    undoLastAnswer();
     setCurrentIndex(currentIndex - 1);
-  }, [currentIndex, undoResponse]);
+  }, [currentIndex, undoLastAnswer]);
 
-  // Handle skip
+  // Handle skip (advance without recording a response)
   const handleSkip = useCallback(() => {
-    skipQuestion(currentQuestion?.id ?? "");
     const nextIndex = currentIndex + 1;
     setDirection("right");
     if (nextIndex >= sessionQuestions.length) {
@@ -339,10 +343,8 @@ export default function Session({
     }
     setCurrentIndex(nextIndex);
   }, [
-    currentQuestion,
     currentIndex,
     sessionQuestions,
-    skipQuestion,
     checkBlockTransition,
   ]);
 
@@ -358,26 +360,34 @@ export default function Session({
 
   // Handle discovery mode activation
   const handleDiscoveryContinue = useCallback(() => {
-    setDiscoveryMode(true);
+    triggerDiscoveryMode();
     setFlowPhase("questions");
-  }, [setDiscoveryMode]);
+  }, [triggerDiscoveryMode]);
 
   // Handle self-map completion
   const handleSelfMapComplete = useCallback(
     (data: { clarity: number; sources: string[]; perceived_strengths: string[] }) => {
-      setSelfMap(data);
+      // Self-map data captured; move to reveal
       setFlowPhase("reveal");
     },
-    [setSelfMap]
+    []
   );
 
   // Handle reveal sequence completion (moves to confirmatory)
   const handleRevealComplete = useCallback(() => {
-    const adaptive = getAdaptiveQuestions(scoreState);
+    const adaptive = selectAdaptiveQuestions({
+      riasecScores: scoreState.riasec,
+      riasecRaw: scoreState.riasec_raw,
+      miScores: scoreState.mi,
+      miRaw: scoreState.mi_raw,
+      mbtiScores: scoreState.mbti,
+      mbtiRaw: scoreState.mbti_raw,
+      pool: session1AdaptivePool,
+    });
     setAdaptiveQuestions(adaptive);
     setConfirmIndex(0);
     setFlowPhase("confirmatory");
-  }, [getAdaptiveQuestions, scoreState]);
+  }, [scoreState]);
 
   // Handle confirmatory answer
   const handleConfirmatoryAnswer = useCallback(
@@ -386,20 +396,19 @@ export default function Session({
       if (!q) return;
 
       const numericValue = typeof value === "string" ? 0 : value;
-      submitResponse({
+      const response: ClientResponse = {
         question_id: q.id,
         response_value: numericValue,
         response_label: label ?? String(value),
         framework: q.framework,
         framework_target: q.framework_target,
         answered_at: Date.now(),
-      });
-      processResponse(q, numericValue);
+      };
+
+      answerQuestion(response);
+      processResponse(response);
 
       if (confirmIndex + 1 >= adaptiveQuestions.length) {
-        // Final persistence + complete
-        persistCheckpoint("final");
-        setPhaseComplete();
         setFlowPhase("complete");
       } else {
         setDirection("right");
@@ -409,17 +418,15 @@ export default function Session({
     [
       adaptiveQuestions,
       confirmIndex,
-      submitResponse,
+      answerQuestion,
       processResponse,
-      persistCheckpoint,
-      setPhaseComplete,
     ]
   );
 
   // Render the correct input component based on question_type
   const renderInput = useCallback(
     (
-      question: (typeof sessionQuestions)[0],
+      question: Question,
       onSubmit: (value: number | string, label?: string) => void
     ) => {
       switch (question.question_type) {
@@ -515,7 +522,7 @@ export default function Session({
   if (flowPhase === "engagement") {
     return (
       <EngagementCheckpoint
-        className={getClassName()}
+        className={avatarClassName}
         onContinue={handleEngagementContinue}
       />
     );
@@ -525,7 +532,7 @@ export default function Session({
   if (flowPhase === "discovery_prompt") {
     return (
       <DiscoveryModePrompt
-        className={getClassName()}
+        className={avatarClassName}
         onContinue={handleDiscoveryContinue}
       />
     );
@@ -541,8 +548,8 @@ export default function Session({
     return (
       <RevealSequence
         scoreState={scoreState}
-        className={getClassName()}
-        tone={getTone()}
+        className={avatarClassName}
+        tone="quest"
         onRevealComplete={handleRevealComplete}
         onSessionComplete={() => setFlowPhase("complete")}
       />

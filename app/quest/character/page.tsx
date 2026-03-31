@@ -159,10 +159,8 @@ export default function CharacterCreation() {
             solo_team: 0,
           },
           strengths: [],
-        })
-        .catch(() => {
-          // Non-blocking — will be created at first checkpoint
         });
+        // Non-blocking — will be created at first checkpoint
 
       // 4. Insert "Quest Started" badge (non-blocking)
       await supabase
@@ -170,10 +168,8 @@ export default function CharacterCreation() {
         .insert({
           student_id: userId,
           badge_id: "quest_started",
-        })
-        .catch(() => {
-          // Non-blocking — badge shown from client state
         });
+        // Non-blocking — badge shown from client state
 
       // 5. Navigate to Session 1
       router.push("/quest/session/1");

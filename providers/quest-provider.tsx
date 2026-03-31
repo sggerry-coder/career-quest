@@ -53,7 +53,7 @@ interface QuestProviderProps {
  * 3 attempts: 1s, 2s, 4s delays.
  */
 async function retryWithBackoff<T>(
-  operation: () => Promise<{ data: T | null; error: unknown }>,
+  operation: () => PromiseLike<{ data: T | null; error: unknown }>,
   maxAttempts: number = 3
 ): Promise<{ data: T | null; error: unknown }> {
   let lastResult: { data: T | null; error: unknown } = {

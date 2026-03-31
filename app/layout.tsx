@@ -24,7 +24,7 @@ export default function RootLayout({
           minHeight: "100vh",
         }}
       >
-        <ThemeProvider defaultTheme="purple-teal">
+        <ThemeProvider initialTheme="purple-teal">
           {children}
         </ThemeProvider>
       </body>
