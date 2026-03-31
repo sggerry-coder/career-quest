@@ -1,26 +1,273 @@
 @import "tailwindcss";
 
+/* ============================================
+   Career Quest — Dark RPG Theme System
+   ============================================ */
+
+/* --- Base theme (default: purple-teal / Shadow Court) --- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cq-bg-primary: #0f0a1e;
+  --cq-bg-secondary: #1a1035;
+  --cq-bg-card: #1e1440;
+  --cq-bg-card-hover: #261a50;
+  --cq-bg-input: #160f30;
+  --cq-text-primary: #f0eef5;
+  --cq-text-secondary: #a89ec8;
+  --cq-text-muted: #6b5f8a;
+  --cq-border: #2d2255;
+  --cq-border-focus: #8b5cf6;
+
+  /* Theme-specific (default = purple-teal) */
+  --cq-primary: #8b5cf6;
+  --cq-accent: #2dd4bf;
+  --cq-glow: rgba(139, 92, 246, 0.5);
+  --cq-glow-accent: rgba(45, 212, 191, 0.4);
+  --cq-radius: 6px;
+
+  /* Functional */
+  --cq-error: #ef4444;
+  --cq-error-bg: rgba(239, 68, 68, 0.15);
+  --cq-success: #22c55e;
+  --cq-success-bg: rgba(34, 197, 94, 0.15);
+
+  /* Spacing */
+  --cq-card-padding: 1.5rem;
+  --cq-gap: 1rem;
 }
 
+/* --- Theme: purple-teal (Shadow Court) --- */
+[data-theme="purple-teal"] {
+  --cq-primary: #8b5cf6;
+  --cq-accent: #2dd4bf;
+  --cq-glow: rgba(139, 92, 246, 0.5);
+  --cq-glow-accent: rgba(45, 212, 191, 0.4);
+  --cq-radius: 6px;
+}
+
+/* --- Theme: magenta-violet (Crimson Order) --- */
+[data-theme="magenta-violet"] {
+  --cq-primary: #ec4899;
+  --cq-accent: #f0abfc;
+  --cq-glow: rgba(236, 72, 153, 0.4);
+  --cq-glow-accent: rgba(240, 171, 252, 0.3);
+  --cq-radius: 16px;
+}
+
+/* --- Theme: blue-indigo (Azure Path) --- */
+[data-theme="blue-indigo"] {
+  --cq-primary: #3b82f6;
+  --cq-accent: #38bdf8;
+  --cq-glow: rgba(59, 130, 246, 0.4);
+  --cq-glow-accent: rgba(56, 189, 248, 0.3);
+  --cq-radius: 12px;
+}
+
+/* --- Tailwind v4 theme inline overrides --- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--cq-bg-primary);
+  --color-foreground: var(--cq-text-primary);
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* --- Base element styles --- */
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(180deg, var(--cq-bg-primary), var(--cq-bg-secondary));
+  color: var(--cq-text-primary);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+}
+
+/* --- Focus styles (accessibility) --- */
+*:focus-visible {
+  outline: 2px solid var(--cq-primary);
+  outline-offset: 2px;
+  border-radius: var(--cq-radius);
+}
+
+/* --- Custom scrollbar (dark theme) --- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cq-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cq-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cq-text-muted);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cq-border) var(--cq-bg-primary);
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- High contrast mode --- */
+@media (forced-colors: active) {
+  :root {
+    --cq-primary: LinkText;
+    --cq-accent: Highlight;
+    --cq-text-primary: CanvasText;
+    --cq-bg-primary: Canvas;
+    --cq-border: ButtonBorder;
+  }
+}
+
+/* --- Card base utility --- */
+.cq-card {
+  background: var(--cq-bg-card);
+  border: 1px solid var(--cq-border);
+  border-radius: var(--cq-radius);
+  padding: var(--cq-card-padding);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cq-card:hover {
+  border-color: var(--cq-primary);
+}
+
+.cq-card-selected {
+  border-color: var(--cq-primary);
+  box-shadow: 0 0 20px var(--cq-glow), inset 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Glow effect utility --- */
+.cq-glow {
+  box-shadow: 0 0 15px var(--cq-glow), 0 0 30px var(--cq-glow);
+}
+
+.cq-glow-accent {
+  box-shadow: 0 0 15px var(--cq-glow-accent), 0 0 30px var(--cq-glow-accent);
+}
+
+/* --- Button base --- */
+.cq-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  border-radius: var(--cq-radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.cq-button-primary {
+  background: var(--cq-primary);
+  color: white;
+}
+
+.cq-button-primary:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 20px var(--cq-glow);
+}
+
+.cq-button-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: none;
+  box-shadow: none;
+}
+
+.cq-button-ghost {
+  background: transparent;
+  color: var(--cq-text-secondary);
+  border: 1px solid var(--cq-border);
+}
+
+.cq-button-ghost:hover {
+  border-color: var(--cq-primary);
+  color: var(--cq-text-primary);
+}
+
+/* --- Input base --- */
+.cq-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--cq-bg-input);
+  border: 1px solid var(--cq-border);
+  border-radius: var(--cq-radius);
+  color: var(--cq-text-primary);
+  font-size: 1rem;
+  min-height: 44px;
+  transition: border-color 0.2s ease;
+}
+
+.cq-input:focus {
+  border-color: var(--cq-primary);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--cq-glow);
+}
+
+.cq-input::placeholder {
+  color: var(--cq-text-muted);
+}
+
+/* --- Chip / pill base --- */
+.cq-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid var(--cq-border);
+  border-radius: 9999px;
+  background: var(--cq-bg-card);
+  color: var(--cq-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+  min-width: 44px;
+  user-select: none;
+}
+
+.cq-chip:hover {
+  border-color: var(--cq-primary);
+  color: var(--cq-text-primary);
+}
+
+.cq-chip-selected {
+  background: var(--cq-primary);
+  border-color: var(--cq-primary);
+  color: white;
+  box-shadow: 0 0 10px var(--cq-glow);
+}
+
+/* --- Error card --- */
+.cq-error-card {
+  background: var(--cq-error-bg);
+  border: 1px solid var(--cq-error);
+  border-radius: var(--cq-radius);
+  padding: var(--cq-card-padding);
+  color: var(--cq-text-primary);
+  text-align: center;
 }
