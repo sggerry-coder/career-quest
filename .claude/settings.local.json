@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /tmp/career-quest-backup)",
+      "Bash(mv \"/Users/gerrygan/Career Quest/career-quest-scope.md\" /tmp/career-quest-backup/)",
+      "Bash(mv \"/Users/gerrygan/Career Quest/docs\" /tmp/career-quest-backup/)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src=no --import-alias=\"@/*\" --use-npm --yes)",
+      "Read(//private/tmp/**)",
+      "Bash(npx create-next-app@latest career-quest --typescript --tailwind --eslint --app --src=no --import-alias=\"@/*\" --use-npm --yes)",
+      "Bash(mv /tmp/career-quest-backup/career-quest-scope.md \"/Users/gerrygan/Career Quest/\")",
+      "Bash(mv /tmp/career-quest-backup/docs \"/Users/gerrygan/Career Quest/\")",
+      "Bash(rmdir /tmp/career-quest-backup)"
+    ]
+  }
+}
