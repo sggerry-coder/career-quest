@@ -85,29 +85,29 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FLOW-01 | TBD | Pending |
-| FLOW-02 | TBD | Pending |
-| FLOW-03 | TBD | Pending |
-| COMP-01 | TBD | Pending |
-| COMP-02 | TBD | Pending |
-| COMP-03 | TBD | Pending |
-| COMP-04 | TBD | Pending |
-| DATA-01 | TBD | Pending |
-| DATA-02 | TBD | Pending |
-| DATA-03 | TBD | Pending |
-| SCORE-01 | TBD | Pending |
-| SCORE-02 | TBD | Pending |
-| SCORE-03 | TBD | Pending |
-| AUDIT-01 | TBD | Pending |
-| AUDIT-02 | TBD | Pending |
-| AUDIT-03 | TBD | Pending |
-| AUDIT-04 | TBD | Pending |
+| FLOW-01 | Phase 1 | Pending |
+| FLOW-02 | Phase 1 | Pending |
+| FLOW-03 | Phase 1 | Pending |
+| COMP-01 | Phase 2 | Pending |
+| COMP-02 | Phase 2 | Pending |
+| COMP-03 | Phase 2 | Pending |
+| COMP-04 | Phase 2 | Pending |
+| DATA-01 | Phase 2 | Pending |
+| DATA-02 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Pending |
+| SCORE-01 | Phase 3 | Pending |
+| SCORE-02 | Phase 3 | Pending |
+| SCORE-03 | Phase 3 | Pending |
+| AUDIT-01 | Phase 4 | Pending |
+| AUDIT-02 | Phase 4 | Pending |
+| AUDIT-03 | Phase 4 | Pending |
+| AUDIT-04 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total
-- Mapped to phases: 0
-- Unmapped: 17
+- Mapped to phases: 17
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-01*
-*Last updated: 2026-04-01 after initial definition*
+*Last updated: 2026-04-01 after roadmap creation*
