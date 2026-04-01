@@ -28,10 +28,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Student reaches the Profile Reveal sequence after answering all Session 1 questions
   3. Narration text reflects the student's selected character class (not hardcoded "Wanderer")
   4. All flow transitions are deterministic -- no race conditions between index and phase updates
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
+- [ ] 01-01-PLAN.md — TDD: Create questReducer with typed actions and unit tests (FLOW-01, FLOW-02)
+- [ ] 01-02-PLAN.md — Wire reducer into session page and fetch avatar_class from Supabase (FLOW-02, FLOW-03)
 
 ### Phase 2: Session Completion & Persistence
 **Goal**: Students see a satisfying completion experience after Session 1 and their progress is reliably saved
@@ -84,7 +85,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Flow Engine Refactor | 0/0 | Not started | - |
+| 1. Flow Engine Refactor | 0/2 | Not started | - |
 | 2. Session Completion & Persistence | 0/0 | Not started | - |
 | 3. Scoring Quality | 0/0 | Not started | - |
 | 4. Quality Audit | 0/0 | Not started | - |
