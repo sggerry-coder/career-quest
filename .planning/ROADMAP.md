@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — TDD: Create questReducer with typed actions and unit tests (FLOW-01, FLOW-02)
-- [ ] 01-02-PLAN.md — Wire reducer into session page and fetch avatar_class from Supabase (FLOW-02, FLOW-03)
+- [x] 01-02-PLAN.md — Wire reducer into session page and fetch avatar_class from Supabase (FLOW-02, FLOW-03)
 
 ### Phase 2: Session Completion & Persistence
 **Goal**: Students see a satisfying completion experience after Session 1 and their progress is reliably saved
