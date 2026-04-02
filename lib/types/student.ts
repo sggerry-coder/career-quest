@@ -8,6 +8,7 @@ export interface Student {
   self_map: SelfMap | null;
   preferred_destinations: string[];
   current_session: number;
+  has_completed_session1: boolean;
   strong_subjects: string[] | null;
   weak_subjects: string[] | null;
   predicted_grades: Record<string, string> | null;
