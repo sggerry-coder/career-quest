@@ -9,8 +9,8 @@ Requirements for Phase 1 completion and quality hardening.
 
 ### Flow Engine
 
-- [ ] **FLOW-01**: Engagement checkpoints do not block progression — atomic state transitions via useReducer
-- [ ] **FLOW-02**: Flow state machine refactored from scattered useState to single useReducer with typed actions
+- [x] **FLOW-01**: Engagement checkpoints do not block progression — atomic state transitions via useReducer
+- [x] **FLOW-02**: Flow state machine refactored from scattered useState to single useReducer with typed actions
 - [ ] **FLOW-03**: Session narration uses student's selected class, not hardcoded "Wanderer"
 
 ### Session Completion
@@ -85,8 +85,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FLOW-01 | Phase 1 | Pending |
-| FLOW-02 | Phase 1 | Pending |
+| FLOW-01 | Phase 1 | Complete |
+| FLOW-02 | Phase 1 | Complete |
 | FLOW-03 | Phase 1 | Pending |
 | COMP-01 | Phase 2 | Pending |
 | COMP-02 | Phase 2 | Pending |
