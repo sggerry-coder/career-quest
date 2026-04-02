@@ -9,6 +9,7 @@ import ValuesSliders from "@/components/charts/values-sliders";
 import ClassLabel from "@/components/charts/class-label";
 import EmergingType from "@/components/charts/emerging-type";
 import BadgeUnlock from "@/components/badges/badge-unlock";
+import CompletionScreen from "@/components/quest/completion-screen";
 
 interface ScoreState {
   riasec: Record<string, number>;
@@ -25,6 +26,10 @@ interface RevealSequenceProps {
   tone: "quest" | "explorer";
   onRevealComplete: () => void;
   onSessionComplete: () => void;
+  persistResult?: { success: boolean; errorType?: string } | null;
+  onRetryPersist?: () => void;
+  onSignIn?: () => void;
+  onSaveExit?: () => void;
 }
 
 type RevealPhase =
@@ -39,6 +44,7 @@ type RevealPhase =
   | "confirmatory_intro"
   | "badge_unlock"
   | "comparison_hint"
+  | "session_complete"
   | "done";
 
 // CLASS label derivation
@@ -93,6 +99,10 @@ export default function RevealSequence({
   tone,
   onRevealComplete,
   onSessionComplete,
+  persistResult = null,
+  onRetryPersist = () => {},
+  onSignIn = () => {},
+  onSaveExit = () => {},
 }: RevealSequenceProps) {
   const [phase, setPhase] = useState<RevealPhase>("transition");
   const [showBadge, setShowBadge] = useState(false);
@@ -128,7 +138,7 @@ export default function RevealSequence({
     } else if (phase === "badge_unlock") {
       setPhase("comparison_hint");
     } else if (phase === "comparison_hint") {
-      onSessionComplete();
+      setPhase("session_complete");
     }
   }, [phase, onRevealComplete, onSessionComplete]);
 
@@ -170,6 +180,22 @@ export default function RevealSequence({
           setShowBadge(false);
           handleNext();
         }}
+      />
+    );
+  }
+
+  // Session complete celebration
+  if (phase === "session_complete") {
+    return (
+      <CompletionScreen
+        tone={tone}
+        classLabel={className}
+        scoreState={{ riasec: scoreState.riasec, strengths: scoreState.strengths }}
+        onViewDashboard={onSessionComplete}
+        onSaveExit={onSaveExit}
+        persistResult={persistResult}
+        onRetryPersist={onRetryPersist}
+        onSignIn={onSignIn}
       />
     );
   }
