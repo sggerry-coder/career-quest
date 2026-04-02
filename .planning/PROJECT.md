@@ -20,10 +20,9 @@ Students can complete Session 1 end-to-end — from character creation through a
 - ✓ Engagement checkpoints and block transition interstitials — existing
 - ✓ Supabase auth (anonymous) and session state persistence — existing
 - ✓ Dark theme with Framer Motion animations — existing
+- ✓ Fix Session 1 flow — useReducer state machine replaces scattered useState, engagement checkpoint deadlock resolved. Validated in Phase 1: Flow Engine Refactor
 
 ### Active
-
-- [ ] Fix Session 1 flow — progression blocks at engagement checkpoint ("Halfway there"), remaining question blocks never load
 - [ ] Complete Session 1 end state — animated Profile Reveal with score summary, badges unlocked, "Session Complete" state
 - [ ] Save & exit after Session 1 — clear completion state persisted, option to return later
 - [ ] Quality audit — robustness, code quality, scoring accuracy, efficiency, edge cases
