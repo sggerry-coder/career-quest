@@ -6,14 +6,15 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { useQuestState, type QuestState } from "@/hooks/use-quest-state";
+import { useQuestState, type QuestState, type QuestAction } from "@/hooks/use-quest-state";
 import { useScores, type ScoreState } from "@/hooks/use-scores";
-import type { ClientResponse, QuestionBlock } from "@/lib/types/quest";
+import type { ClientResponse } from "@/lib/types/quest";
 import { createClient } from "@/lib/supabase/client";
 
 interface QuestContextValue {
   questState: QuestState;
   scoreState: ScoreState;
+  dispatch: React.Dispatch<QuestAction>;
   actions: {
     answerQuestion: (
       response: ClientResponse,
@@ -25,9 +26,6 @@ interface QuestContextValue {
       rankings: Array<{ type: string; rank: number }>
     ) => void;
     undoLastAnswer: () => void;
-    advanceBlock: (nextBlock: QuestionBlock) => void;
-    triggerDiscoveryMode: () => void;
-    setSelectedAdaptiveIds: (ids: string[]) => void;
     takeSnapshot: () => void;
     persistCheckpoint: (type: "riasec" | "full" | "final") => Promise<boolean>;
   };
@@ -35,7 +33,7 @@ interface QuestContextValue {
 
 const QuestContext = createContext<QuestContextValue | null>(null);
 
-export function useQuest() {
+export function useQuest(): QuestContextValue {
   const context = useContext(QuestContext);
   if (!context) {
     throw new Error("useQuest must be used within a QuestProvider");
@@ -74,16 +72,8 @@ async function retryWithBackoff<T>(
   return lastResult;
 }
 
-export function QuestProvider({ children, studentId }: QuestProviderProps) {
-  const {
-    state: questState,
-    answerQuestion: questAnswerQuestion,
-    undoLastAnswer: questUndoLastAnswer,
-    advanceBlock,
-    triggerDiscoveryMode,
-    setSelectedAdaptiveIds,
-    setPersistenceFailed,
-  } = useQuestState();
+export function QuestProvider({ children, studentId }: QuestProviderProps): React.JSX.Element {
+  const { state: questState, dispatch } = useQuestState();
 
   const {
     scoreState,
@@ -99,39 +89,35 @@ export function QuestProvider({ children, studentId }: QuestProviderProps) {
       response: ClientResponse,
       frameworkSignals?: Record<string, number>,
       strengthSignal?: string
-    ) => {
-      // Update quest state
-      questAnswerQuestion(response);
-
-      // Update scores
+    ): void => {
+      // Scoring side effect (kept outside reducer)
       if (frameworkSignals) {
         processResponseWithSignals(response, frameworkSignals, strengthSignal);
       } else {
         processResponse(response);
       }
     },
-    [questAnswerQuestion, processResponse, processResponseWithSignals]
+    [processResponse, processResponseWithSignals]
   );
 
   const answerIpsative = useCallback(
     (
       response: ClientResponse,
       rankings: Array<{ type: string; rank: number }>
-    ) => {
-      questAnswerQuestion(response);
+    ): void => {
       processIpsativeResponse(rankings);
     },
-    [questAnswerQuestion, processIpsativeResponse]
+    [processIpsativeResponse]
   );
 
-  const undoLastAnswer = useCallback(() => {
+  const undoLastAnswer = useCallback((): void => {
     const lastResponse =
       questState.responses[questState.responses.length - 1];
     if (lastResponse) {
       removeLastResponse(lastResponse);
     }
-    questUndoLastAnswer();
-  }, [questState.responses, questUndoLastAnswer, removeLastResponse]);
+    dispatch({ type: "UNDO" });
+  }, [questState.responses, dispatch, removeLastResponse]);
 
   const persistCheckpoint = useCallback(
     async (type: "riasec" | "full" | "final"): Promise<boolean> => {
@@ -139,7 +125,7 @@ export function QuestProvider({ children, studentId }: QuestProviderProps) {
 
       try {
         if (type === "riasec") {
-          // Lightweight — just RIASEC + MI scores
+          // Lightweight -- just RIASEC + MI scores
           const result = await retryWithBackoff(() =>
             supabase
               .from("assessment_scores")
@@ -151,7 +137,6 @@ export function QuestProvider({ children, studentId }: QuestProviderProps) {
               })
           );
           if (result.error) {
-            setPersistenceFailed(true);
             return false;
           }
         } else if (type === "full" || type === "final") {
@@ -174,7 +159,6 @@ export function QuestProvider({ children, studentId }: QuestProviderProps) {
               supabase.from("session_responses").insert(sessionResponses)
             );
             if (responsesResult.error) {
-              setPersistenceFailed(true);
               return false;
             }
           }
@@ -192,7 +176,6 @@ export function QuestProvider({ children, studentId }: QuestProviderProps) {
             })
           );
           if (scoresResult.error) {
-            setPersistenceFailed(true);
             return false;
           }
 
@@ -204,7 +187,6 @@ export function QuestProvider({ children, studentId }: QuestProviderProps) {
               .eq("id", studentId)
           );
           if (studentResult.error) {
-            setPersistenceFailed(true);
             return false;
           }
 
@@ -221,26 +203,22 @@ export function QuestProvider({ children, studentId }: QuestProviderProps) {
           }
         }
 
-        setPersistenceFailed(false);
         return true;
       } catch {
-        setPersistenceFailed(true);
         return false;
       }
     },
-    [studentId, scoreState, questState.responses, setPersistenceFailed]
+    [studentId, scoreState, questState.responses]
   );
 
   const value: QuestContextValue = {
     questState,
     scoreState,
+    dispatch,
     actions: {
       answerQuestion,
       answerIpsative,
       undoLastAnswer,
-      advanceBlock,
-      triggerDiscoveryMode,
-      setSelectedAdaptiveIds,
       takeSnapshot,
       persistCheckpoint,
     },

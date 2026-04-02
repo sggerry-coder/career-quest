@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useCallback, useMemo } from "react";
+import { use, useEffect, useCallback, useMemo } from "react";
 import QuestionCard from "@/components/quest/question-card";
 import LikertSlider from "@/components/quest/likert-slider";
 import SpectrumSlider from "@/components/quest/spectrum-slider";
@@ -18,6 +18,7 @@ import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
 import { classDefinitions } from "@/lib/theme";
+import { createClient } from "@/lib/supabase/client";
 import type { Question, ClientResponse } from "@/lib/types/quest";
 
 // Block definitions with question index ranges
@@ -30,69 +31,90 @@ interface BlockDef {
   canUndo: boolean;
 }
 
-type FlowPhase =
-  | "questions"
-  | "block_transition"
-  | "engagement"
-  | "discovery_prompt"
-  | "selfmap"
-  | "reveal"
-  | "confirmatory"
-  | "complete";
+/**
+ * Map reducer transition narration keys (e.g. "warmup_to_riasec") to
+ * ClassDefinition narration keys used for block transition text.
+ */
+const TRANSITION_KEY_MAP: Record<string, keyof typeof classDefinitions[0]["narration"]> = {
+  warmup_to_riasec: "riasec_intro",
+  riasec_to_riasec_mi: "riasec_intro",
+  riasec_mi_to_mbti_values: "mbti_intro",
+};
 
 export default function Session({
   params,
 }: {
   params: Promise<{ id: string }>;
-}) {
+}): React.JSX.Element {
   const { id } = use(params);
+  const { state: questState, dispatch } = useQuestState();
   const {
-    state: questState,
-    answerQuestion,
-    undoLastAnswer,
-    triggerDiscoveryMode,
-  } = useQuestState();
+    flowPhase,
+    currentIndex,
+    direction,
+    transitionNarration,
+    adaptiveQuestions,
+    confirmIndex,
+    avatarClass,
+  } = questState;
 
   const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse } = useScores();
 
+  // Fetch the student's avatar_class from Supabase on mount (FLOW-03)
+  useEffect(() => {
+    async function loadStudentClass(): Promise<void> {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from("students")
+          .select("avatar_class")
+          .eq("id", user.id)
+          .single();
+        if (data?.avatar_class) {
+          dispatch({ type: "SET_AVATAR_CLASS", avatarClass: data.avatar_class });
+        }
+      } catch {
+        // Silent catch per project conventions -- falls back to "wanderer" default in reducer
+      }
+    }
+    loadStudentClass();
+  }, [dispatch]);
+
+  // Derive class definition from avatarClass (fetched from Supabase or default "wanderer")
+  const classDef = useMemo(() => {
+    return classDefinitions.find((c) => c.id === avatarClass)
+      ?? classDefinitions.find((c) => c.id === "wanderer")!;
+  }, [avatarClass]);
+
+  const avatarClassName = classDef.name.quest;
+
+  /**
+   * Resolve narration text for a block transition.
+   * The reducer stores keys like "warmup_to_riasec"; we map them to
+   * ClassDefinition narration keys and read the quest-tone text.
+   */
+  const getNarration = useCallback(
+    (key: string): string => {
+      const narrationKey = TRANSITION_KEY_MAP[key];
+      if (narrationKey) {
+        return classDef.narration[narrationKey]?.quest ?? "";
+      }
+      // Fallback: return the raw string (for any unmapped transitions)
+      return key;
+    },
+    [classDef]
+  );
+
   // Get questions for the current session
-  const sessionQuestions = useMemo(() => {
+  const sessionQuestions = useMemo((): Question[] => {
     const sessionNum = Number(id);
-    // Currently only session 1 is implemented
     if (sessionNum === 1) return session1CoreQuestions;
     return [];
   }, [id]);
 
-  // Helper: get class name based on a hardcoded default (no student context here)
-  const avatarClassName = useMemo(() => {
-    // Default class for the session; actual class is determined by character selection
-    const classDef = classDefinitions.find((c) => c.id === "wanderer");
-    return classDef?.name.quest ?? "Wanderer";
-  }, []);
-
-  // Helper: get narration text for a block transition
-  const getNarration = useCallback(
-    (key: "riasec_intro" | "mbti_intro" | "reveal_intro") => {
-      const classDef = classDefinitions.find((c) => c.id === "wanderer");
-      if (!classDef) return "";
-      return classDef.narration[key]?.quest ?? "";
-    },
-    []
-  );
-
-  const [flowPhase, setFlowPhase] = useState<FlowPhase>("questions");
-  const [currentIndex, setCurrentIndex] = useState(
-    questState.current_question_index
-  );
-  const [direction, setDirection] = useState<"left" | "right">("right");
-  const [transitionNarration, setTransitionNarration] = useState("");
-  const [adaptiveQuestions, setAdaptiveQuestions] = useState<Question[]>([]);
-  const [confirmIndex, setConfirmIndex] = useState(0);
-
-  // Track consecutive neutral Likert responses for discovery mode trigger
-  const [consecutiveNeutrals, setConsecutiveNeutrals] = useState(0);
-
-  const currentQuestion = useMemo(() => {
+  const currentQuestion = useMemo((): Question | null => {
     if (flowPhase === "confirmatory") {
       return adaptiveQuestions[confirmIndex] ?? null;
     }
@@ -100,7 +122,7 @@ export default function Session({
   }, [flowPhase, sessionQuestions, currentIndex, adaptiveQuestions, confirmIndex]);
 
   // Build block definitions from question data
-  const blocks = useMemo(() => {
+  const blocks = useMemo((): BlockDef[] => {
     const blockMap = new Map<string, BlockDef>();
     sessionQuestions.forEach((q, i) => {
       const existing = blockMap.get(q.block);
@@ -122,86 +144,24 @@ export default function Session({
     return Array.from(blockMap.values());
   }, [sessionQuestions]);
 
-  const currentBlock = useMemo(() => {
+  const currentBlock = useMemo((): BlockDef | undefined => {
     return blocks.find(
       (b) => currentIndex >= b.startIndex && currentIndex <= b.endIndex
     );
   }, [blocks, currentIndex]);
 
   // Time estimate based on remaining questions * 25s
-  const timeEstimate = useMemo(() => {
+  const timeEstimate = useMemo((): string => {
     const remaining = sessionQuestions.length - currentIndex;
     const seconds = remaining * 25;
     const minutes = Math.ceil(seconds / 60);
     return `${minutes} min`;
   }, [sessionQuestions.length, currentIndex]);
 
-  // Check for block transitions
-  const checkBlockTransition = useCallback(
-    (nextIndex: number) => {
-      const currentBlockKey = sessionQuestions[currentIndex]?.block;
-      const nextBlockKey = sessionQuestions[nextIndex]?.block;
-
-      if (!nextBlockKey || currentBlockKey === nextBlockKey) return false;
-
-      const transitions: Record<string, string> = {
-        warmup_riasec: getNarration("riasec_intro"),
-        warmup_riasec_mi: getNarration("riasec_intro"),
-        riasec_mbti: getNarration("mbti_intro"),
-        riasec_mi_mbti: getNarration("mbti_intro"),
-        riasec_mbti_values: getNarration("mbti_intro"),
-        mbti_values: "One more thing \u2014 what drives you?",
-        values_selfmap: "Almost there... one moment of reflection.",
-      };
-
-      const key = `${currentBlockKey}_${nextBlockKey}`;
-      const narration = transitions[key];
-      if (narration) {
-        setTransitionNarration(narration);
-        setFlowPhase("block_transition");
-        return true;
-      }
-      return false;
-    },
-    [currentIndex, sessionQuestions, getNarration]
-  );
-
-  // Check for engagement checkpoint (question 7 in RIASEC block)
-  const checkEngagement = useCallback(
-    (nextIndex: number) => {
-      const q = sessionQuestions[nextIndex];
-      if (q && q.block === "riasec" && nextIndex === (currentBlock?.startIndex ?? 0) + 7) {
-        setFlowPhase("engagement");
-        return true;
-      }
-      return false;
-    },
-    [sessionQuestions, currentBlock]
-  );
-
-  // Check for discovery mode trigger
-  const checkDiscoveryMode = useCallback(
-    (responseValue: number, questionType: string) => {
-      if (questState.discovery_mode_active) return false;
-      if (questionType !== "likert") return false;
-
-      const newCount = responseValue === 3 ? consecutiveNeutrals + 1 : 0;
-      setConsecutiveNeutrals(newCount);
-
-      if (newCount >= 3) {
-        setFlowPhase("discovery_prompt");
-        return true;
-      }
-      return false;
-    },
-    [questState.discovery_mode_active, consecutiveNeutrals]
-  );
-
-  // Handle answer submission
+  // Handle answer submission -- dispatches to reducer for atomic state transition
   const handleAnswer = useCallback(
-    (value: number | string, label?: string) => {
+    (value: number | string, label?: string): void => {
       if (!currentQuestion) return;
-
       const numericValue = typeof value === "string" ? 0 : value;
       const responseLabel = label ?? String(value);
 
@@ -214,78 +174,32 @@ export default function Session({
         answered_at: Date.now(),
       };
 
-      // Submit to quest state
-      answerQuestion(response);
+      // Dispatch to reducer (ATOMIC state transition -- FLOW-01 fix)
+      dispatch({
+        type: "ANSWER_QUESTION",
+        response,
+        question: currentQuestion,
+        sessionQuestions,
+      });
 
-      // Process scoring - use framework signals if available on the selected option
+      // Scoring side effect (kept OUTSIDE reducer per research pitfall #2)
       const selectedOption = currentQuestion.options.find(
         (o) => String(o.value) === String(value) || o.label === label
       );
       if (selectedOption?.framework_signals) {
-        processResponseWithSignals(
-          response,
-          selectedOption.framework_signals,
-          selectedOption.strength_signal
-        );
+        processResponseWithSignals(response, selectedOption.framework_signals, selectedOption.strength_signal);
       } else {
         processResponse(response);
       }
-
-      // Check discovery mode trigger (only for Likert in RIASEC block)
-      if (
-        currentQuestion.question_type === "likert" &&
-        currentQuestion.block === "riasec"
-      ) {
-        if (checkDiscoveryMode(numericValue, "likert")) return;
-      }
-
-      // Advance to next question
-      const nextIndex = currentIndex + 1;
-      setDirection("right");
-
-      // Check if we've reached the end of all core questions
-      if (nextIndex >= sessionQuestions.length) {
-        // Move to self-map capture
-        setFlowPhase("selfmap");
-        return;
-      }
-
-      // Check block transition
-      if (checkBlockTransition(nextIndex)) {
-        setCurrentIndex(nextIndex);
-        return;
-      }
-
-      // Check engagement checkpoint
-      if (checkEngagement(nextIndex)) {
-        setCurrentIndex(nextIndex);
-        return;
-      }
-
-      setCurrentIndex(nextIndex);
     },
-    [
-      currentQuestion,
-      currentIndex,
-      sessionQuestions,
-      answerQuestion,
-      processResponse,
-      processResponseWithSignals,
-      checkDiscoveryMode,
-      checkBlockTransition,
-      checkEngagement,
-    ]
+    [currentQuestion, sessionQuestions, dispatch, processResponse, processResponseWithSignals]
   );
 
   // Handle ipsative ranking completion
   const handleIpsativeComplete = useCallback(
-    (ranked: { value: string; rank: number }[]) => {
+    (ranked: { value: string; rank: number }[]): void => {
       if (!currentQuestion) return;
-
-      // Process ipsative scores
-      processIpsativeResponse(
-        ranked.map((r) => ({ type: r.value, rank: r.rank }))
-      );
+      processIpsativeResponse(ranked.map((r) => ({ type: r.value, rank: r.rank })));
 
       const response: ClientResponse = {
         question_id: currentQuestion.id,
@@ -296,85 +210,46 @@ export default function Session({
         answered_at: Date.now(),
       };
 
-      answerQuestion(response);
-
-      // Advance
-      const nextIndex = currentIndex + 1;
-      setDirection("right");
-      if (nextIndex >= sessionQuestions.length) {
-        setFlowPhase("selfmap");
-        return;
-      }
-      if (checkBlockTransition(nextIndex)) {
-        setCurrentIndex(nextIndex);
-        return;
-      }
-      setCurrentIndex(nextIndex);
+      dispatch({ type: "ANSWER_IPSATIVE", response, sessionQuestions });
     },
-    [
-      currentQuestion,
-      currentIndex,
-      sessionQuestions,
-      processIpsativeResponse,
-      answerQuestion,
-      checkBlockTransition,
-    ]
+    [currentQuestion, sessionQuestions, dispatch, processIpsativeResponse]
   );
 
   // Handle undo
-  const handleUndo = useCallback(() => {
-    if (currentIndex <= 0) return;
-    setDirection("left");
-    undoLastAnswer();
-    setCurrentIndex(currentIndex - 1);
-  }, [currentIndex, undoLastAnswer]);
+  const handleUndo = useCallback((): void => {
+    dispatch({ type: "UNDO" });
+  }, [dispatch]);
 
   // Handle skip (advance without recording a response)
-  const handleSkip = useCallback(() => {
-    const nextIndex = currentIndex + 1;
-    setDirection("right");
-    if (nextIndex >= sessionQuestions.length) {
-      setFlowPhase("selfmap");
-      return;
-    }
-    if (checkBlockTransition(nextIndex)) {
-      setCurrentIndex(nextIndex);
-      return;
-    }
-    setCurrentIndex(nextIndex);
-  }, [
-    currentIndex,
-    sessionQuestions,
-    checkBlockTransition,
-  ]);
+  const handleSkip = useCallback((): void => {
+    dispatch({ type: "SKIP", sessionQuestions });
+  }, [dispatch, sessionQuestions]);
 
   // Handle block transition complete
-  const handleTransitionComplete = useCallback(() => {
-    setFlowPhase("questions");
-  }, []);
+  const handleTransitionComplete = useCallback((): void => {
+    dispatch({ type: "DISMISS_BLOCK_TRANSITION" });
+  }, [dispatch]);
 
   // Handle engagement continue
-  const handleEngagementContinue = useCallback(() => {
-    setFlowPhase("questions");
-  }, []);
+  const handleEngagementContinue = useCallback((): void => {
+    dispatch({ type: "DISMISS_ENGAGEMENT" });
+  }, [dispatch]);
 
   // Handle discovery mode activation
-  const handleDiscoveryContinue = useCallback(() => {
-    triggerDiscoveryMode();
-    setFlowPhase("questions");
-  }, [triggerDiscoveryMode]);
+  const handleDiscoveryContinue = useCallback((): void => {
+    dispatch({ type: "DISMISS_DISCOVERY" });
+  }, [dispatch]);
 
   // Handle self-map completion
   const handleSelfMapComplete = useCallback(
-    (data: { clarity: number; sources: string[]; perceived_strengths: string[] }) => {
-      // Self-map data captured; move to reveal
-      setFlowPhase("reveal");
+    (_data: { clarity: number; sources: string[]; perceived_strengths: string[] }): void => {
+      dispatch({ type: "ENTER_REVEAL" });
     },
-    []
+    [dispatch]
   );
 
   // Handle reveal sequence completion (moves to confirmatory)
-  const handleRevealComplete = useCallback(() => {
+  const handleRevealComplete = useCallback((): void => {
     const adaptive = selectAdaptiveQuestions({
       riasecScores: scoreState.riasec,
       riasecRaw: scoreState.riasec_raw,
@@ -384,17 +259,14 @@ export default function Session({
       mbtiRaw: scoreState.mbti_raw,
       pool: session1AdaptivePool,
     });
-    setAdaptiveQuestions(adaptive);
-    setConfirmIndex(0);
-    setFlowPhase("confirmatory");
-  }, [scoreState]);
+    dispatch({ type: "ENTER_CONFIRMATORY", adaptiveQuestions: adaptive });
+  }, [scoreState, dispatch]);
 
   // Handle confirmatory answer
   const handleConfirmatoryAnswer = useCallback(
-    (value: number | string, label?: string) => {
+    (value: number | string, label?: string): void => {
       const q = adaptiveQuestions[confirmIndex];
       if (!q) return;
-
       const numericValue = typeof value === "string" ? 0 : value;
       const response: ClientResponse = {
         question_id: q.id,
@@ -405,22 +277,10 @@ export default function Session({
         answered_at: Date.now(),
       };
 
-      answerQuestion(response);
+      dispatch({ type: "ANSWER_CONFIRMATORY", response });
       processResponse(response);
-
-      if (confirmIndex + 1 >= adaptiveQuestions.length) {
-        setFlowPhase("complete");
-      } else {
-        setDirection("right");
-        setConfirmIndex(confirmIndex + 1);
-      }
     },
-    [
-      adaptiveQuestions,
-      confirmIndex,
-      answerQuestion,
-      processResponse,
-    ]
+    [adaptiveQuestions, confirmIndex, dispatch, processResponse]
   );
 
   // Render the correct input component based on question_type
@@ -428,7 +288,7 @@ export default function Session({
     (
       question: Question,
       onSubmit: (value: number | string, label?: string) => void
-    ) => {
+    ): React.ReactNode => {
       switch (question.question_type) {
         case "likert":
           return (
@@ -512,7 +372,7 @@ export default function Session({
   if (flowPhase === "block_transition") {
     return (
       <BlockTransition
-        narrationText={transitionNarration}
+        narrationText={getNarration(transitionNarration)}
         onComplete={handleTransitionComplete}
       />
     );
@@ -551,7 +411,7 @@ export default function Session({
         className={avatarClassName}
         tone="quest"
         onRevealComplete={handleRevealComplete}
-        onSessionComplete={() => setFlowPhase("complete")}
+        onSessionComplete={() => dispatch({ type: "COMPLETE_SESSION" })}
       />
     );
   }
