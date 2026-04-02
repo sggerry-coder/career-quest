@@ -44,12 +44,13 @@ Plans:
   3. Returning student who completed Session 1 sees their saved dashboard (not a restart prompt)
   4. Student can save and exit after completion, with confirmation that their data is preserved
   5. When persistence fails, student sees an error message with a retry button (not silent failure)
-**Plans**: TBD
+**Plans**: 3 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — TDD: Score validation, error classification, Student type update, and database migration (DATA-02, DATA-03, COMP-03)
+- [ ] 02-02-PLAN.md — CompletionScreen with confetti, persistence refactor with validation/error handling, reveal sequence extension (COMP-01, COMP-02, COMP-04, DATA-01)
+- [ ] 02-03-PLAN.md — Completion-aware routing on landing page, dashboard, and session page wiring (COMP-03)
 
 ### Phase 3: Scoring Quality
 **Goal**: Scoring results are accurate, honest about uncertainty, and handle edge cases gracefully
@@ -86,6 +87,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Flow Engine Refactor | 0/2 | Not started | - |
-| 2. Session Completion & Persistence | 0/0 | Not started | - |
+| 2. Session Completion & Persistence | 0/3 | Not started | - |
 | 3. Scoring Quality | 0/0 | Not started | - |
 | 4. Quality Audit | 0/0 | Not started | - |
