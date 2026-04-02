@@ -51,17 +51,19 @@ Source: `app/globals.css` existing `--cq-card-padding: 1.5rem` and `--cq-gap: 1r
 
 | Role | Size | Weight | Line Height |
 |------|------|--------|-------------|
+| Label | 12px (`text-xs`) | 400 (regular) | 1.4 |
 | Body | 14px (`text-sm`) | 400 (regular) | 1.5 (`leading-relaxed`) |
-| Label | 12px (`text-xs`) | 500 (medium) | 1.4 |
 | Heading | 20px (`text-xl`) | 600 (semibold) | 1.2 |
-| Display | 28px (`text-2xl`) | 700 (bold) | 1.2 |
+| Display | 28px (`text-2xl`) | 600 (semibold) | 1.2 |
+
+Weights declared: **2** -- 400 (regular) and 600 (semibold). Visual hierarchy between Heading and Display achieved through size difference (20px vs 28px), not weight. Labels use uppercase `tracking-wider` for distinction at 12px rather than a separate weight.
 
 Phase-specific usage:
-- **"Quest Chapter 1 Complete" header:** Display size (28px), bold, `text-white`
-- **Score summary labels:** Label size (12px), medium, `text-white/70`, uppercase tracking-wider
-- **Completion body text:** Body size (14px), regular, `text-white/60`
-- **Button labels:** 16px (`text-base`), 600 weight -- matches existing `.cq-button` at `font-size: 1rem; font-weight: 600`
-- **Toast/banner text:** Body size (14px), regular, `text-white/80`
+- **"Quest Chapter 1 Complete" header:** Display size (28px), semibold 600, `text-white`
+- **Score summary labels:** Label size (12px), regular 400, `text-white/70`, uppercase `tracking-wider`
+- **Completion body text:** Body size (14px), regular 400, `text-white/60`
+- **Button labels:** Body size (14px), semibold 600 -- matches existing `.cq-button` pattern with `font-weight: 600`
+- **Toast/banner text:** Body size (14px), regular 400, `text-white/80`
 
 Source: Detected from existing components -- `text-xl font-semibold` in headings, `text-sm` for body, `text-xs` for labels throughout `components/quest/` and `components/badges/`.
 
