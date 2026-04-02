@@ -17,14 +17,14 @@ Requirements for Phase 1 completion and quality hardening.
 
 - [ ] **COMP-01**: Animated Profile Reveal displays after all Session 1 questions are answered (RIASEC, MI, MBTI scores, badges)
 - [ ] **COMP-02**: Clear "Session Complete" visual state with celebration particles (canvas-confetti)
-- [ ] **COMP-03**: Completion flag persisted to Supabase so returning users see their progress
+- [x] **COMP-03**: Completion flag persisted to Supabase so returning users see their progress
 - [ ] **COMP-04**: Save & exit option after Session 1 completion with confirmation
 
 ### Data Integrity
 
 - [ ] **DATA-01**: Persistence failures surfaced to user with actionable retry UI (not silent)
-- [ ] **DATA-02**: Retry logic distinguishes recoverable errors (network/timeout) from non-recoverable (auth/permission)
-- [ ] **DATA-03**: Scores validated before persistence to catch calculation errors
+- [x] **DATA-02**: Retry logic distinguishes recoverable errors (network/timeout) from non-recoverable (auth/permission)
+- [x] **DATA-03**: Scores validated before persistence to catch calculation errors
 
 ### Scoring Quality
 
@@ -90,11 +90,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FLOW-03 | Phase 1 | Complete |
 | COMP-01 | Phase 2 | Pending |
 | COMP-02 | Phase 2 | Pending |
-| COMP-03 | Phase 2 | Pending |
+| COMP-03 | Phase 2 | Complete |
 | COMP-04 | Phase 2 | Pending |
 | DATA-01 | Phase 2 | Pending |
-| DATA-02 | Phase 2 | Pending |
-| DATA-03 | Phase 2 | Pending |
+| DATA-02 | Phase 2 | Complete |
+| DATA-03 | Phase 2 | Complete |
 | SCORE-01 | Phase 3 | Pending |
 | SCORE-02 | Phase 3 | Pending |
 | SCORE-03 | Phase 3 | Pending |

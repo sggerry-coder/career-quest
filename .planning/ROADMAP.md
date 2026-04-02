@@ -48,7 +48,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 02-01-PLAN.md — TDD: Score validation, error classification, Student type update, and database migration (DATA-02, DATA-03, COMP-03)
+- [x] 02-01-PLAN.md — TDD: Score validation, error classification, Student type update, and database migration (DATA-02, DATA-03, COMP-03)
 - [ ] 02-02-PLAN.md — CompletionScreen with confetti, persistence refactor with validation/error handling, reveal sequence extension (COMP-01, COMP-02, COMP-04, DATA-01)
 - [ ] 02-03-PLAN.md — Completion-aware routing on landing page, dashboard, and session page wiring (COMP-03)
 
@@ -87,6 +87,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Flow Engine Refactor | 0/2 | Not started | - |
-| 2. Session Completion & Persistence | 0/3 | Not started | - |
+| 2. Session Completion & Persistence | 1/3 | In Progress|  |
 | 3. Scoring Quality | 0/0 | Not started | - |
 | 4. Quality Audit | 0/0 | Not started | - |
