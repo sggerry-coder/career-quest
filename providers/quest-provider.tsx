@@ -10,6 +10,8 @@ import { useQuestState, type QuestState, type QuestAction } from "@/hooks/use-qu
 import { useScores, type ScoreState } from "@/hooks/use-scores";
 import type { ClientResponse } from "@/lib/types/quest";
 import { createClient } from "@/lib/supabase/client";
+import { validateScoresBeforePersist } from "@/lib/validation/score-validation";
+import { classifySupabaseError, type PersistResult } from "@/lib/validation/error-classification";
 
 interface QuestContextValue {
   questState: QuestState;
@@ -27,7 +29,7 @@ interface QuestContextValue {
     ) => void;
     undoLastAnswer: () => void;
     takeSnapshot: () => void;
-    persistCheckpoint: (type: "riasec" | "full" | "final") => Promise<boolean>;
+    persistCheckpoint: (type: "riasec" | "full" | "final") => Promise<PersistResult>;
   };
 }
 
@@ -120,7 +122,7 @@ export function QuestProvider({ children, studentId }: QuestProviderProps): Reac
   }, [questState.responses, dispatch, removeLastResponse]);
 
   const persistCheckpoint = useCallback(
-    async (type: "riasec" | "full" | "final"): Promise<boolean> => {
+    async (type: "riasec" | "full" | "final"): Promise<PersistResult> => {
       const supabase = createClient();
 
       try {
@@ -137,10 +139,20 @@ export function QuestProvider({ children, studentId }: QuestProviderProps): Reac
               })
           );
           if (result.error) {
-            return false;
+            const errorType = classifySupabaseError(result.error);
+            return { success: false, errorType, message: String((result.error as { message?: string }).message ?? "Unknown error") };
           }
         } else if (type === "full" || type === "final") {
-          // Write session responses
+          // Pre-save validation
+          const validation = validateScoresBeforePersist(
+            { riasec: scoreState.riasec, mi: scoreState.mi, mbti: scoreState.mbti, values: scoreState.values },
+            questState.responses.length
+          );
+          if (!validation.valid) {
+            return { success: false, errorType: "unknown", message: `Validation failed: ${validation.errors.join("; ")}` };
+          }
+
+          // Write session responses using upsert for idempotency
           const sessionResponses = questState.responses.map((r) => ({
             student_id: studentId,
             session_number: 1,
@@ -156,10 +168,13 @@ export function QuestProvider({ children, studentId }: QuestProviderProps): Reac
 
           if (sessionResponses.length > 0) {
             const responsesResult = await retryWithBackoff(() =>
-              supabase.from("session_responses").insert(sessionResponses)
+              supabase.from("session_responses").upsert(sessionResponses, {
+                onConflict: "student_id,question_id,session_number",
+              })
             );
             if (responsesResult.error) {
-              return false;
+              const errorType = classifySupabaseError(responsesResult.error);
+              return { success: false, errorType, message: String((responsesResult.error as { message?: string }).message ?? "Unknown error") };
             }
           }
 
@@ -176,21 +191,23 @@ export function QuestProvider({ children, studentId }: QuestProviderProps): Reac
             })
           );
           if (scoresResult.error) {
-            return false;
-          }
-
-          // Update student session
-          const studentResult = await retryWithBackoff(() =>
-            supabase
-              .from("students")
-              .update({ current_session: 1 })
-              .eq("id", studentId)
-          );
-          if (studentResult.error) {
-            return false;
+            const errorType = classifySupabaseError(scoresResult.error);
+            return { success: false, errorType, message: String((scoresResult.error as { message?: string }).message ?? "Unknown error") };
           }
 
           if (type === "final") {
+            // Update student session and mark completion atomically
+            const studentResult = await retryWithBackoff(() =>
+              supabase
+                .from("students")
+                .update({ current_session: 1, has_completed_session1: true })
+                .eq("id", studentId)
+            );
+            if (studentResult.error) {
+              const errorType = classifySupabaseError(studentResult.error);
+              return { success: false, errorType, message: String((studentResult.error as { message?: string }).message ?? "Unknown error") };
+            }
+
             // Insert Self-Discoverer achievement
             await supabase.from("achievements").upsert(
               {
@@ -203,9 +220,10 @@ export function QuestProvider({ children, studentId }: QuestProviderProps): Reac
           }
         }
 
-        return true;
-      } catch {
-        return false;
+        return { success: true };
+      } catch (err) {
+        const errorType = classifySupabaseError(err);
+        return { success: false, errorType, message: err instanceof Error ? err.message : "Unknown error" };
       }
     },
     [studentId, scoreState, questState.responses]
