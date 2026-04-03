@@ -33,13 +33,15 @@ export function calculateRiasecType(rawScores: number[]): number {
 
 /**
  * Calculate normalized scores for all 6 RIASEC types from raw Likert data.
+ * Guards against NaN: any non-finite result is replaced with 0.
  */
 export function calculateAllRiasec(
   raw: Record<string, number[]>
 ): Record<string, number> {
   const result: Record<string, number> = {};
   for (const type of RIASEC_TYPES) {
-    result[type] = calculateRiasecType(raw[type] || []);
+    const score = calculateRiasecType(raw[type] || []);
+    result[type] = Number.isFinite(score) ? score : 0;
   }
   return result;
 }

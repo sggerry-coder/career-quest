@@ -28,6 +28,7 @@ export function calculateMiDimension(
 
 /**
  * Calculate normalized scores for all 8 MI dimensions.
+ * Guards against NaN: any non-finite result is replaced with 0.
  */
 export function calculateAllMi(
   raw: Record<string, number[]>,
@@ -35,7 +36,8 @@ export function calculateAllMi(
 ): Record<string, number> {
   const result: Record<string, number> = {};
   for (const dim of MI_DIMENSIONS) {
-    result[dim] = calculateMiDimension(raw[dim] || [], maxWeight);
+    const score = calculateMiDimension(raw[dim] || [], maxWeight);
+    result[dim] = Number.isFinite(score) ? score : 0;
   }
   return result;
 }

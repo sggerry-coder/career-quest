@@ -37,13 +37,15 @@ export function calculateMbtiDichotomy(rawValues: number[]): number {
 
 /**
  * Calculate normalized scores for all 4 MBTI dichotomies.
+ * Guards against NaN: any non-finite result is replaced with 0.
  */
 export function calculateAllMbti(
   raw: Record<string, number[]>
 ): Record<string, number> {
   const result: Record<string, number> = {};
   for (const dichotomy of MBTI_DICHOTOMIES) {
-    result[dichotomy] = calculateMbtiDichotomy(raw[dichotomy] || []);
+    const score = calculateMbtiDichotomy(raw[dichotomy] || []);
+    result[dichotomy] = Number.isFinite(score) ? score : 0;
   }
   return result;
 }
@@ -58,18 +60,31 @@ export function isStillEmerging(score: number): boolean {
 
 /**
  * Derive the emerging MBTI type string from all dichotomy scores.
- * Returns type (e.g. "IN_J") and display (e.g. "I N _ J").
+ * Returns type (e.g. "IN_J"), display (e.g. "I N _ J"), and hasEmerging flag.
+ *
+ * @param scores - Normalized dichotomy scores (-100 to +100)
+ * @param rawCounts - Optional count of raw responses per dichotomy.
+ *   When provided, dichotomies with fewer than 3 responses are forced
+ *   to underscore regardless of score magnitude.
  */
-export function deriveEmergingType(scores: Record<string, number>): {
+export function deriveEmergingType(
+  scores: Record<string, number>,
+  rawCounts?: Record<string, number>
+): {
   type: string;
   display: string;
+  hasEmerging: boolean;
 } {
   const letters: string[] = [];
+  let hasEmerging = false;
 
   for (const dichotomy of MBTI_DICHOTOMIES) {
     const score = scores[dichotomy] ?? 0;
-    if (isStillEmerging(score)) {
+    const count = rawCounts?.[dichotomy] ?? Infinity;
+
+    if (count < 3 || isStillEmerging(score)) {
       letters.push("_");
+      hasEmerging = true;
     } else {
       const [negativeLetter, positiveLetter] = DICHOTOMY_POLES[dichotomy];
       letters.push(score < 0 ? negativeLetter : positiveLetter);
@@ -79,5 +94,6 @@ export function deriveEmergingType(scores: Record<string, number>): {
   return {
     type: letters.join(""),
     display: letters.join(" "),
+    hasEmerging,
   };
 }

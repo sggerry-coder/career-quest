@@ -31,13 +31,15 @@ export function calculateValuesDimension(rawValues: number[]): number {
 
 /**
  * Calculate normalized scores for all values dimensions.
+ * Guards against NaN: any non-finite result is replaced with 0.
  */
 export function calculateAllValues(
   raw: Record<string, number[]>
 ): Record<string, number> {
   const result: Record<string, number> = {};
   for (const dim of VALUES_DIMENSIONS) {
-    result[dim] = calculateValuesDimension(raw[dim] || []);
+    const score = calculateValuesDimension(raw[dim] || []);
+    result[dim] = Number.isFinite(score) ? score : 0;
   }
   return result;
 }
