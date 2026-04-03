@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Flow Engine Refactor** - Fix the engagement checkpoint deadlock and replace scattered useState with a single useReducer state machine
 - [x] **Phase 2: Session Completion & Persistence** - Deliver the full end-of-session experience with reliable data persistence
-- [ ] **Phase 3: Scoring Quality** - Harden scoring correctness, undo behavior, and edge case handling
-- [ ] **Phase 4: Quality Audit** - Code quality review, test coverage, performance, and robustness hardening
+- [x] **Phase 3: Scoring Quality** - Harden scoring correctness, undo behavior, and edge case handling
+- [x] **Phase 4: Quality Audit** - Code quality review, test coverage, performance, and robustness hardening
 
 ## Phase Details
 
@@ -90,5 +90,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Flow Engine Refactor | 2/2 | Complete | 2026-04-02 |
 | 2. Session Completion & Persistence | 3/3 | Complete | 2026-04-03 |
-| 3. Scoring Quality | 1/2 | In Progress|  |
-| 4. Quality Audit | 0/2 | Not started | - |
+| 3. Scoring Quality | 2/2 | Complete | 2026-04-03 |
+| 4. Quality Audit | 2/2 | Complete | 2026-04-03 |
