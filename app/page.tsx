@@ -87,7 +87,7 @@ export default function Home() {
 
   const handleContinueQuest = useCallback(
     (student: Student) => {
-      if (student.current_session >= 1) {
+      if (student.has_completed_session1) {
         router.push("/quest/dashboard");
       } else {
         router.push("/quest/session/1");
@@ -204,7 +204,7 @@ export default function Home() {
                 {classDef
                   ? classDef.name[displayTone]
                   : "Adventurer"}{" "}
-                &middot; Session {student.current_session || 1}
+                &middot; {student.has_completed_session1 ? "Session 1 Complete" : `Session ${student.current_session || 1}`}
               </p>
             </div>
           </div>

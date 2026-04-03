@@ -18,6 +18,7 @@ interface StudentData {
   avatar_class: string;
   tone: "quest" | "explorer";
   current_session: number;
+  has_completed_session1: boolean;
   self_map: {
     clarity: number;
     sources: string[];
@@ -147,7 +148,7 @@ export default function Dashboard() {
         const [studentRes, scoresRes, achievementsRes] = await Promise.all([
           supabase
             .from("students")
-            .select("name, age, avatar_class, tone, current_session, self_map")
+            .select("name, age, avatar_class, tone, current_session, has_completed_session1, self_map")
             .eq("user_id", user.id)
             .single(),
           supabase
@@ -194,10 +195,11 @@ export default function Dashboard() {
   if (!student || !scores) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
-        <p className="text-white/50 mb-4">No quest data found.</p>
+        <h2 className="text-xl font-semibold text-white mb-2">No results yet</h2>
+        <p className="text-sm text-white/50 mb-6">Complete Session 1 to see your profile. Start your quest!</p>
         <a
           href="/"
-          className="rounded-xl bg-[var(--color-primary)] px-6 py-3 text-white font-medium"
+          className="rounded-xl bg-[var(--color-primary)] px-6 py-3 text-white font-medium min-h-[44px]"
         >
           Start Your Quest
         </a>
@@ -208,7 +210,7 @@ export default function Dashboard() {
   const className =
     CLASS_NAMES[student.avatar_class]?.[student.tone] ?? student.avatar_class;
   const classIcon = CLASS_ICONS[student.avatar_class] ?? "\u{2728}";
-  const hasCompletedSession1 = student.current_session >= 1;
+  const hasCompletedSession1 = student.has_completed_session1;
   const xp = calculateXp(student.current_session, hasCompletedSession1);
   const classLabel = deriveClassLabel(scores.riasec_scores);
   const emergingTypeCode = deriveEmergingTypeCode(scores.mbti_indicators);
