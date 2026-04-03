@@ -9,5 +9,8 @@ export default defineConfig({
   },
   test: {
     include: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
+    environmentMatchGlobs: [
+      ["**/__tests__/**/*.test.tsx", "jsdom"],
+    ],
   },
 });
