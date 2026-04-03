@@ -79,7 +79,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — ESLint fixes, dead code removal, and scoring boundary-value tests (AUDIT-01, AUDIT-02)
-- [ ] 04-02-PLAN.md — Error boundaries at route and section level, bundle audit with fixes (AUDIT-03, AUDIT-04)
+- [x] 04-02-PLAN.md — Error boundaries at route and section level, bundle audit with fixes (AUDIT-03, AUDIT-04)
 
 ## Progress
 

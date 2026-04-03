@@ -36,8 +36,8 @@ Requirements for Phase 1 completion and quality hardening.
 
 - [x] **AUDIT-01**: Code quality review — conventions adherence, dead code removal, type safety improvements
 - [x] **AUDIT-02**: Scoring accuracy verification — unit tests cover edge cases, boundary values, empty inputs
-- [ ] **AUDIT-03**: Performance check — no animation jank, reasonable bundle size, no unnecessary re-renders
-- [ ] **AUDIT-04**: Robustness check — error boundaries, network failure recovery, state consistency
+- [x] **AUDIT-03**: Performance check — no animation jank, reasonable bundle size, no unnecessary re-renders
+- [x] **AUDIT-04**: Robustness check — error boundaries, network failure recovery, state consistency
 
 ## v2 Requirements
 
@@ -100,8 +100,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCORE-03 | Phase 3 | Complete |
 | AUDIT-01 | Phase 4 | Complete |
 | AUDIT-02 | Phase 4 | Complete |
-| AUDIT-03 | Phase 4 | Pending |
-| AUDIT-04 | Phase 4 | Pending |
+| AUDIT-03 | Phase 4 | Complete |
+| AUDIT-04 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 17 total
