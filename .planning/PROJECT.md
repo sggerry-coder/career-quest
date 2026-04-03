@@ -21,10 +21,10 @@ Students can complete Session 1 end-to-end — from character creation through a
 - ✓ Supabase auth (anonymous) and session state persistence — existing
 - ✓ Dark theme with Framer Motion animations — existing
 - ✓ Fix Session 1 flow — useReducer state machine replaces scattered useState, engagement checkpoint deadlock resolved. Validated in Phase 1: Flow Engine Refactor
+- ✓ Complete Session 1 end state — animated Profile Reveal with confetti celebration, score summary cards, badges unlocked, "Session Complete" state. Validated in Phase 2: Session Completion & Persistence
+- ✓ Save & exit after Session 1 — completion persisted with validation/error classification, upsert idempotency, PersistenceBanner for failures, ConfirmationToast, completion-aware routing. Validated in Phase 2: Session Completion & Persistence
 
 ### Active
-- [ ] Complete Session 1 end state — animated Profile Reveal with score summary, badges unlocked, "Session Complete" state
-- [ ] Save & exit after Session 1 — clear completion state persisted, option to return later
 - [ ] Quality audit — robustness, code quality, scoring accuracy, efficiency, edge cases
 
 ### Out of Scope
@@ -39,10 +39,10 @@ Students can complete Session 1 end-to-end — from character creation through a
 ## Context
 
 - **Stack:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Framer Motion, Recharts, Supabase, Vitest
-- **Brownfield:** 62 commits, Session 1 flow engine and scoring are functional but flow is broken mid-session
+- **Brownfield:** 80+ commits, Session 1 flow engine refactored (Phase 1), completion & persistence built (Phase 2)
 - **Codebase map:** `.planning/codebase/` has full architecture, stack, conventions, and concerns documentation
 - **Scope doc:** `career-quest-scope.md` contains the full 6-phase vision and data model
-- **Known issues from codebase mapping:** Silent persistence failures, hardcoded "wanderer" class, no input validation, retry logic doesn't distinguish error types
+- **Known issues from codebase mapping:** No input validation on some paths, scoring edge cases to audit in Phase 3
 
 ## Constraints
 
@@ -58,6 +58,10 @@ Students can complete Session 1 end-to-end — from character creation through a
 | Anonymous auth with optional save | Lower friction for students | ✓ Good |
 | Client-side scoring for Sessions 1-2 | Zero API cost per student | ✓ Good |
 | Block-based question flow engine | Supports adaptive branching and engagement checkpoints | ✓ Good |
+| useReducer state machine for quest flow | Atomic state transitions, eliminates engagement desync (FLOW-01) | ✓ Good — Phase 1 |
+| PersistResult with error classification | Enables retry UI with distinct network/auth handling | ✓ Good — Phase 2 |
+| session_responses upsert with onConflict | Idempotent retries prevent duplicate rows | ✓ Good — Phase 2 |
+| onPersistStart callback from RevealSequence | Persist fires when CompletionScreen appears, not on user exit | ✓ Good — Phase 2 |
 
 ## Evolution
 
@@ -77,4 +81,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 after initialization*
+*Last updated: 2026-04-03 after Phase 2 completion*
