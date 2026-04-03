@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useCallback, useMemo } from "react";
+import { use, useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import QuestionCard from "@/components/quest/question-card";
 import LikertSlider from "@/components/quest/likert-slider";
 import SpectrumSlider from "@/components/quest/spectrum-slider";
@@ -12,6 +13,7 @@ import EngagementCheckpoint from "@/components/quest/engagement-checkpoint";
 import DiscoveryModePrompt from "@/components/quest/discovery-mode-prompt";
 import SelfMapCapture from "@/components/selfmap/self-map-capture";
 import RevealSequence from "@/components/quest/reveal-sequence";
+import ConfirmationToast from "@/components/ui/confirmation-toast";
 import { useQuestState } from "@/hooks/use-quest-state";
 import { useScores } from "@/hooks/use-scores";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
@@ -19,6 +21,9 @@ import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
 import { classDefinitions } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
+import { validateScoresBeforePersist } from "@/lib/validation/score-validation";
+import { classifySupabaseError } from "@/lib/validation/error-classification";
+import type { PersistResult } from "@/lib/validation/error-classification";
 import type { Question, ClientResponse } from "@/lib/types/quest";
 
 // Block definitions with question index ranges
@@ -89,6 +94,148 @@ export default function Session({
   }, [avatarClass]);
 
   const avatarClassName = classDef.name.quest;
+
+  // Persistence state for completion flow
+  const router = useRouter();
+  const [persistResult, setPersistResult] = useState<PersistResult | null>(null);
+  const [showSaveToast, setShowSaveToast] = useState(false);
+  const [studentId, setStudentId] = useState<string | null>(null);
+
+  // Capture student ID from the avatar_class fetch (reuse auth user)
+  useEffect(() => {
+    async function loadStudentId(): Promise<void> {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) setStudentId(user.id);
+      } catch {
+        // Silent catch per project conventions
+      }
+    }
+    loadStudentId();
+  }, []);
+
+  /**
+   * Run final persistence: scores, responses, completion flag.
+   * Returns a PersistResult without calling setState -- callers handle state.
+   */
+  const runFinalPersist = useCallback(async (): Promise<PersistResult> => {
+    if (!studentId) {
+      return { success: false, errorType: "auth", message: "No authenticated user" };
+    }
+
+    try {
+      const supabase = createClient();
+
+      // Pre-save validation
+      const validation = validateScoresBeforePersist(
+        { riasec: scoreState.riasec, mi: scoreState.mi, mbti: scoreState.mbti, values: scoreState.values },
+        questState.responses.length
+      );
+      if (!validation.valid) {
+        return { success: false, errorType: "unknown", message: `Validation failed: ${validation.errors.join("; ")}` };
+      }
+
+      // Write session responses using upsert for idempotency
+      const sessionResponses = questState.responses.map((r) => ({
+        student_id: studentId,
+        session_number: 1,
+        question_id: r.question_id,
+        question_text: r.response_label,
+        response_text: String(r.response_value),
+        framework_signals: {
+          framework: r.framework,
+          target: r.framework_target,
+          value: r.response_value,
+        },
+      }));
+
+      if (sessionResponses.length > 0) {
+        const responsesResult = await supabase.from("session_responses").upsert(sessionResponses, {
+          onConflict: "student_id,question_id,session_number",
+        });
+        if (responsesResult.error) {
+          const errorType = classifySupabaseError(responsesResult.error);
+          return { success: false, errorType, message: String((responsesResult.error as { message?: string }).message ?? "Unknown error") };
+        }
+      }
+
+      // Write computed scores
+      const scoresResult = await supabase.from("assessment_scores").upsert({
+        student_id: studentId,
+        riasec_scores: scoreState.riasec,
+        mi_scores: scoreState.mi,
+        mbti_indicators: scoreState.mbti,
+        values_compass: scoreState.values,
+        strengths: scoreState.strengths,
+        updated_at: new Date().toISOString(),
+      });
+      if (scoresResult.error) {
+        const errorType = classifySupabaseError(scoresResult.error);
+        return { success: false, errorType, message: String((scoresResult.error as { message?: string }).message ?? "Unknown error") };
+      }
+
+      // Mark student as completed
+      const studentResult = await supabase
+        .from("students")
+        .update({ current_session: 1, has_completed_session1: true })
+        .eq("id", studentId);
+      if (studentResult.error) {
+        const errorType = classifySupabaseError(studentResult.error);
+        return { success: false, errorType, message: String((studentResult.error as { message?: string }).message ?? "Unknown error") };
+      }
+
+      // Insert Self-Discoverer achievement
+      await supabase.from("achievements").upsert(
+        { student_id: studentId, badge_id: "self_discoverer", unlocked_at: new Date().toISOString() },
+        { onConflict: "student_id,badge_id" }
+      );
+
+      return { success: true };
+    } catch (err) {
+      const errorType = classifySupabaseError(err);
+      return { success: false, errorType, message: err instanceof Error ? err.message : "Unknown error" };
+    }
+  }, [studentId, scoreState, questState.responses]);
+
+  /** Retry persistence after a failure. */
+  const handleRetryPersist = useCallback(async (): Promise<void> => {
+    setPersistResult(null);
+    const result = await runFinalPersist();
+    setPersistResult(result);
+  }, [runFinalPersist]);
+
+  /** Navigate to landing for sign-in. */
+  const handleSignIn = useCallback((): void => {
+    router.push("/");
+  }, [router]);
+
+  /** Save and exit: show toast then redirect. */
+  const handleSaveExit = useCallback(async (): Promise<void> => {
+    if (persistResult?.success) {
+      setShowSaveToast(true);
+      setTimeout(() => router.push("/"), 2200);
+    } else {
+      const result = await runFinalPersist();
+      setPersistResult(result);
+      if (result.success) {
+        setShowSaveToast(true);
+        setTimeout(() => router.push("/"), 2200);
+      }
+    }
+  }, [persistResult, runFinalPersist, router]);
+
+  // Auto-persist when entering complete phase
+  const hasPersisted = useRef(false);
+  useEffect(() => {
+    if (flowPhase !== "complete" || hasPersisted.current) return;
+    hasPersisted.current = true;
+    // Subscribe to the persist result via async callback (not synchronous setState in effect)
+    runFinalPersist().then(
+      (result) => setPersistResult(result),
+      () => setPersistResult({ success: false, errorType: "unknown", message: "Unexpected error" })
+    );
+  }, [flowPhase, runFinalPersist]);
 
   /**
    * Resolve narration text for a block transition.
@@ -406,13 +553,24 @@ export default function Session({
   // Reveal sequence
   if (flowPhase === "reveal") {
     return (
-      <RevealSequence
-        scoreState={scoreState}
-        className={avatarClassName}
-        tone="quest"
-        onRevealComplete={handleRevealComplete}
-        onSessionComplete={() => dispatch({ type: "COMPLETE_SESSION" })}
-      />
+      <>
+        <RevealSequence
+          scoreState={scoreState}
+          className={avatarClassName}
+          tone="quest"
+          onRevealComplete={handleRevealComplete}
+          onSessionComplete={() => dispatch({ type: "COMPLETE_SESSION" })}
+          persistResult={persistResult}
+          onRetryPersist={handleRetryPersist}
+          onSignIn={handleSignIn}
+          onSaveExit={handleSaveExit}
+        />
+        <ConfirmationToast
+          message="Your progress is saved!"
+          visible={showSaveToast}
+          onDismiss={() => setShowSaveToast(false)}
+        />
+      </>
     );
   }
 
@@ -451,27 +609,34 @@ export default function Session({
   // Session complete
   if (flowPhase === "complete") {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
-        <span className="text-6xl mb-6">{"\u{1F389}"}</span>
-        <h1 className="text-2xl font-bold text-white mb-2">
-          Quest progress saved!
-        </h1>
-        <p className="text-white/60 mb-8">
-          Session 1 complete. Your profile has been revealed.
-        </p>
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          <a
-            href="/quest/dashboard"
-            className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white text-center shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-          >
-            View Dashboard
-          </a>
-          <div className="flex items-center gap-2 justify-center text-white/30 mt-4">
-            <span className="text-lg">{"\u{1F512}"}</span>
-            <span className="text-sm">Session 2 coming soon</span>
+      <>
+        <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
+          <span className="text-6xl mb-6">{"\u{1F389}"}</span>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Quest progress saved!
+          </h1>
+          <p className="text-white/60 mb-8">
+            Session 1 complete. Your profile has been revealed.
+          </p>
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <a
+              href="/quest/dashboard"
+              className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white text-center shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
+            >
+              View Dashboard
+            </a>
+            <div className="flex items-center gap-2 justify-center text-white/30 mt-4">
+              <span className="text-lg">{"\u{1F512}"}</span>
+              <span className="text-sm">Session 2 coming soon</span>
+            </div>
           </div>
         </div>
-      </div>
+        <ConfirmationToast
+          message="Your progress is saved!"
+          visible={showSaveToast}
+          onDismiss={() => setShowSaveToast(false)}
+        />
+      </>
     );
   }
 
