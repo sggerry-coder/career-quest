@@ -75,10 +75,11 @@ Plans:
   2. Unit tests cover scoring edge cases including boundary values, empty inputs, and single-response sets
   3. Animations run without visible jank on mid-range hardware; no unnecessary component re-renders
   4. Error boundaries catch rendering failures; network errors trigger recovery UI instead of blank screens
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md — ESLint fixes, dead code removal, and scoring boundary-value tests (AUDIT-01, AUDIT-02)
+- [ ] 04-02-PLAN.md — Error boundaries at route and section level, bundle audit with fixes (AUDIT-03, AUDIT-04)
 
 ## Progress
 
@@ -90,4 +91,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Flow Engine Refactor | 2/2 | Complete | 2026-04-02 |
 | 2. Session Completion & Persistence | 3/3 | Complete | 2026-04-03 |
 | 3. Scoring Quality | 1/2 | In Progress|  |
-| 4. Quality Audit | 0/0 | Not started | - |
+| 4. Quality Audit | 0/2 | Not started | - |
