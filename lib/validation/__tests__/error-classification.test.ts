@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classifySupabaseError, type ErrorCategory } from "../error-classification";
+import { classifySupabaseError } from "../error-classification";
 
 describe("classifySupabaseError", () => {
   describe("auth errors", () => {

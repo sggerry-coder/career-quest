@@ -63,7 +63,7 @@ describe("validateScoresBeforePersist", () => {
 
   describe("missing keys", () => {
     it("detects missing MBTI key JP", () => {
-      const { JP: _, ...incompleteMbti } = validMbti;
+      const incompleteMbti: Record<string, number> = { EI: validMbti.EI, SN: validMbti.SN, TF: validMbti.TF };
       const result = validateScoresBeforePersist(
         { riasec: validRiasec, mi: validMi, mbti: incompleteMbti, values: validValues },
         25
@@ -99,12 +99,12 @@ describe("validateScoresBeforePersist", () => {
 
   describe("multiple errors", () => {
     it("accumulates NaN and missing key errors", () => {
-      const { JP: _, ...incompleteMbti } = validMbti;
+      const incompleteMbti2: Record<string, number> = { EI: validMbti.EI, SN: validMbti.SN, TF: validMbti.TF };
       const result = validateScoresBeforePersist(
         {
           riasec: { ...validRiasec, R: NaN },
           mi: validMi,
-          mbti: incompleteMbti,
+          mbti: incompleteMbti2,
           values: validValues,
         },
         25

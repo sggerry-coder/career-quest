@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import RiasecBars from "@/components/charts/riasec-bars";
 import MiPreviewBars from "@/components/charts/mi-preview-bars";
 import MbtiSliders from "@/components/charts/mbti-sliders";
 import ValuesSliders from "@/components/charts/values-sliders";
-import ClassLabel from "@/components/charts/class-label";
 import EmergingType from "@/components/charts/emerging-type";
 import BadgeRow from "@/components/badges/badge-row";
 import XpBar from "@/components/ui/xp-bar";
@@ -141,12 +141,12 @@ export default function Dashboard() {
       <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
         <h2 className="text-xl font-semibold text-white mb-2">No results yet</h2>
         <p className="text-sm text-white/50 mb-6">Complete Session 1 to see your profile. Start your quest!</p>
-        <a
+        <Link
           href="/"
           className="rounded-xl bg-[var(--color-primary)] px-6 py-3 text-white font-medium min-h-[44px]"
         >
           Start Your Quest
-        </a>
+        </Link>
       </div>
     );
   }

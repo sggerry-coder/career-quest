@@ -5,7 +5,7 @@ import {
   buildSignalsFootprint,
   buildIpsativeFootprint,
 } from "../use-scores";
-import type { ScoreState, ResponseSignalFootprint } from "../use-scores";
+import type { ScoreState } from "../use-scores";
 
 function makeEmptyState(): ScoreState {
   return {

@@ -3,16 +3,14 @@
 import { useCallback, useState } from "react";
 import type { ClientResponse } from "@/lib/types/quest";
 import {
-  calculateRiasecType,
   calculateAllRiasec,
   mergeIpsativeScores,
   detectAcquiescenceBias,
   deriveClassLabel,
 } from "@/lib/scoring/riasec";
-import { calculateAllMi, getTopMi } from "@/lib/scoring/mi";
+import { calculateAllMi } from "@/lib/scoring/mi";
 import {
   calculateAllMbti,
-  deriveEmergingType,
 } from "@/lib/scoring/mbti";
 import { calculateAllValues } from "@/lib/scoring/values";
 import { getTopStrengths } from "@/lib/scoring/strengths";

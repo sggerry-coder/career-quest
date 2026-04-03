@@ -394,7 +394,7 @@ export default function Session({
 
   // Handle self-map completion
   const handleSelfMapComplete = useCallback(
-    (_data: { clarity: number; sources: string[]; perceived_strengths: string[] }): void => {
+    (): void => {
       dispatch({ type: "ENTER_REVEAL" });
     },
     [dispatch]

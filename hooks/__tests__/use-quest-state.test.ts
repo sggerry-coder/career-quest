@@ -3,7 +3,6 @@ import {
   questReducer,
   type QuestState,
   type QuestAction,
-  type FlowPhase,
 } from "@/hooks/use-quest-state";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import type { ClientResponse, Question } from "@/lib/types/quest";

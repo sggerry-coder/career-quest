@@ -110,13 +110,7 @@ export default function RevealSequence({
     } else if (phase === "comparison_hint") {
       setPhase("session_complete");
     }
-  }, [phase, onRevealComplete, onSessionComplete]);
-
-  // Called after confirmatory round completes (from parent)
-  const handlePostConfirmatory = useCallback(() => {
-    setShowBadge(true);
-    setPhase("badge_unlock");
-  }, []);
+  }, [phase, onRevealComplete]);
 
   // Transition card
   if (phase === "transition") {
