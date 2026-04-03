@@ -63,7 +63,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — TDD: Multi-framework undo with signal footprint tracking and handleUndo wiring (SCORE-02)
+- [x] 03-01-PLAN.md — TDD: Multi-framework undo with signal footprint tracking and handleUndo wiring (SCORE-02)
 - [ ] 03-02-PLAN.md — Still Emerging MBTI label with raw count check, NaN guards in scoring functions, duplicate consolidation (SCORE-01, SCORE-03)
 
 ### Phase 4: Quality Audit
@@ -89,5 +89,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Flow Engine Refactor | 2/2 | Complete | 2026-04-02 |
 | 2. Session Completion & Persistence | 3/3 | Complete | 2026-04-03 |
-| 3. Scoring Quality | 0/2 | Not started | - |
+| 3. Scoring Quality | 1/2 | In Progress|  |
 | 4. Quality Audit | 0/0 | Not started | - |
