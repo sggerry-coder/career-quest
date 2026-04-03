@@ -28,9 +28,9 @@ Requirements for Phase 1 completion and quality hardening.
 
 ### Scoring Quality
 
-- [ ] **SCORE-01**: MBTI results prominently display "emerging" label when fewer than 3 questions per dichotomy answered
+- [x] **SCORE-01**: MBTI results prominently display "emerging" label when fewer than 3 questions per dichotomy answered
 - [x] **SCORE-02**: Undo correctly reverses all framework signal scores, not just one framework
-- [ ] **SCORE-03**: Graceful handling for empty/minimal response sets (no NaN, no blank charts)
+- [x] **SCORE-03**: Graceful handling for empty/minimal response sets (no NaN, no blank charts)
 
 ### Quality Audit
 
@@ -95,9 +95,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-01 | Phase 2 | Complete |
 | DATA-02 | Phase 2 | Complete |
 | DATA-03 | Phase 2 | Complete |
-| SCORE-01 | Phase 3 | Pending |
+| SCORE-01 | Phase 3 | Complete |
 | SCORE-02 | Phase 3 | Complete |
-| SCORE-03 | Phase 3 | Pending |
+| SCORE-03 | Phase 3 | Complete |
 | AUDIT-01 | Phase 4 | Pending |
 | AUDIT-02 | Phase 4 | Pending |
 | AUDIT-03 | Phase 4 | Pending |

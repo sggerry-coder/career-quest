@@ -64,7 +64,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — TDD: Multi-framework undo with signal footprint tracking and handleUndo wiring (SCORE-02)
-- [ ] 03-02-PLAN.md — Still Emerging MBTI label with raw count check, NaN guards in scoring functions, duplicate consolidation (SCORE-01, SCORE-03)
+- [x] 03-02-PLAN.md — Still Emerging MBTI label with raw count check, NaN guards in scoring functions, duplicate consolidation (SCORE-01, SCORE-03)
 
 ### Phase 4: Quality Audit
 **Goal**: The codebase is clean, well-tested, performant, and robust against failure modes
