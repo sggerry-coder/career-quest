@@ -10,11 +10,14 @@ import ClassLabel from "@/components/charts/class-label";
 import EmergingType from "@/components/charts/emerging-type";
 import BadgeUnlock from "@/components/badges/badge-unlock";
 import CompletionScreen from "@/components/quest/completion-screen";
+import { deriveEmergingType } from "@/lib/scoring/mbti";
+import { deriveClassLabel } from "@/lib/scoring/riasec";
 
 interface ScoreState {
   riasec: Record<string, number>;
   mi: Record<string, number>;
   mbti: Record<string, number>;
+  mbti_raw?: Record<string, number[]>;
   values: Record<string, number>;
   strengths: string[];
   class_label: string;
@@ -48,52 +51,6 @@ type RevealPhase =
   | "session_complete"
   | "done";
 
-// CLASS label derivation
-function deriveClassLabel(scores: Record<string, number>): string {
-  const DISPLAY_NAMES: Record<string, string> = {
-    R: "MAKER",
-    I: "INVESTIGATOR",
-    A: "CREATOR",
-    S: "HELPER",
-    E: "LEADER",
-    C: "ORGANIZER",
-  };
-
-  const sorted = Object.entries(scores).sort(([, a], [, b]) => b - a);
-  if (sorted.length < 2) return "SEEKER";
-
-  const [top, second, third] = sorted;
-  const gap23 = third ? second[1] - third[1] : second[1];
-
-  if (top[1] > 50 && second[1] > 50 && gap23 > 10) {
-    return `${DISPLAY_NAMES[top[0]] ?? top[0]}-${DISPLAY_NAMES[second[0]] ?? second[0]}`;
-  }
-  if (top[1] > 50) {
-    if (top[1] - second[1] > 15) return DISPLAY_NAMES[top[0]] ?? top[0];
-    return "EXPLORER";
-  }
-  if (sorted.every(([, v]) => v < 40)) return "SEEKER";
-  return "EXPLORER";
-}
-
-// Derive MBTI type code
-function deriveEmergingTypeCode(mbti: Record<string, number>): string {
-  const threshold = 35;
-  const pairs: [string, string, string][] = [
-    ["EI", "E", "I"],
-    ["SN", "S", "N"],
-    ["TF", "T", "F"],
-    ["JP", "J", "P"],
-  ];
-  return pairs
-    .map(([key, left, right]) => {
-      const score = mbti[key] ?? 0;
-      if (Math.abs(score) < threshold) return "_";
-      return score < 0 ? left : right;
-    })
-    .join(" ");
-}
-
 export default function RevealSequence({
   scoreState,
   className,
@@ -110,7 +67,11 @@ export default function RevealSequence({
   const [showBadge, setShowBadge] = useState(false);
 
   const classLabel = deriveClassLabel(scoreState.riasec);
-  const emergingType = deriveEmergingTypeCode(scoreState.mbti);
+  const mbtiRawCounts: Record<string, number> = {};
+  for (const key of ["EI", "SN", "TF", "JP"]) {
+    mbtiRawCounts[key] = scoreState.mbti_raw?.[key]?.length ?? 0;
+  }
+  const { display: emergingType, hasEmerging } = deriveEmergingType(scoreState.mbti, mbtiRawCounts);
 
   // Auto-advance from transition
   useEffect(() => {
@@ -286,6 +247,9 @@ export default function RevealSequence({
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
               <RiasecBars scores={scoreState.riasec} classLabel={classLabel} />
+              {Object.values(scoreState.riasec).every(v => v === 0) && (
+                <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
+              )}
             </motion.div>
           )}
 
@@ -319,6 +283,9 @@ export default function RevealSequence({
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
               <MiPreviewBars scores={scoreState.mi} />
+              {Object.values(scoreState.mi).every(v => v === 0) && (
+                <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
+              )}
             </motion.div>
           )}
 
@@ -334,6 +301,9 @@ export default function RevealSequence({
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
               <MbtiSliders scores={scoreState.mbti} />
+              {Object.values(scoreState.mbti).every(v => v === 0) && (
+                <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
+              )}
             </motion.div>
           )}
 
@@ -347,7 +317,7 @@ export default function RevealSequence({
               animate={{ opacity: 1 }}
               className="flex justify-center"
             >
-              <EmergingType typeCode={emergingType} descriptor="" />
+              <EmergingType typeCode={emergingType} descriptor="" hasEmerging={hasEmerging} />
             </motion.div>
           )}
 
@@ -360,6 +330,9 @@ export default function RevealSequence({
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
               <ValuesSliders scores={scoreState.values} />
+              {Object.values(scoreState.values).every(v => v === 0) && (
+                <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
+              )}
             </motion.div>
           )}
 

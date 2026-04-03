@@ -11,6 +11,8 @@ import EmergingType from "@/components/charts/emerging-type";
 import BadgeRow from "@/components/badges/badge-row";
 import XpBar from "@/components/ui/xp-bar";
 import { badges as allBadgeDefinitions } from "@/data/badges";
+import { deriveEmergingType } from "@/lib/scoring/mbti";
+import { deriveClassLabel } from "@/lib/scoring/riasec";
 
 interface StudentData {
   name: string;
@@ -46,64 +48,6 @@ function calculateXp(currentSession: number, hasCompletedSession1: boolean): num
     xp += 50 + 100 + 50 + 100 + 25 + 25; // warmup + riasec + mi + mbti + values + confirmatory
   }
   return xp;
-}
-
-// CLASS label derivation
-function deriveClassLabel(scores: Record<string, number>): string {
-  const DISPLAY_NAMES: Record<string, string> = {
-    R: "MAKER",
-    I: "INVESTIGATOR",
-    A: "CREATOR",
-    S: "HELPER",
-    E: "LEADER",
-    C: "ORGANIZER",
-  };
-
-  const sorted = Object.entries(scores)
-    .sort(([, a], [, b]) => b - a);
-
-  if (sorted.length < 2) return "SEEKER";
-
-  const [top, second, third] = sorted;
-  const gap23 = third ? second[1] - third[1] : second[1];
-
-  if (top[1] > 50 && second[1] > 50 && gap23 > 10) {
-    return `${DISPLAY_NAMES[top[0]] ?? top[0]}-${DISPLAY_NAMES[second[0]] ?? second[0]}`;
-  }
-  if (top[1] > 50) {
-    if (top[1] - second[1] > 15) {
-      return DISPLAY_NAMES[top[0]] ?? top[0];
-    }
-    return "EXPLORER";
-  }
-  if (sorted.every(([, v]) => v < 40)) {
-    return "SEEKER";
-  }
-  return "EXPLORER";
-}
-
-// Derive MBTI type string with underscore for emerging
-function deriveEmergingTypeCode(mbti: Record<string, number>): string {
-  const threshold = 35;
-  const letters: string[] = [];
-
-  const pairs: [string, string, string][] = [
-    ["EI", "E", "I"],
-    ["SN", "S", "N"],
-    ["TF", "T", "F"],
-    ["JP", "J", "P"],
-  ];
-
-  for (const [key, left, right] of pairs) {
-    const score = mbti[key] ?? 0;
-    if (Math.abs(score) < threshold) {
-      letters.push("_");
-    } else {
-      letters.push(score < 0 ? left : right);
-    }
-  }
-
-  return letters.join(" ");
 }
 
 // CLASS name mapping for avatar
@@ -213,7 +157,7 @@ export default function Dashboard() {
   const hasCompletedSession1 = student.has_completed_session1;
   const xp = calculateXp(student.current_session, hasCompletedSession1);
   const classLabel = deriveClassLabel(scores.riasec_scores);
-  const emergingTypeCode = deriveEmergingTypeCode(scores.mbti_indicators);
+  const { display: emergingTypeCode, hasEmerging } = deriveEmergingType(scores.mbti_indicators);
 
   return (
     <div className="min-h-dvh bg-gradient-to-b from-[#0f0a1e] to-[#1a1035] px-4 py-6 pb-20">
@@ -264,6 +208,7 @@ export default function Dashboard() {
               <EmergingType
                 typeCode={emergingTypeCode}
                 descriptor=""
+                hasEmerging={hasEmerging}
               />
             </div>
           </div>

@@ -7,11 +7,14 @@ interface EmergingTypeProps {
   typeCode: string;
   /** e.g. "The Strategic Visionary" */
   descriptor: string;
+  /** true if any dichotomy is underdetermined */
+  hasEmerging?: boolean;
 }
 
 export default function EmergingType({
   typeCode,
   descriptor,
+  hasEmerging,
 }: EmergingTypeProps) {
   const letters = typeCode.split(" ");
 
@@ -50,6 +53,16 @@ export default function EmergingType({
       >
         {descriptor}
       </motion.p>
+      {hasEmerging && (
+        <div className="mt-2 flex flex-col items-center gap-1">
+          <span className="rounded-full bg-white/10 border border-white/20 px-3 py-0.5 text-xs font-medium text-white/60">
+            Still Emerging
+          </span>
+          <p className="text-xs text-white/30 max-w-[200px] text-center">
+            Some preferences need more data to pin down
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 }
