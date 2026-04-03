@@ -12,8 +12,8 @@ Career Quest has Session 1 roughly 80% built -- scoring, charts, badges, and rev
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Flow Engine Refactor** - Fix the engagement checkpoint deadlock and replace scattered useState with a single useReducer state machine
-- [ ] **Phase 2: Session Completion & Persistence** - Deliver the full end-of-session experience with reliable data persistence
+- [x] **Phase 1: Flow Engine Refactor** - Fix the engagement checkpoint deadlock and replace scattered useState with a single useReducer state machine
+- [x] **Phase 2: Session Completion & Persistence** - Deliver the full end-of-session experience with reliable data persistence
 - [ ] **Phase 3: Scoring Quality** - Harden scoring correctness, undo behavior, and edge case handling
 - [ ] **Phase 4: Quality Audit** - Code quality review, test coverage, performance, and robustness hardening
 
@@ -86,7 +86,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Flow Engine Refactor | 0/2 | Not started | - |
-| 2. Session Completion & Persistence | 1/3 | In Progress|  |
+| 1. Flow Engine Refactor | 2/2 | Complete | 2026-04-02 |
+| 2. Session Completion & Persistence | 3/3 | Complete | 2026-04-03 |
 | 3. Scoring Quality | 0/0 | Not started | - |
 | 4. Quality Audit | 0/0 | Not started | - |
