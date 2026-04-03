@@ -25,6 +25,7 @@ import { validateScoresBeforePersist } from "@/lib/validation/score-validation";
 import { classifySupabaseError } from "@/lib/validation/error-classification";
 import type { PersistResult } from "@/lib/validation/error-classification";
 import type { Question, ClientResponse } from "@/lib/types/quest";
+import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
 // Block definitions with question index ranges
 interface BlockDef {
@@ -559,6 +560,7 @@ export default function Session({
   if (flowPhase === "reveal") {
     return (
       <>
+        <SectionErrorBoundary name="Profile Reveal">
         <RevealSequence
           scoreState={scoreState}
           className={avatarClassName}
@@ -571,6 +573,7 @@ export default function Session({
           onSaveExit={handleSaveExit}
           onPersistStart={handlePersistStart}
         />
+        </SectionErrorBoundary>
         <ConfirmationToast
           message="Your progress is saved!"
           visible={showSaveToast}
@@ -678,20 +681,22 @@ export default function Session({
           timeEstimate={timeEstimate}
         />
       </div>
-      <QuestionCard
-        questionText={currentQuestion.question_text}
-        questionIndex={currentIndex}
-        totalQuestions={sessionQuestions.length}
-        blockName={currentBlock?.name ?? ""}
-        timeEstimate={`~${timeEstimate} left`}
-        direction={direction}
-        canUndo={canUndo}
-        onUndo={handleUndo}
-        canSkip={canSkip}
-        onSkip={handleSkip}
-      >
-        {renderInput(currentQuestion, handleAnswer)}
-      </QuestionCard>
+      <SectionErrorBoundary name="Question">
+        <QuestionCard
+          questionText={currentQuestion.question_text}
+          questionIndex={currentIndex}
+          totalQuestions={sessionQuestions.length}
+          blockName={currentBlock?.name ?? ""}
+          timeEstimate={`~${timeEstimate} left`}
+          direction={direction}
+          canUndo={canUndo}
+          onUndo={handleUndo}
+          canSkip={canSkip}
+          onSkip={handleSkip}
+        >
+          {renderInput(currentQuestion, handleAnswer)}
+        </QuestionCard>
+      </SectionErrorBoundary>
     </div>
   );
 }

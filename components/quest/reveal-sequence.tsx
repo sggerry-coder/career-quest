@@ -12,6 +12,7 @@ import BadgeUnlock from "@/components/badges/badge-unlock";
 import CompletionScreen from "@/components/quest/completion-screen";
 import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
+import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
 interface ScoreState {
   riasec: Record<string, number>;
@@ -151,16 +152,18 @@ export default function RevealSequence({
   // Session complete celebration
   if (phase === "session_complete") {
     return (
-      <CompletionScreen
-        tone={tone}
-        classLabel={className}
-        scoreState={{ riasec: scoreState.riasec, strengths: scoreState.strengths }}
-        onViewDashboard={onSessionComplete}
-        onSaveExit={onSaveExit}
-        persistResult={persistResult}
-        onRetryPersist={onRetryPersist}
-        onSignIn={onSignIn}
-      />
+      <SectionErrorBoundary name="Completion">
+        <CompletionScreen
+          tone={tone}
+          classLabel={className}
+          scoreState={{ riasec: scoreState.riasec, strengths: scoreState.strengths }}
+          onViewDashboard={onSessionComplete}
+          onSaveExit={onSaveExit}
+          persistResult={persistResult}
+          onRetryPersist={onRetryPersist}
+          onSignIn={onSignIn}
+        />
+      </SectionErrorBoundary>
     );
   }
 
@@ -225,6 +228,7 @@ export default function RevealSequence({
   return (
     <div className="min-h-dvh px-4 py-8">
       <div className="mx-auto max-w-lg flex flex-col items-center gap-8">
+        <SectionErrorBoundary name="Score Cards">
         <AnimatePresence mode="wait">
           {/* RIASEC */}
           {(phase === "riasec" ||
@@ -347,6 +351,7 @@ export default function RevealSequence({
             </motion.div>
           )}
         </AnimatePresence>
+        </SectionErrorBoundary>
 
         {/* Next button */}
         <button

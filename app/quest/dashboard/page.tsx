@@ -13,6 +13,7 @@ import XpBar from "@/components/ui/xp-bar";
 import { badges as allBadgeDefinitions } from "@/data/badges";
 import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
+import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
 interface StudentData {
   name: string;
@@ -183,94 +184,99 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* === Badge inventory === */}
-        <div className="mb-8">
-          <BadgeRow
-            allBadges={allBadgeDefinitions}
-            unlockedIds={unlockedBadgeIds}
-          />
-        </div>
-
-        {/* === Two-column grid === */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-          {/* Left: RIASEC + CLASS */}
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-            <RiasecBars
-              scores={scores.riasec_scores}
-              classLabel={classLabel}
+        {/* === Quest Progress section (error boundary per D-02) === */}
+        <SectionErrorBoundary name="Quest Progress">
+          {/* === Badge inventory === */}
+          <div className="mb-8">
+            <BadgeRow
+              allBadges={allBadgeDefinitions}
+              unlockedIds={unlockedBadgeIds}
             />
           </div>
 
-          {/* Right: MBTI + Emerging type */}
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-            <MbtiSliders scores={scores.mbti_indicators} />
-            <div className="mt-4 flex justify-center">
-              <EmergingType
-                typeCode={emergingTypeCode}
-                descriptor=""
-                hasEmerging={hasEmerging}
+        {/* === Score Charts section (error boundary per D-02) === */}
+        <SectionErrorBoundary name="Score Charts">
+          {/* === Two-column grid === */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            {/* Left: RIASEC + CLASS */}
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+              <RiasecBars
+                scores={scores.riasec_scores}
+                classLabel={classLabel}
               />
             </div>
-          </div>
-        </div>
 
-        {/* === Second row === */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-          {/* Left: MI preview */}
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-            <MiPreviewBars scores={scores.mi_scores} />
+            {/* Right: MBTI + Emerging type */}
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+              <MbtiSliders scores={scores.mbti_indicators} />
+              <div className="mt-4 flex justify-center">
+                <EmergingType
+                  typeCode={emergingTypeCode}
+                  descriptor=""
+                  hasEmerging={hasEmerging}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Right: Values preview */}
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-            <ValuesSliders scores={scores.values_compass} />
-          </div>
-        </div>
+          {/* === Second row === */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            {/* Left: MI preview */}
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+              <MiPreviewBars scores={scores.mi_scores} />
+            </div>
 
-        {/* === Locked panels === */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-          <div className="rounded-2xl bg-white/5 border border-white/5 p-5 opacity-40">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">{"\u{1F512}"}</span>
-              <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">
-                Full Learning Styles
+            {/* Right: Values preview */}
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+              <ValuesSliders scores={scores.values_compass} />
+            </div>
+          </div>
+
+          {/* === Locked panels === */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            <div className="rounded-2xl bg-white/5 border border-white/5 p-5 opacity-40">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">{"\u{1F512}"}</span>
+                <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">
+                  Full Learning Styles
+                </h3>
+              </div>
+              <p className="text-xs text-white/20">
+                Deepens in Session 2
+              </p>
+            </div>
+            <div className="rounded-2xl bg-white/5 border border-white/5 p-5 opacity-40">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">{"\u{1F512}"}</span>
+                <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">
+                  Full Values Compass
+                </h3>
+              </div>
+              <p className="text-xs text-white/20">
+                Deepens in Session 2
+              </p>
+            </div>
+          </div>
+
+          {/* === Strengths section === */}
+          {scores.strengths && scores.strengths.length > 0 && (
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-5 mb-6">
+              <h3 className="text-sm font-semibold text-white/70 mb-3 uppercase tracking-wider">
+                Detected Strengths
               </h3>
+              <div className="flex flex-wrap gap-2">
+                {scores.strengths.map((s) => (
+                  <span
+                    key={s}
+                    className="rounded-full bg-[var(--color-accent)]/15 px-3 py-1 text-xs font-medium text-[var(--color-accent)]"
+                  >
+                    {s}
+                  </span>
+                ))}
+              </div>
             </div>
-            <p className="text-xs text-white/20">
-              Deepens in Session 2
-            </p>
-          </div>
-          <div className="rounded-2xl bg-white/5 border border-white/5 p-5 opacity-40">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">{"\u{1F512}"}</span>
-              <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">
-                Full Values Compass
-              </h3>
-            </div>
-            <p className="text-xs text-white/20">
-              Deepens in Session 2
-            </p>
-          </div>
-        </div>
-
-        {/* === Strengths section === */}
-        {scores.strengths && scores.strengths.length > 0 && (
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 mb-6">
-            <h3 className="text-sm font-semibold text-white/70 mb-3 uppercase tracking-wider">
-              Detected Strengths
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {scores.strengths.map((s) => (
-                <span
-                  key={s}
-                  className="rounded-full bg-[var(--color-accent)]/15 px-3 py-1 text-xs font-medium text-[var(--color-accent)]"
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </SectionErrorBoundary>
 
         {/* === Quest Log === */}
         <div className="rounded-2xl bg-white/5 border border-white/10 p-5 mb-6">
@@ -318,6 +324,7 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+        </SectionErrorBoundary>
 
         {/* === Action button === */}
         <div className="flex justify-center">

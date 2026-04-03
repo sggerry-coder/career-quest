@@ -26,6 +26,7 @@ export class SectionErrorBoundary extends Component<
     return { hasError: true, error };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   componentDidCatch(_error: Error, _errorInfo: ErrorInfo): void {
     // Silent per project convention -- no console logging
   }

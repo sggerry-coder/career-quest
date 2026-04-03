@@ -55,7 +55,7 @@ describe("SectionErrorBoundary", () => {
 
   it("re-renders children after clicking Try again when error is resolved", () => {
     shouldThrow = true;
-    const { rerender } = render(
+    render(
       <SectionErrorBoundary name="Charts">
         <ThrowingChild />
       </SectionErrorBoundary>
