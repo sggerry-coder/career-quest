@@ -26,8 +26,10 @@ Students can complete Session 1 end-to-end — from character creation through a
 
 - ✓ Scoring quality — MBTI "Still Emerging" labels with raw count checks, multi-framework undo reversal with signal footprint tracking, NaN guards across all scoring functions. Validated in Phase 3: Scoring Quality
 
+- ✓ Quality audit — zero ESLint warnings, dead code removed, 1012 tests (incl. boundary values), per-section error boundaries with retry, bundle analyzer configured, route-level error.tsx files. Validated in Phase 4: Quality Audit
+
 ### Active
-- [ ] Quality audit — robustness, code quality, scoring accuracy, efficiency, edge cases
+No active requirements — v1.0 milestone complete.
 
 ### Out of Scope
 
@@ -83,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after Phase 3 completion*
+*Last updated: 2026-04-03 after Phase 4 completion — v1.0 milestone complete*
