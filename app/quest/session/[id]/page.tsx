@@ -63,7 +63,7 @@ export default function Session({
     avatarClass,
   } = questState;
 
-  const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse } = useScores();
+  const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse, removeLastResponse } = useScores();
 
   const [studentTone, setStudentTone] = useState<"quest" | "explorer">("quest");
 
@@ -366,10 +366,11 @@ export default function Session({
     [currentQuestion, sessionQuestions, dispatch, processIpsativeResponse]
   );
 
-  // Handle undo
+  // Handle undo — reverse score state FIRST, then quest state
   const handleUndo = useCallback((): void => {
+    removeLastResponse();
     dispatch({ type: "UNDO" });
-  }, [dispatch]);
+  }, [dispatch, removeLastResponse]);
 
   // Handle skip (advance without recording a response)
   const handleSkip = useCallback((): void => {

@@ -113,13 +113,9 @@ export function QuestProvider({ children, studentId }: QuestProviderProps): Reac
   );
 
   const undoLastAnswer = useCallback((): void => {
-    const lastResponse =
-      questState.responses[questState.responses.length - 1];
-    if (lastResponse) {
-      removeLastResponse(lastResponse);
-    }
+    removeLastResponse();
     dispatch({ type: "UNDO" });
-  }, [questState.responses, dispatch, removeLastResponse]);
+  }, [dispatch, removeLastResponse]);
 
   const persistCheckpoint = useCallback(
     async (type: "riasec" | "full" | "final"): Promise<PersistResult> => {
