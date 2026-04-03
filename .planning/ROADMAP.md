@@ -60,10 +60,11 @@ Plans:
   1. MBTI results display "still emerging" label when fewer than 3 questions per dichotomy have been answered
   2. Undoing a response correctly reverses score changes across all affected frameworks (not just one)
   3. Charts and score displays handle empty or minimal response sets without NaN values or blank renders
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
+- [ ] 03-01-PLAN.md — TDD: Multi-framework undo with signal footprint tracking and handleUndo wiring (SCORE-02)
+- [ ] 03-02-PLAN.md — Still Emerging MBTI label with raw count check, NaN guards in scoring functions, duplicate consolidation (SCORE-01, SCORE-03)
 
 ### Phase 4: Quality Audit
 **Goal**: The codebase is clean, well-tested, performant, and robust against failure modes
@@ -88,5 +89,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 |-------|----------------|--------|-----------|
 | 1. Flow Engine Refactor | 2/2 | Complete | 2026-04-02 |
 | 2. Session Completion & Persistence | 3/3 | Complete | 2026-04-03 |
-| 3. Scoring Quality | 0/0 | Not started | - |
+| 3. Scoring Quality | 0/2 | Not started | - |
 | 4. Quality Audit | 0/0 | Not started | - |
