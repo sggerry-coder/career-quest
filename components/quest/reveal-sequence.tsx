@@ -30,6 +30,7 @@ interface RevealSequenceProps {
   onRetryPersist?: () => void;
   onSignIn?: () => void;
   onSaveExit?: () => void;
+  onPersistStart?: () => void;
 }
 
 type RevealPhase =
@@ -103,6 +104,7 @@ export default function RevealSequence({
   onRetryPersist = () => {},
   onSignIn = () => {},
   onSaveExit = () => {},
+  onPersistStart,
 }: RevealSequenceProps) {
   const [phase, setPhase] = useState<RevealPhase>("transition");
   const [showBadge, setShowBadge] = useState(false);
@@ -117,6 +119,13 @@ export default function RevealSequence({
       return () => clearTimeout(timer);
     }
   }, [phase]);
+
+  // Trigger persist when entering session_complete phase
+  useEffect(() => {
+    if (phase === "session_complete" && onPersistStart) {
+      onPersistStart();
+    }
+  }, [phase, onPersistStart]);
 
   const handleNext = useCallback(() => {
     const sequence: RevealPhase[] = [

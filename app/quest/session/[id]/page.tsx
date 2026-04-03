@@ -65,26 +65,31 @@ export default function Session({
 
   const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse } = useScores();
 
-  // Fetch the student's avatar_class from Supabase on mount (FLOW-03)
+  const [studentTone, setStudentTone] = useState<"quest" | "explorer">("quest");
+
+  // Fetch the student's avatar_class and tone from Supabase on mount (FLOW-03)
   useEffect(() => {
-    async function loadStudentClass(): Promise<void> {
+    async function loadStudentProfile(): Promise<void> {
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
         const { data } = await supabase
           .from("students")
-          .select("avatar_class")
+          .select("avatar_class, tone")
           .eq("id", user.id)
           .single();
         if (data?.avatar_class) {
           dispatch({ type: "SET_AVATAR_CLASS", avatarClass: data.avatar_class });
         }
+        if (data?.tone === "quest" || data?.tone === "explorer") {
+          setStudentTone(data.tone);
+        }
       } catch {
-        // Silent catch per project conventions -- falls back to "wanderer" default in reducer
+        // Silent catch per project conventions -- falls back to defaults
       }
     }
-    loadStudentClass();
+    loadStudentProfile();
   }, [dispatch]);
 
   // Derive class definition from avatarClass (fetched from Supabase or default "wanderer")
@@ -225,17 +230,16 @@ export default function Session({
     }
   }, [persistResult, runFinalPersist, router]);
 
-  // Auto-persist when entering complete phase
+  // Auto-persist when CompletionScreen appears inside RevealSequence
   const hasPersisted = useRef(false);
-  useEffect(() => {
-    if (flowPhase !== "complete" || hasPersisted.current) return;
+  const handlePersistStart = useCallback(() => {
+    if (hasPersisted.current) return;
     hasPersisted.current = true;
-    // Subscribe to the persist result via async callback (not synchronous setState in effect)
     runFinalPersist().then(
       (result) => setPersistResult(result),
       () => setPersistResult({ success: false, errorType: "unknown", message: "Unexpected error" })
     );
-  }, [flowPhase, runFinalPersist]);
+  }, [runFinalPersist]);
 
   /**
    * Resolve narration text for a block transition.
@@ -557,13 +561,14 @@ export default function Session({
         <RevealSequence
           scoreState={scoreState}
           className={avatarClassName}
-          tone="quest"
+          tone={studentTone}
           onRevealComplete={handleRevealComplete}
           onSessionComplete={() => dispatch({ type: "COMPLETE_SESSION" })}
           persistResult={persistResult}
           onRetryPersist={handleRetryPersist}
           onSignIn={handleSignIn}
           onSaveExit={handleSaveExit}
+          onPersistStart={handlePersistStart}
         />
         <ConfirmationToast
           message="Your progress is saved!"
