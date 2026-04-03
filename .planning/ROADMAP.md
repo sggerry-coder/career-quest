@@ -50,7 +50,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — TDD: Score validation, error classification, Student type update, and database migration (DATA-02, DATA-03, COMP-03)
 - [x] 02-02-PLAN.md — CompletionScreen with confetti, persistence refactor with validation/error handling, reveal sequence extension (COMP-01, COMP-02, COMP-04, DATA-01)
-- [ ] 02-03-PLAN.md — Completion-aware routing on landing page, dashboard, and session page wiring (COMP-03)
+- [x] 02-03-PLAN.md — Completion-aware routing on landing page, dashboard, and session page wiring (COMP-03)
 
 ### Phase 3: Scoring Quality
 **Goal**: Scoring results are accurate, honest about uncertainty, and handle edge cases gracefully
