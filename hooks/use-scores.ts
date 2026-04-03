@@ -17,6 +17,16 @@ import {
 import { calculateAllValues } from "@/lib/scoring/values";
 import { getTopStrengths } from "@/lib/scoring/strengths";
 
+export interface ResponseSignalFootprint {
+  question_id: string;
+  riasec_additions: Record<string, number[]>;
+  mi_additions: Record<string, number[]>;
+  mbti_additions: Record<string, number[]>;
+  values_additions: Record<string, number[]>;
+  ipsative_additions: Record<string, number[]>;
+  strength_signal?: string;
+}
+
 export interface ScoreState {
   riasec: Record<string, number>;
   riasec_raw: Record<string, number[]>;
@@ -32,6 +42,7 @@ export interface ScoreState {
   acquiescence_flag: boolean;
   riasec_snapshot: Record<string, number> | null;
   class_label: string;
+  signal_history: ResponseSignalFootprint[];
 }
 
 const INITIAL_RIASEC_RAW: Record<string, number[]> = {
@@ -77,6 +88,180 @@ function cloneRaw(raw: Record<string, number[]>): Record<string, number[]> {
   return clone;
 }
 
+/**
+ * Build a signal footprint for a single-framework processResponse call.
+ */
+export function buildProcessResponseFootprint(
+  response: ClientResponse
+): ResponseSignalFootprint {
+  const footprint: ResponseSignalFootprint = {
+    question_id: response.question_id,
+    riasec_additions: {},
+    mi_additions: {},
+    mbti_additions: {},
+    values_additions: {},
+    ipsative_additions: {},
+  };
+
+  if (response.framework === "riasec" && response.framework_target !== "none") {
+    footprint.riasec_additions[response.framework_target] = [response.response_value];
+  } else if (response.framework === "mbti" && response.framework_target !== "none") {
+    footprint.mbti_additions[response.framework_target] = [response.response_value];
+  } else if (response.framework === "values" && response.framework_target !== "none") {
+    footprint.values_additions[response.framework_target] = [response.response_value];
+  }
+
+  return footprint;
+}
+
+/**
+ * Build a signal footprint for a multi-framework processResponseWithSignals call.
+ */
+export function buildSignalsFootprint(
+  questionId: string,
+  frameworkSignals: Record<string, number>,
+  strengthSignal?: string
+): ResponseSignalFootprint {
+  const footprint: ResponseSignalFootprint = {
+    question_id: questionId,
+    riasec_additions: {},
+    mi_additions: {},
+    mbti_additions: {},
+    values_additions: {},
+    ipsative_additions: {},
+    strength_signal: strengthSignal,
+  };
+
+  for (const [key, weight] of Object.entries(frameworkSignals)) {
+    if (key.startsWith("riasec_")) {
+      const type = key.replace("riasec_", "");
+      footprint.riasec_additions[type] = [weight >= 2 ? 4 : 3];
+    } else if (key.startsWith("mi_")) {
+      const dim = key.replace("mi_", "");
+      footprint.mi_additions[dim] = [weight];
+    } else {
+      // Direct MI dimension key
+      footprint.mi_additions[key] = [weight];
+    }
+  }
+
+  return footprint;
+}
+
+/**
+ * Build a signal footprint for an ipsative response.
+ */
+export function buildIpsativeFootprint(
+  questionId: string,
+  rankings: Array<{ type: string; rank: number }>
+): ResponseSignalFootprint {
+  const rankToScore: Record<number, number> = { 1: 5, 2: 3, 3: 1 };
+  const footprint: ResponseSignalFootprint = {
+    question_id: questionId,
+    riasec_additions: {},
+    mi_additions: {},
+    mbti_additions: {},
+    values_additions: {},
+    ipsative_additions: {},
+  };
+
+  for (const { type, rank } of rankings) {
+    const score = rankToScore[rank] ?? 1;
+    footprint.ipsative_additions[type] = [score];
+  }
+
+  return footprint;
+}
+
+/**
+ * Recalculate all derived scores from raw arrays.
+ * Used after undo to ensure consistency.
+ */
+function recalculateAllDerived(state: ScoreState): void {
+  const likertNorm = calculateAllRiasec(state.riasec_raw);
+  const hasIpsative = Object.values(state.riasec_ipsative_raw).some(
+    (arr) => arr.length > 0
+  );
+  if (hasIpsative) {
+    const ipsativeNorm = calculateAllRiasec(state.riasec_ipsative_raw);
+    state.riasec = mergeIpsativeScores(likertNorm, ipsativeNorm);
+  } else {
+    state.riasec = likertNorm;
+  }
+  state.acquiescence_flag = detectAcquiescenceBias(state.riasec);
+  state.class_label = deriveClassLabel(state.riasec);
+  state.mi = calculateAllMi(state.mi_raw);
+  state.mbti = calculateAllMbti(state.mbti_raw);
+  state.values = calculateAllValues(state.values_raw);
+  state.strengths = getTopStrengths(state.strength_signals, 5);
+}
+
+/**
+ * Pure function: apply undo by popping the last signal footprint and reversing its mutations.
+ * Returns a new ScoreState with the last response's effects removed.
+ */
+export function applyFootprintUndo(prev: ScoreState): ScoreState {
+  if (prev.signal_history.length === 0) {
+    return prev;
+  }
+
+  const next = structuredClone(prev);
+  const footprint = next.signal_history.pop()!;
+
+  // Reverse riasec_raw additions
+  for (const [key, values] of Object.entries(footprint.riasec_additions)) {
+    const arr = next.riasec_raw[key];
+    if (arr) {
+      arr.splice(arr.length - values.length, values.length);
+    }
+  }
+
+  // Reverse mi_raw additions
+  for (const [key, values] of Object.entries(footprint.mi_additions)) {
+    const arr = next.mi_raw[key];
+    if (arr) {
+      arr.splice(arr.length - values.length, values.length);
+    }
+  }
+
+  // Reverse mbti_raw additions
+  for (const [key, values] of Object.entries(footprint.mbti_additions)) {
+    const arr = next.mbti_raw[key];
+    if (arr) {
+      arr.splice(arr.length - values.length, values.length);
+    }
+  }
+
+  // Reverse values_raw additions
+  for (const [key, values] of Object.entries(footprint.values_additions)) {
+    const arr = next.values_raw[key];
+    if (arr) {
+      arr.splice(arr.length - values.length, values.length);
+    }
+  }
+
+  // Reverse ipsative_raw additions
+  for (const [key, values] of Object.entries(footprint.ipsative_additions)) {
+    const arr = next.riasec_ipsative_raw[key];
+    if (arr) {
+      arr.splice(arr.length - values.length, values.length);
+    }
+  }
+
+  // Reverse strength signal
+  if (footprint.strength_signal) {
+    const idx = next.strength_signals.lastIndexOf(footprint.strength_signal);
+    if (idx !== -1) {
+      next.strength_signals.splice(idx, 1);
+    }
+  }
+
+  // Recalculate all derived scores
+  recalculateAllDerived(next);
+
+  return next;
+}
+
 const INITIAL_SCORE_STATE: ScoreState = {
   riasec: { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 },
   riasec_raw: cloneRaw(INITIAL_RIASEC_RAW),
@@ -107,6 +292,7 @@ const INITIAL_SCORE_STATE: ScoreState = {
   acquiescence_flag: false,
   riasec_snapshot: null,
   class_label: "SEEKER",
+  signal_history: [],
 };
 
 export function useScores() {
@@ -118,9 +304,12 @@ export function useScores() {
     setScoreState((prev) => {
       const next = structuredClone(prev);
 
+      // Build signal footprint for undo tracking
+      const footprint = buildProcessResponseFootprint(response);
+
       if (response.framework === "riasec") {
         if (response.framework_target !== "none") {
-          // Likert response — append to riasec_raw
+          // Likert response -- append to riasec_raw
           next.riasec_raw[response.framework_target] = [
             ...(next.riasec_raw[response.framework_target] || []),
             response.response_value,
@@ -163,6 +352,7 @@ export function useScores() {
         next.values = calculateAllValues(next.values_raw);
       }
 
+      next.signal_history = [...next.signal_history, footprint];
       return next;
     });
   }, []);
@@ -179,6 +369,13 @@ export function useScores() {
     ) => {
       setScoreState((prev) => {
         const next = structuredClone(prev);
+
+        // Build signal footprint for undo tracking
+        const footprint = buildSignalsFootprint(
+          response.question_id,
+          frameworkSignals,
+          strengthSignal
+        );
 
         // Process framework signals (e.g., riasec_R: 2, mi_bodily: 1)
         for (const [key, weight] of Object.entries(frameworkSignals)) {
@@ -220,6 +417,7 @@ export function useScores() {
         next.class_label = deriveClassLabel(next.riasec);
         next.mi = calculateAllMi(next.mi_raw);
 
+        next.signal_history = [...next.signal_history, footprint];
         return next;
       });
     },
@@ -231,9 +429,12 @@ export function useScores() {
    * with the rankings for each option's RIASEC type.
    */
   const processIpsativeResponse = useCallback(
-    (rankings: Array<{ type: string; rank: number }>) => {
+    (rankings: Array<{ type: string; rank: number }>, questionId: string = "ipsative") => {
       setScoreState((prev) => {
         const next = structuredClone(prev);
+
+        // Build signal footprint for undo tracking
+        const footprint = buildIpsativeFootprint(questionId, rankings);
 
         // Convert ranks to scores: 1st=5, 2nd=3, 3rd=1
         const rankToScore: Record<number, number> = { 1: 5, 2: 3, 3: 1 };
@@ -253,6 +454,7 @@ export function useScores() {
         next.acquiescence_flag = detectAcquiescenceBias(next.riasec);
         next.class_label = deriveClassLabel(next.riasec);
 
+        next.signal_history = [...next.signal_history, footprint];
         return next;
       });
     },
@@ -270,50 +472,12 @@ export function useScores() {
   }, []);
 
   /**
-   * Remove the last processed response from raw scores.
-   * Used by undo. Recalculates all derived scores.
+   * Remove the last processed response from raw scores using signal footprint history.
+   * Used by undo. Pops the last footprint and reverses all its mutations atomically.
    */
-  const removeLastResponse = useCallback(
-    (response: ClientResponse) => {
-      setScoreState((prev) => {
-        const next = structuredClone(prev);
-
-        if (response.framework === "riasec" && response.framework_target !== "none") {
-          const arr = next.riasec_raw[response.framework_target];
-          if (arr && arr.length > 0) {
-            arr.pop();
-          }
-          const likertNorm = calculateAllRiasec(next.riasec_raw);
-          const hasIpsative = Object.values(next.riasec_ipsative_raw).some(
-            (a) => a.length > 0
-          );
-          if (hasIpsative) {
-            const ipsativeNorm = calculateAllRiasec(next.riasec_ipsative_raw);
-            next.riasec = mergeIpsativeScores(likertNorm, ipsativeNorm);
-          } else {
-            next.riasec = likertNorm;
-          }
-          next.acquiescence_flag = detectAcquiescenceBias(next.riasec);
-          next.class_label = deriveClassLabel(next.riasec);
-        } else if (response.framework === "mbti" && response.framework_target !== "none") {
-          const arr = next.mbti_raw[response.framework_target];
-          if (arr && arr.length > 0) {
-            arr.pop();
-          }
-          next.mbti = calculateAllMbti(next.mbti_raw);
-        } else if (response.framework === "values" && response.framework_target !== "none") {
-          const arr = next.values_raw[response.framework_target];
-          if (arr && arr.length > 0) {
-            arr.pop();
-          }
-          next.values = calculateAllValues(next.values_raw);
-        }
-
-        return next;
-      });
-    },
-    []
-  );
+  const removeLastResponse = useCallback(() => {
+    setScoreState((prev) => applyFootprintUndo(prev));
+  }, []);
 
   return {
     scoreState,
