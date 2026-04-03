@@ -124,3 +124,40 @@ describe("deriveEmergingType", () => {
     expect(result.display).toBe("I S T J");
   });
 });
+
+describe("deriveEmergingType with rawCounts", () => {
+  it("forces underscore when rawCounts < 3 despite strong scores", () => {
+    const scores = { EI: -80, SN: 60, TF: -50, JP: 70 };
+    const rawCounts = { EI: 2, SN: 1, TF: 5, JP: 4 };
+    const result = deriveEmergingType(scores, rawCounts);
+    // EI has 2 < 3 → underscore, SN has 1 < 3 → underscore
+    // TF has 5 >= 3 and score -50 → T, JP has 4 >= 3 and score 70 → P
+    expect(result.type).toBe("__TP");
+    expect(result.hasEmerging).toBe(true);
+  });
+
+  it("returns full type when all rawCounts >= 3 and scores are strong", () => {
+    const scores = { EI: -80, SN: 60, TF: -50, JP: 70 };
+    const rawCounts = { EI: 3, SN: 3, TF: 3, JP: 3 };
+    const result = deriveEmergingType(scores, rawCounts);
+    // EI: -80 → I, SN: 60 → N, TF: -50 → T, JP: 70 → P
+    expect(result.type).toBe("INTP");
+    expect(result.hasEmerging).toBe(false);
+  });
+
+  it("returns hasEmerging true when scores are within threshold even with sufficient counts", () => {
+    const scores = { EI: 0, SN: 0, TF: 0, JP: 0 };
+    const rawCounts = { EI: 5, SN: 5, TF: 5, JP: 5 };
+    const result = deriveEmergingType(scores, rawCounts);
+    expect(result.type).toBe("____");
+    expect(result.hasEmerging).toBe(true);
+  });
+
+  it("returns hasEmerging false when no rawCounts provided and scores are strong", () => {
+    const scores = { EI: -80, SN: 60, TF: -50, JP: 70 };
+    const result = deriveEmergingType(scores);
+    // EI: -80 → I, SN: 60 → N, TF: -50 → T, JP: 70 → P
+    expect(result.type).toBe("INTP");
+    expect(result.hasEmerging).toBe(false);
+  });
+});

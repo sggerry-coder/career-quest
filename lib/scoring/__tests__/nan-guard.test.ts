@@ -1,0 +1,101 @@
+import { describe, it, expect } from "vitest";
+import { calculateAllRiasec } from "../riasec";
+import { calculateAllMbti } from "../mbti";
+import { calculateAllMi } from "../mi";
+import { calculateAllValues } from "../values";
+
+function assertAllFinite(result: Record<string, number>, label: string): void {
+  for (const [key, value] of Object.entries(result)) {
+    expect(Number.isFinite(value), `${label}.${key} should be finite, got ${value}`).toBe(true);
+    expect(Number.isNaN(value), `${label}.${key} should not be NaN`).toBe(false);
+  }
+}
+
+describe("NaN safety guards", () => {
+  describe("calculateAllRiasec", () => {
+    it("returns all 0 for empty arrays, no NaN", () => {
+      const result = calculateAllRiasec({ R: [], I: [], A: [], S: [], E: [], C: [] });
+      assertAllFinite(result, "riasec");
+      expect(result.R).toBe(0);
+      expect(result.I).toBe(0);
+    });
+
+    it("returns finite values for single-element arrays", () => {
+      const result = calculateAllRiasec({ R: [0], I: [0], A: [0], S: [0], E: [0], C: [0] });
+      assertAllFinite(result, "riasec-single");
+    });
+  });
+
+  describe("calculateAllMbti", () => {
+    it("returns all 0 for empty arrays, no NaN", () => {
+      const result = calculateAllMbti({ EI: [], SN: [], TF: [], JP: [] });
+      assertAllFinite(result, "mbti");
+      expect(result.EI).toBe(0);
+      expect(result.SN).toBe(0);
+    });
+
+    it("returns finite values for single-element arrays", () => {
+      const result = calculateAllMbti({ EI: [0], SN: [0], TF: [0], JP: [0] });
+      assertAllFinite(result, "mbti-single");
+    });
+  });
+
+  describe("calculateAllMi", () => {
+    it("returns all 0 for empty arrays, no NaN", () => {
+      const result = calculateAllMi({
+        linguistic: [], logical: [], spatial: [], musical: [],
+        bodily: [], interpersonal: [], intrapersonal: [], naturalistic: [],
+      });
+      assertAllFinite(result, "mi");
+      expect(result.linguistic).toBe(0);
+    });
+
+    it("returns finite values for single-element arrays", () => {
+      const result = calculateAllMi({
+        linguistic: [0], logical: [0], spatial: [0], musical: [0],
+        bodily: [0], interpersonal: [0], intrapersonal: [0], naturalistic: [0],
+      });
+      assertAllFinite(result, "mi-single");
+    });
+  });
+
+  describe("calculateAllValues", () => {
+    it("returns all 0 for empty arrays, no NaN", () => {
+      const result = calculateAllValues({
+        security_adventure: [], income_impact: [], prestige_fulfilment: [],
+        structure_flexibility: [], solo_team: [],
+      });
+      assertAllFinite(result, "values");
+      expect(result.security_adventure).toBe(0);
+    });
+
+    it("returns finite values for single-element arrays", () => {
+      const result = calculateAllValues({
+        security_adventure: [0], income_impact: [0], prestige_fulfilment: [0],
+        structure_flexibility: [0], solo_team: [0],
+      });
+      assertAllFinite(result, "values-single");
+    });
+  });
+
+  describe("cross-cutting NaN check", () => {
+    it("no scoring function output value is NaN for empty input", () => {
+      const riasec = calculateAllRiasec({ R: [], I: [], A: [], S: [], E: [], C: [] });
+      const mbti = calculateAllMbti({ EI: [], SN: [], TF: [], JP: [] });
+      const mi = calculateAllMi({
+        linguistic: [], logical: [], spatial: [], musical: [],
+        bodily: [], interpersonal: [], intrapersonal: [], naturalistic: [],
+      });
+      const values = calculateAllValues({
+        security_adventure: [], income_impact: [], prestige_fulfilment: [],
+        structure_flexibility: [], solo_team: [],
+      });
+
+      const allResults = { ...riasec, ...mbti, ...mi, ...values };
+      for (const [key, value] of Object.entries(allResults)) {
+        expect(Number.isNaN(value), `${key} should not be NaN`).toBe(false);
+        expect(Number.isFinite(value), `${key} should be finite`).toBe(true);
+      }
+    });
+  });
+});
