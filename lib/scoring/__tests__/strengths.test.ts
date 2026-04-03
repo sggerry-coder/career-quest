@@ -52,3 +52,22 @@ describe("getTopStrengths", () => {
     expect(top3).toEqual(["Ideation", "Empathy", "Command"]);
   });
 });
+
+describe("Boundary values", () => {
+  it("getTopStrengths with n=0 returns empty array", () => {
+    const signals = ["Achiever", "Ideation", "Achiever"];
+    expect(getTopStrengths(signals, 0)).toEqual([]);
+  });
+
+  it("accumulateStrengths with single signal repeated many times accumulates correctly", () => {
+    const signals = Array(100).fill("Achiever");
+    const result = accumulateStrengths(signals);
+    expect(result).toEqual({ Achiever: 100 });
+  });
+
+  it("getTopStrengths with single signal repeated returns it as top", () => {
+    const signals = Array(50).fill("Empathy");
+    const top5 = getTopStrengths(signals, 5);
+    expect(top5).toEqual(["Empathy"]);
+  });
+});

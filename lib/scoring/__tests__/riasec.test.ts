@@ -169,3 +169,85 @@ describe("deriveClassLabel", () => {
     expect(deriveClassLabel(scores)).toBe("EXPLORER");
   });
 });
+
+describe("Boundary values", () => {
+  describe("calculateAllRiasec", () => {
+    it("returns 100 for all types when all responses are max (5)", () => {
+      const raw = {
+        R: [5, 5, 5],
+        I: [5, 5, 5],
+        A: [5, 5, 5],
+        S: [5, 5, 5],
+        E: [5, 5, 5],
+        C: [5, 5, 5],
+      };
+      const result = calculateAllRiasec(raw);
+      for (const type of ["R", "I", "A", "S", "E", "C"]) {
+        expect(result[type]).toBe(100);
+      }
+    });
+
+    it("returns 0 for all types when all responses are min (1)", () => {
+      const raw = {
+        R: [1, 1, 1],
+        I: [1, 1, 1],
+        A: [1, 1, 1],
+        S: [1, 1, 1],
+        E: [1, 1, 1],
+        C: [1, 1, 1],
+      };
+      const result = calculateAllRiasec(raw);
+      for (const type of ["R", "I", "A", "S", "E", "C"]) {
+        expect(result[type]).toBe(0);
+      }
+    });
+  });
+
+  describe("deriveClassLabel at threshold 50/51", () => {
+    it("does not qualify types at exactly 50 (strict > 50)", () => {
+      // Both R and I at exactly 50 — neither qualifies as > 50
+      const scores = { R: 50, I: 50, A: 0, S: 0, E: 0, C: 0 };
+      const result = deriveClassLabel(scores);
+      // first.score = 50, not > 50, so falls through to "all < 40?" check
+      // Not all < 40 (50 >= 40), so → EXPLORER
+      expect(result).toBe("EXPLORER");
+    });
+
+    it("qualifies type at 51 as primary", () => {
+      // R at 51 with others far below — leads by > 15
+      const scores = { R: 51, I: 0, A: 0, S: 0, E: 0, C: 0 };
+      const result = deriveClassLabel(scores);
+      // first.score = 51 > 50, second.score = 0 not > 50 → single check
+      // 51 - 0 = 51 > 15 → single dominant
+      expect(result).toBe("MAKER");
+    });
+
+    it("returns pair when both at 51 with gap to 3rd > 10", () => {
+      const scores = { R: 51, I: 51, A: 0, S: 0, E: 0, C: 0 };
+      const result = deriveClassLabel(scores);
+      // Top 2 both > 50, gap from 2nd to 3rd = 51 - 0 = 51 > 10
+      expect(result).toBe("MAKER-INVESTIGATOR");
+    });
+  });
+
+  describe("mergeIpsativeScores with all-null ipsative", () => {
+    it("returns base likert scores unchanged when all ipsative values are null", () => {
+      const likert = { R: 80, I: 60, A: 40, S: 20, E: 50, C: 70 };
+      const ipsative: Record<string, number | null> = {
+        R: null,
+        I: null,
+        A: null,
+        S: null,
+        E: null,
+        C: null,
+      };
+      const result = mergeIpsativeScores(likert, ipsative);
+      expect(result.R).toBe(80);
+      expect(result.I).toBe(60);
+      expect(result.A).toBe(40);
+      expect(result.S).toBe(20);
+      expect(result.E).toBe(50);
+      expect(result.C).toBe(70);
+    });
+  });
+});

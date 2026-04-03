@@ -161,3 +161,30 @@ describe("deriveEmergingType with rawCounts", () => {
     expect(result.hasEmerging).toBe(false);
   });
 });
+
+describe("Boundary values", () => {
+  it("deriveEmergingType with all scores exactly at threshold 35 — NOT emerging", () => {
+    // isStillEmerging(35) is false (uses < 35, not <=), so 35 is definitive
+    const scores = { EI: 35, SN: 35, TF: 35, JP: 35 };
+    const result = deriveEmergingType(scores);
+    // All positive → E, N, F, P
+    expect(result.type).toBe("ENFP");
+    expect(result.hasEmerging).toBe(false);
+  });
+
+  it("deriveEmergingType with all scores at 34 — IS emerging", () => {
+    // isStillEmerging(34) is true (abs(34) < 35)
+    const scores = { EI: 34, SN: 34, TF: 34, JP: 34 };
+    const result = deriveEmergingType(scores);
+    expect(result.type).toBe("____");
+    expect(result.hasEmerging).toBe(true);
+  });
+
+  it("deriveEmergingType with negative scores at -35 — NOT emerging", () => {
+    const scores = { EI: -35, SN: -35, TF: -35, JP: -35 };
+    const result = deriveEmergingType(scores);
+    // All negative → I, S, T, J
+    expect(result.type).toBe("ISTJ");
+    expect(result.hasEmerging).toBe(false);
+  });
+});

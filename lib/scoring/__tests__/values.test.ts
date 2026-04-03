@@ -67,3 +67,50 @@ describe("calculateAllValues", () => {
     expect(Object.values(result).every((v) => v === 0)).toBe(true);
   });
 });
+
+describe("Boundary values", () => {
+  it("returns +100 for all dimensions with all extreme positive inputs (+3)", () => {
+    const raw = {
+      security_adventure: [3, 3, 3],
+      income_impact: [3, 3, 3],
+      prestige_fulfilment: [3, 3, 3],
+      structure_flexibility: [3, 3, 3],
+      solo_team: [3, 3, 3],
+    };
+    const result = calculateAllValues(raw);
+    for (const dim of Object.keys(raw)) {
+      expect(result[dim]).toBe(100);
+    }
+  });
+
+  it("returns -100 for all dimensions with all extreme negative inputs (-3)", () => {
+    const raw = {
+      security_adventure: [-3, -3, -3],
+      income_impact: [-3, -3, -3],
+      prestige_fulfilment: [-3, -3, -3],
+      structure_flexibility: [-3, -3, -3],
+      solo_team: [-3, -3, -3],
+    };
+    const result = calculateAllValues(raw);
+    for (const dim of Object.keys(raw)) {
+      expect(result[dim]).toBe(-100);
+    }
+  });
+
+  it("produces no NaN with mixed extreme inputs", () => {
+    const raw = {
+      security_adventure: [3, -3],
+      income_impact: [-3, 3, -3],
+      prestige_fulfilment: [3],
+      structure_flexibility: [-3],
+      solo_team: [0, 0, 0],
+    };
+    const result = calculateAllValues(raw);
+    for (const [key, value] of Object.entries(result)) {
+      expect(Number.isFinite(value), `${key} should be finite`).toBe(true);
+    }
+    // Mixed +3 and -3 should cancel: (3 + -3) / (2*3) * 100 = 0
+    expect(result.security_adventure).toBe(0);
+    expect(result.solo_team).toBe(0);
+  });
+});

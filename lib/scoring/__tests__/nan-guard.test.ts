@@ -78,6 +78,49 @@ describe("NaN safety guards", () => {
     });
   });
 
+  describe("Boundary values — single response sets", () => {
+    it("calculateAllRiasec with single response per type produces finite results", () => {
+      const result = calculateAllRiasec({ R: [3], I: [1], A: [5], S: [2], E: [4], C: [3] });
+      assertAllFinite(result, "riasec-single-response");
+      // Single response of 3: (3-1)/(1*4)*100 = 50
+      expect(result.R).toBe(50);
+      // Single response of 1: (1-1)/(1*4)*100 = 0
+      expect(result.I).toBe(0);
+      // Single response of 5: (5-1)/(1*4)*100 = 100
+      expect(result.A).toBe(100);
+    });
+
+    it("calculateAllMbti with single response per dichotomy produces finite results", () => {
+      const result = calculateAllMbti({ EI: [3], SN: [-3], TF: [0], JP: [1] });
+      assertAllFinite(result, "mbti-single-response");
+      expect(result.EI).toBe(100);
+      expect(result.SN).toBe(-100);
+      expect(result.TF).toBe(0);
+    });
+
+    it("calculateAllMi with single response per dimension produces finite results", () => {
+      const result = calculateAllMi({
+        linguistic: [1], logical: [2], spatial: [0], musical: [1],
+        bodily: [2], interpersonal: [0], intrapersonal: [1], naturalistic: [2],
+      });
+      assertAllFinite(result, "mi-single-response");
+      expect(result.linguistic).toBe(50);
+      expect(result.logical).toBe(100);
+      expect(result.spatial).toBe(0);
+    });
+
+    it("calculateAllValues with single response per dimension produces finite results", () => {
+      const result = calculateAllValues({
+        security_adventure: [3], income_impact: [-3], prestige_fulfilment: [0],
+        structure_flexibility: [1], solo_team: [-1],
+      });
+      assertAllFinite(result, "values-single-response");
+      expect(result.security_adventure).toBe(100);
+      expect(result.income_impact).toBe(-100);
+      expect(result.prestige_fulfilment).toBe(0);
+    });
+  });
+
   describe("cross-cutting NaN check", () => {
     it("no scoring function output value is NaN for empty input", () => {
       const riasec = calculateAllRiasec({ R: [], I: [], A: [], S: [], E: [], C: [] });

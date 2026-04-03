@@ -119,3 +119,39 @@ describe("getTopMi", () => {
     expect(top3.every((t) => t.score === 0)).toBe(true);
   });
 });
+
+describe("Boundary values", () => {
+  it("returns 100 for all dimensions with all-max inputs", () => {
+    const raw = {
+      linguistic: [2, 2, 2],
+      logical: [2, 2, 2],
+      spatial: [2, 2, 2],
+      musical: [2, 2, 2],
+      bodily: [2, 2, 2],
+      interpersonal: [2, 2, 2],
+      intrapersonal: [2, 2, 2],
+      naturalistic: [2, 2, 2],
+    };
+    const result = calculateAllMi(raw, 2);
+    for (const dim of Object.keys(raw)) {
+      expect(result[dim]).toBe(100);
+    }
+  });
+
+  it("returns 0 for all dimensions with all-min inputs (0)", () => {
+    const raw = {
+      linguistic: [0, 0, 0],
+      logical: [0, 0, 0],
+      spatial: [0, 0, 0],
+      musical: [0, 0, 0],
+      bodily: [0, 0, 0],
+      interpersonal: [0, 0, 0],
+      intrapersonal: [0, 0, 0],
+      naturalistic: [0, 0, 0],
+    };
+    const result = calculateAllMi(raw, 2);
+    for (const dim of Object.keys(raw)) {
+      expect(result[dim]).toBe(0);
+    }
+  });
+});
