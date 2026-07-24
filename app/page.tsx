@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { classes } from "@/data/classes";
+import { applyClassTheme } from "@/lib/theme";
 import type { Student } from "@/lib/types/student";
 
 type LandingState =
@@ -43,7 +44,11 @@ export default function Home() {
             .single();
 
           if (student) {
-            setState({ status: "returning", student: student as Student });
+            const returningStudent = student as Student;
+            if (returningStudent.avatar_class) {
+              applyClassTheme(returningStudent.avatar_class);
+            }
+            setState({ status: "returning", student: returningStudent });
             return;
           }
         }

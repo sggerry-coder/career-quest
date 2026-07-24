@@ -13,6 +13,7 @@ import XpBar from "@/components/ui/xp-bar";
 import { badges as allBadgeDefinitions } from "@/data/badges";
 import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
+import { applyClassTheme } from "@/lib/theme";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
 interface StudentData {
@@ -113,7 +114,11 @@ export default function Dashboard() {
         ]);
 
         if (studentRes.data) {
-          setStudent(studentRes.data as StudentData);
+          const studentData = studentRes.data as StudentData;
+          setStudent(studentData);
+          if (studentData.avatar_class) {
+            applyClassTheme(studentData.avatar_class);
+          }
         }
         if (scoresRes.data) {
           setScores(scoresRes.data as ScoresData);

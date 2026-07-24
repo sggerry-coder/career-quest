@@ -54,6 +54,17 @@ export function getThemeForClass(classId: string): ThemeConfig {
   return themes[classDef.theme];
 }
 
+/**
+ * Apply the visual theme for a student's chosen class to the document.
+ * Used to restore the class theme for returning students, since the root
+ * ThemeProvider only knows the default theme.
+ */
+export function applyClassTheme(classId: string): void {
+  if (typeof document === "undefined") return;
+  const theme = getThemeForClass(classId);
+  document.documentElement.setAttribute("data-theme", theme.name);
+}
+
 export function getClassName(
   classId: string,
   tone: "quest" | "explorer"

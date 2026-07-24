@@ -21,7 +21,7 @@ import { useScores } from "@/hooks/use-scores";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
-import { classDefinitions } from "@/lib/theme";
+import { classDefinitions, applyClassTheme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { validateScoresBeforePersist } from "@/lib/validation/score-validation";
 import { buildMbtiRawCounts } from "@/lib/scoring/mbti";
@@ -92,6 +92,7 @@ export default function Session({
           .single();
         if (data?.avatar_class) {
           dispatch({ type: "SET_AVATAR_CLASS", avatarClass: data.avatar_class });
+          applyClassTheme(data.avatar_class);
         }
         if (data?.tone === "quest" || data?.tone === "explorer") {
           setStudentTone(data.tone);
@@ -112,7 +113,7 @@ export default function Session({
       ?? classDefinitions.find((c) => c.id === "wanderer")!;
   }, [avatarClass]);
 
-  const avatarClassName = classDef.name.quest;
+  const avatarClassName = classDef.name[studentTone];
 
   // Persistence state for completion flow
   const router = useRouter();
@@ -283,18 +284,18 @@ export default function Session({
   /**
    * Resolve narration text for a block transition.
    * The reducer stores keys like "warmup_to_riasec"; we map them to
-   * ClassDefinition narration keys and read the quest-tone text.
+   * ClassDefinition narration keys and read the text for the student's tone.
    */
   const getNarration = useCallback(
     (key: string): string => {
       const narrationKey = TRANSITION_KEY_MAP[key];
       if (narrationKey) {
-        return classDef.narration[narrationKey]?.quest ?? "";
+        return classDef.narration[narrationKey]?.[studentTone] ?? "";
       }
       // Fallback: return the raw string (for any unmapped transitions)
       return key;
     },
-    [classDef]
+    [classDef, studentTone]
   );
 
   // Get questions for the current session
