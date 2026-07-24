@@ -94,7 +94,7 @@ export default function Dashboard() {
           supabase
             .from("students")
             .select("name, age, avatar_class, tone, current_session, has_completed_session1, self_map")
-            .eq("user_id", user.id)
+            .eq("id", user.id)
             .single(),
           supabase
             .from("assessment_scores")
