@@ -74,7 +74,7 @@ export default function Session({
     avatarClass,
   } = questState;
 
-  const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse, removeLastResponse, restoreScores } = useScores();
+  const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse, takeSnapshot, removeLastResponse, restoreScores } = useScores();
 
   const [studentTone, setStudentTone] = useState<"quest" | "explorer">("quest");
 
@@ -462,8 +462,11 @@ export default function Session({
     [dispatch]
   );
 
-  // Handle reveal sequence completion (moves to confirmatory)
+  // Handle reveal sequence completion (moves to confirmatory).
+  // Snapshot RIASEC scores first so the CompletionScreen can show a
+  // before/after "profile sharpened" delta for the confirmatory round (P1.3).
   const handleRevealComplete = useCallback((): void => {
+    takeSnapshot();
     const adaptive = selectAdaptiveQuestions({
       riasecScores: scoreState.riasec,
       riasecRaw: scoreState.riasec_raw,
@@ -474,7 +477,7 @@ export default function Session({
       pool: session1AdaptivePool,
     });
     dispatch({ type: "ENTER_CONFIRMATORY", adaptiveQuestions: adaptive });
-  }, [scoreState, dispatch]);
+  }, [scoreState, dispatch, takeSnapshot]);
 
   // Handle confirmatory answer
   const handleConfirmatoryAnswer = useCallback(
@@ -704,6 +707,7 @@ export default function Session({
                 riasec: scoreState.riasec,
                 strengths: scoreState.strengths,
               }}
+              riasecSnapshot={scoreState.riasec_snapshot}
               onViewDashboard={() => router.push("/quest/dashboard")}
               onSaveExit={handleSaveExit}
               persistResult={persistResult}

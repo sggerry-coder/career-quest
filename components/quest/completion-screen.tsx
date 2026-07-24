@@ -11,6 +11,8 @@ interface CompletionScreenProps {
     riasec: Record<string, number>;
     strengths: string[];
   };
+  /** RIASEC scores snapshotted at confirmatory start (P1.3), if taken. */
+  riasecSnapshot?: Record<string, number> | null;
   onViewDashboard: () => void;
   onSaveExit: () => void;
   persistResult: { success: boolean; errorType?: string } | null;
@@ -18,10 +20,50 @@ interface CompletionScreenProps {
   onSignIn: () => void;
 }
 
+const RIASEC_LABELS: Record<string, string> = {
+  R: "Maker",
+  I: "Investigator",
+  A: "Creator",
+  S: "Helper",
+  E: "Leader",
+  C: "Organizer",
+};
+
+export interface ProfileDelta {
+  key: string;
+  label: string;
+  delta: number;
+}
+
+/**
+ * Compare the RIASEC snapshot taken at confirmatory start against the final
+ * scores and return the biggest movements (max 3, |delta| >= 1 point).
+ * Returns [] when there is no snapshot or nothing moved.
+ */
+export function computeProfileDeltas(
+  snapshot: Record<string, number> | null | undefined,
+  current: Record<string, number>
+): ProfileDelta[] {
+  if (!snapshot) return [];
+  const deltas: ProfileDelta[] = [];
+  for (const [key, label] of Object.entries(RIASEC_LABELS)) {
+    const before = Math.round(snapshot[key] ?? 0);
+    const after = Math.round(current[key] ?? 0);
+    const delta = after - before;
+    if (Math.abs(delta) >= 1) {
+      deltas.push({ key, label, delta });
+    }
+  }
+  return deltas
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 3);
+}
+
 export default function CompletionScreen({
   tone,
   classLabel,
   scoreState,
+  riasecSnapshot = null,
   onViewDashboard,
   onSaveExit,
   persistResult,
@@ -65,6 +107,16 @@ export default function CompletionScreen({
 
   const topStrength =
     scoreState.strengths.length > 0 ? scoreState.strengths[0] : null;
+
+  // Confirmatory payoff (P1.3): show how the 5 confirmatory answers moved
+  // the profile relative to the snapshot taken when the round began.
+  const profileDeltas = computeProfileDeltas(riasecSnapshot, scoreState.riasec);
+  const sharpenedHeading =
+    tone === "quest" ? "Your legend sharpened" : "Your profile sharpened";
+  const steadyText =
+    tone === "quest"
+      ? "Your final answers held firm — a steady hand makes a clear prophecy."
+      : "Your final answers were consistent — that makes your profile more reliable.";
 
   const showBanner = persistResult !== null && !persistResult.success;
 
@@ -153,6 +205,41 @@ export default function CompletionScreen({
           </div>
         )}
       </motion.div>
+
+      {/* Confirmatory before/after delta card (P1.3) */}
+      {riasecSnapshot && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeOut", delay: 1.6 }}
+          className="rounded-xl bg-white/5 border border-white/10 px-4 py-3 max-w-sm w-full"
+        >
+          <p className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
+            {sharpenedHeading}
+          </p>
+          {profileDeltas.length > 0 ? (
+            <ul className="flex flex-col gap-1.5">
+              {profileDeltas.map((d) => (
+                <li
+                  key={d.key}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span className="text-white/80">{d.label}</span>
+                  <span
+                    className={`font-mono font-semibold ${
+                      d.delta > 0 ? "text-[#2dd4bf]" : "text-white/50"
+                    }`}
+                  >
+                    {d.delta > 0 ? `+${d.delta}` : `${d.delta}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-white/60">{steadyText}</p>
+          )}
+        </motion.div>
+      )}
 
       {/* CTA buttons */}
       <motion.div

@@ -119,8 +119,8 @@ export default function RevealSequence({
             Want to sharpen your results?
           </h2>
           <p className="text-sm text-white/60">
-            5 quick questions based on what we&apos;ve seen so far. Your charts
-            will update live.
+            5 quick questions based on what we&apos;ve seen so far. At the
+            finish you&apos;ll see exactly how they sharpened your profile.
           </p>
           <button
             onClick={handleNext}

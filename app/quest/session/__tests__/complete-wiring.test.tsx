@@ -103,7 +103,8 @@ const h = vi.hoisted(() => {
     strengths: ["Creative Thinking"],
     strength_signals: [],
     acquiescence_flag: false,
-    riasec_snapshot: null,
+    // Snapshot taken at confirmatory start (P1.3): R moved +6, I moved +5
+    riasec_snapshot: { R: 74, I: 55, A: 40, S: 20, E: 10, C: 5 },
     class_label: "MAKER",
     signal_history: [],
   };
@@ -235,6 +236,19 @@ describe("session complete wiring", () => {
     expect(screen.getByText("Creative Thinking")).toBeDefined();
     expect(screen.getByRole("button", { name: "View Dashboard" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Save and Exit" })).toBeDefined();
+  });
+
+  it("shows the confirmatory before/after delta card (P1.3)", async () => {
+    await renderCompletePage();
+    await screen.findByText("Quest Chapter 1 Complete");
+
+    // quest tone heading
+    expect(screen.getByText("Your legend sharpened")).toBeDefined();
+    // R: 74 -> 80 (+6), I: 55 -> 60 (+5)
+    expect(screen.getByText("Maker")).toBeDefined();
+    expect(screen.getByText("+6")).toBeDefined();
+    expect(screen.getByText("Investigator")).toBeDefined();
+    expect(screen.getByText("+5")).toBeDefined();
   });
 
   it("fires final persistence exactly once on entering complete", async () => {
