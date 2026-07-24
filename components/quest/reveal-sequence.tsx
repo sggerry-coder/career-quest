@@ -8,8 +8,6 @@ import MbtiSliders from "@/components/charts/mbti-sliders";
 import ValuesSliders from "@/components/charts/values-sliders";
 import ClassLabel from "@/components/charts/class-label";
 import EmergingType from "@/components/charts/emerging-type";
-import BadgeUnlock from "@/components/badges/badge-unlock";
-import CompletionScreen from "@/components/quest/completion-screen";
 import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
@@ -29,12 +27,6 @@ interface RevealSequenceProps {
   className: string;
   tone: "quest" | "explorer";
   onRevealComplete: () => void;
-  onSessionComplete: () => void;
-  persistResult?: { success: boolean; errorType?: string } | null;
-  onRetryPersist?: () => void;
-  onSignIn?: () => void;
-  onSaveExit?: () => void;
-  onPersistStart?: () => void;
 }
 
 type RevealPhase =
@@ -46,26 +38,15 @@ type RevealPhase =
   | "emerging_type"
   | "values"
   | "explanation"
-  | "confirmatory_intro"
-  | "badge_unlock"
-  | "comparison_hint"
-  | "session_complete"
-  | "done";
+  | "confirmatory_intro";
 
 export default function RevealSequence({
   scoreState,
   className,
   tone,
   onRevealComplete,
-  onSessionComplete,
-  persistResult = null,
-  onRetryPersist = () => {},
-  onSignIn = () => {},
-  onSaveExit = () => {},
-  onPersistStart,
 }: RevealSequenceProps) {
   const [phase, setPhase] = useState<RevealPhase>("transition");
-  const [showBadge, setShowBadge] = useState(false);
 
   const classLabel = deriveClassLabel(scoreState.riasec);
   const mbtiRawCounts: Record<string, number> = {};
@@ -81,13 +62,6 @@ export default function RevealSequence({
       return () => clearTimeout(timer);
     }
   }, [phase]);
-
-  // Trigger persist when entering session_complete phase
-  useEffect(() => {
-    if (phase === "session_complete" && onPersistStart) {
-      onPersistStart();
-    }
-  }, [phase, onPersistStart]);
 
   const handleNext = useCallback(() => {
     const sequence: RevealPhase[] = [
@@ -106,10 +80,6 @@ export default function RevealSequence({
       setPhase(sequence[currentIdx + 1]);
     } else if (phase === "confirmatory_intro") {
       onRevealComplete();
-    } else if (phase === "badge_unlock") {
-      setPhase("comparison_hint");
-    } else if (phase === "comparison_hint") {
-      setPhase("session_complete");
     }
   }, [phase, onRevealComplete]);
 
@@ -132,65 +102,6 @@ export default function RevealSequence({
             : `Here are your results, ${className}.`}
         </motion.p>
       </motion.div>
-    );
-  }
-
-  // Badge unlock overlay
-  if (showBadge && phase === "badge_unlock") {
-    return (
-      <BadgeUnlock
-        badgeName="Self-Discoverer"
-        badgeIcon="magnifying-glass"
-        onComplete={() => {
-          setShowBadge(false);
-          handleNext();
-        }}
-      />
-    );
-  }
-
-  // Session complete celebration
-  if (phase === "session_complete") {
-    return (
-      <SectionErrorBoundary name="Completion">
-        <CompletionScreen
-          tone={tone}
-          classLabel={className}
-          scoreState={{ riasec: scoreState.riasec, strengths: scoreState.strengths }}
-          onViewDashboard={onSessionComplete}
-          onSaveExit={onSaveExit}
-          persistResult={persistResult}
-          onRetryPersist={onRetryPersist}
-          onSignIn={onSignIn}
-        />
-      </SectionErrorBoundary>
-    );
-  }
-
-  // Comparison hint
-  if (phase === "comparison_hint") {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-md"
-        >
-          <span className="text-4xl mb-4 block">{"\u{1F4A1}"}</span>
-          <p className="text-white/80 text-sm leading-relaxed mb-6">
-            Your profile has been saved. The dashboard is where you can review
-            your results anytime.
-          </p>
-          <button
-            onClick={handleNext}
-            className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-            aria-label="Finish"
-            tabIndex={0}
-          >
-            View Dashboard
-          </button>
-        </motion.div>
-      </div>
     );
   }
 

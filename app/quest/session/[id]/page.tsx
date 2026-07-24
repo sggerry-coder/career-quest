@@ -13,6 +13,8 @@ import EngagementCheckpoint from "@/components/quest/engagement-checkpoint";
 import DiscoveryModePrompt from "@/components/quest/discovery-mode-prompt";
 import SelfMapCapture from "@/components/selfmap/self-map-capture";
 import RevealSequence from "@/components/quest/reveal-sequence";
+import CompletionScreen from "@/components/quest/completion-screen";
+import BadgeUnlock from "@/components/badges/badge-unlock";
 import ConfirmationToast from "@/components/ui/confirmation-toast";
 import { useQuestState } from "@/hooks/use-quest-state";
 import { useScores } from "@/hooks/use-scores";
@@ -231,7 +233,7 @@ export default function Session({
     }
   }, [persistResult, runFinalPersist, router]);
 
-  // Auto-persist when CompletionScreen appears inside RevealSequence
+  // Auto-persist exactly once when the session reaches the complete phase
   const hasPersisted = useRef(false);
   const handlePersistStart = useCallback(() => {
     if (hasPersisted.current) return;
@@ -241,6 +243,18 @@ export default function Session({
       () => setPersistResult({ success: false, errorType: "unknown", message: "Unexpected error" })
     );
   }, [runFinalPersist]);
+
+  // Fire persistence on entry to the complete phase (guarded by hasPersisted).
+  // Waits for studentId so the auth lookup finishing late cannot strand the
+  // one-shot persist in a guaranteed-failure state.
+  useEffect(() => {
+    if (flowPhase === "complete" && studentId !== null) {
+      handlePersistStart();
+    }
+  }, [flowPhase, studentId, handlePersistStart]);
+
+  // Badge celebration overlay shown before the completion screen
+  const [showBadgeUnlock, setShowBadgeUnlock] = useState(true);
 
   /**
    * Resolve narration text for a block transition.
@@ -559,27 +573,14 @@ export default function Session({
   // Reveal sequence
   if (flowPhase === "reveal") {
     return (
-      <>
-        <SectionErrorBoundary name="Profile Reveal">
+      <SectionErrorBoundary name="Profile Reveal">
         <RevealSequence
           scoreState={scoreState}
           className={avatarClassName}
           tone={studentTone}
           onRevealComplete={handleRevealComplete}
-          onSessionComplete={() => dispatch({ type: "COMPLETE_SESSION" })}
-          persistResult={persistResult}
-          onRetryPersist={handleRetryPersist}
-          onSignIn={handleSignIn}
-          onSaveExit={handleSaveExit}
-          onPersistStart={handlePersistStart}
         />
-        </SectionErrorBoundary>
-        <ConfirmationToast
-          message="Your progress is saved!"
-          visible={showSaveToast}
-          onDismiss={() => setShowSaveToast(false)}
-        />
-      </>
+      </SectionErrorBoundary>
     );
   }
 
@@ -615,31 +616,34 @@ export default function Session({
     );
   }
 
-  // Session complete
+  // Session complete: badge celebration, then the real completion screen.
+  // Persistence fires exactly once via the flowPhase effect above.
   if (flowPhase === "complete") {
     return (
       <>
-        <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
-          <span className="text-6xl mb-6">{"\u{1F389}"}</span>
-          <h1 className="text-2xl font-bold text-white mb-2">
-            Quest progress saved!
-          </h1>
-          <p className="text-white/60 mb-8">
-            Session 1 complete. Your profile has been revealed.
-          </p>
-          <div className="flex flex-col gap-3 w-full max-w-xs">
-            <a
-              href="/quest/dashboard"
-              className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white text-center shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-            >
-              View Dashboard
-            </a>
-            <div className="flex items-center gap-2 justify-center text-white/30 mt-4">
-              <span className="text-lg">{"\u{1F512}"}</span>
-              <span className="text-sm">Session 2 coming soon</span>
-            </div>
-          </div>
-        </div>
+        {showBadgeUnlock ? (
+          <BadgeUnlock
+            badgeName="Self-Discoverer"
+            badgeIcon="magnifying-glass"
+            onComplete={() => setShowBadgeUnlock(false)}
+          />
+        ) : (
+          <SectionErrorBoundary name="Completion">
+            <CompletionScreen
+              tone={studentTone}
+              classLabel={scoreState.class_label}
+              scoreState={{
+                riasec: scoreState.riasec,
+                strengths: scoreState.strengths,
+              }}
+              onViewDashboard={() => router.push("/quest/dashboard")}
+              onSaveExit={handleSaveExit}
+              persistResult={persistResult}
+              onRetryPersist={handleRetryPersist}
+              onSignIn={handleSignIn}
+            />
+          </SectionErrorBoundary>
+        )}
         <ConfirmationToast
           message="Your progress is saved!"
           visible={showSaveToast}
