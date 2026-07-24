@@ -131,6 +131,21 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 
+// Disable retry backoff in the wiring test: a single attempt per write keeps
+// the failure-path assertions deterministic. Retry behaviour itself is locked
+// by lib/persistence/__tests__/final-persist.test.ts.
+vi.mock("@/lib/persistence/final-persist", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/persistence/final-persist")>();
+  return {
+    ...actual,
+    runFinalPersist: (
+      input: Parameters<typeof actual.runFinalPersist>[0],
+      options?: Parameters<typeof actual.runFinalPersist>[1]
+    ) => actual.runFinalPersist(input, { ...options, retryDelays: [] }),
+  };
+});
+
 // Badge overlay completes immediately so CompletionScreen mounts without timers
 vi.mock("@/components/badges/badge-unlock", async () => {
   const { useEffect } = await import("react");

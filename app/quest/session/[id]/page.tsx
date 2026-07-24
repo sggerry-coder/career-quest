@@ -24,9 +24,7 @@ import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
 import { classDefinitions, applyClassTheme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
-import { validateScoresBeforePersist } from "@/lib/validation/score-validation";
-import { buildMbtiRawCounts } from "@/lib/scoring/mbti";
-import { classifySupabaseError } from "@/lib/validation/error-classification";
+import { runFinalPersist } from "@/lib/persistence/final-persist";
 import type { PersistResult } from "@/lib/validation/error-classification";
 import type { Question, ClientResponse } from "@/lib/types/quest";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
@@ -138,106 +136,39 @@ export default function Session({
 
   /**
    * Run final persistence: scores, responses, completion flag.
+   * Delegates to lib/persistence/final-persist (retry with backoff).
    * Returns a PersistResult without calling setState -- callers handle state.
    */
-  const runFinalPersist = useCallback(async (): Promise<PersistResult> => {
+  const persistFinal = useCallback(async (): Promise<PersistResult> => {
     if (!studentId) {
       return { success: false, errorType: "auth", message: "No authenticated user" };
     }
-
-    try {
-      const supabase = createClient();
-
-      // Pre-save validation
-      const validation = validateScoresBeforePersist(
-        { riasec: scoreState.riasec, mi: scoreState.mi, mbti: scoreState.mbti, values: scoreState.values },
-        questState.responses.length
-      );
-      if (!validation.valid) {
-        return { success: false, errorType: "unknown", message: `Validation failed: ${validation.errors.join("; ")}` };
-      }
-
-      // Write session responses using upsert for idempotency
-      const sessionResponses = questState.responses.map((r) => ({
-        student_id: studentId,
-        session_number: 1,
-        question_id: r.question_id,
-        question_text: r.response_label,
-        response_text: String(r.response_value),
-        framework_signals: {
-          framework: r.framework,
-          target: r.framework_target,
-          value: r.response_value,
-        },
-      }));
-
-      if (sessionResponses.length > 0) {
-        const responsesResult = await supabase.from("session_responses").upsert(sessionResponses, {
-          onConflict: "student_id,question_id,session_number",
-        });
-        if (responsesResult.error) {
-          const errorType = classifySupabaseError(responsesResult.error);
-          return { success: false, errorType, message: String((responsesResult.error as { message?: string }).message ?? "Unknown error") };
-        }
-      }
-
-      // Write computed scores
-      const scoresResult = await supabase.from("assessment_scores").upsert({
-        student_id: studentId,
-        riasec_scores: scoreState.riasec,
-        mi_scores: scoreState.mi,
-        mbti_indicators: scoreState.mbti,
-        mbti_raw_counts: buildMbtiRawCounts(scoreState.mbti_raw),
-        values_compass: scoreState.values,
+    return runFinalPersist({
+      studentId,
+      responses: questState.responses,
+      scores: {
+        riasec: scoreState.riasec,
+        mi: scoreState.mi,
+        mbti: scoreState.mbti,
+        mbti_raw: scoreState.mbti_raw,
+        values: scoreState.values,
         strengths: scoreState.strengths,
-        updated_at: new Date().toISOString(),
-      });
-      if (scoresResult.error) {
-        const errorType = classifySupabaseError(scoresResult.error);
-        return { success: false, errorType, message: String((scoresResult.error as { message?: string }).message ?? "Unknown error") };
-      }
-
-      // Mark student as completed; merge self-map reflections (clarity,
-      // sources, perceived strengths) into the existing self_map without
-      // dropping character-creation data such as curiosities
-      const studentUpdate: Record<string, unknown> = {
-        current_session: 1,
-        has_completed_session1: true,
-      };
-      if (selfMapData.current) {
-        studentUpdate.self_map = {
-          ...existingSelfMap.current,
-          ...selfMapData.current,
-        };
-      }
-      const studentResult = await supabase
-        .from("students")
-        .update(studentUpdate)
-        .eq("id", studentId);
-      if (studentResult.error) {
-        const errorType = classifySupabaseError(studentResult.error);
-        return { success: false, errorType, message: String((studentResult.error as { message?: string }).message ?? "Unknown error") };
-      }
-
-      // Insert Self-Discoverer achievement
-      await supabase.from("achievements").upsert(
-        { student_id: studentId, badge_id: "self_discoverer", unlocked_at: new Date().toISOString() },
-        { onConflict: "student_id,badge_id" }
-      );
-
-      return { success: true };
-    } catch (err) {
-      const errorType = classifySupabaseError(err);
-      return { success: false, errorType, message: err instanceof Error ? err.message : "Unknown error" };
-    }
+      },
+      // Merge self-map reflections (clarity, sources, perceived strengths)
+      // into the existing self_map without dropping character-creation data
+      // such as curiosities
+      selfMap: selfMapData.current
+        ? { ...existingSelfMap.current, ...selfMapData.current }
+        : null,
+    });
   }, [studentId, scoreState, questState.responses]);
 
   /** Retry persistence after a failure. */
   const handleRetryPersist = useCallback(async (): Promise<void> => {
     setPersistResult(null);
-    const result = await runFinalPersist();
+    const result = await persistFinal();
     setPersistResult(result);
-  }, [runFinalPersist]);
+  }, [persistFinal]);
 
   /** Navigate to landing for sign-in. */
   const handleSignIn = useCallback((): void => {
@@ -250,25 +181,25 @@ export default function Session({
       setShowSaveToast(true);
       setTimeout(() => router.push("/"), 2200);
     } else {
-      const result = await runFinalPersist();
+      const result = await persistFinal();
       setPersistResult(result);
       if (result.success) {
         setShowSaveToast(true);
         setTimeout(() => router.push("/"), 2200);
       }
     }
-  }, [persistResult, runFinalPersist, router]);
+  }, [persistResult, persistFinal, router]);
 
   // Auto-persist exactly once when the session reaches the complete phase
   const hasPersisted = useRef(false);
   const handlePersistStart = useCallback(() => {
     if (hasPersisted.current) return;
     hasPersisted.current = true;
-    runFinalPersist().then(
+    persistFinal().then(
       (result) => setPersistResult(result),
       () => setPersistResult({ success: false, errorType: "unknown", message: "Unexpected error" })
     );
-  }, [runFinalPersist]);
+  }, [persistFinal]);
 
   // Fire persistence on entry to the complete phase (guarded by hasPersisted).
   // Waits for studentId so the auth lookup finishing late cannot strand the
