@@ -17,7 +17,14 @@ export default function XpBar({ currentXp, maxXp }: XpBarProps) {
   const pct = maxXp > 0 ? Math.min((currentXp / maxXp) * 100, 100) : 0;
 
   return (
-    <div className="w-full">
+    <div
+      className="w-full"
+      role="progressbar"
+      aria-valuenow={currentXp}
+      aria-valuemin={0}
+      aria-valuemax={maxXp}
+      aria-label={`${currentXp} of ${maxXp} experience points`}
+    >
       {/* XP count */}
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs font-medium text-white/60">XP</span>

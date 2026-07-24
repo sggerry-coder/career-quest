@@ -51,6 +51,12 @@ export default function BadgeUnlock({
           transition={{ duration: 0.3 }}
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
           onClick={() => setVisible(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") setVisible(false);
+          }}
+          role="button"
+          tabIndex={0}
+          aria-label="Badge unlocked. Press to continue"
         >
           {/* Glow pulse background */}
           <motion.div

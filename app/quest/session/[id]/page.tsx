@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import QuestionCard from "@/components/quest/question-card";
 import LikertSlider from "@/components/quest/likert-slider";
 import SpectrumSlider from "@/components/quest/spectrum-slider";
@@ -614,7 +615,7 @@ export default function Session({
   if (flowPhase === "confirmatory" && currentQuestion) {
     return (
       <div>
-        <div className="absolute top-4 left-4 right-4">
+        <div className="absolute top-16 left-4 right-4 z-20">
           <ProgressBar
             currentBlock="Confirmatory"
             questionsAnsweredInBlock={confirmIndex}
@@ -628,8 +629,8 @@ export default function Session({
           questionText={currentQuestion.question_text}
           questionIndex={confirmIndex}
           totalQuestions={adaptiveQuestions.length}
-          blockName="Confirmatory"
-          timeEstimate="~2 min left"
+          blockName=""
+          timeEstimate=""
           direction={direction}
           canUndo={false}
           onUndo={() => {}}
@@ -679,6 +680,28 @@ export default function Session({
     );
   }
 
+  // Unknown or locked session (only Session 1 has questions in v1)
+  if (sessionQuestions.length === 0) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
+        <span className="text-5xl mb-4">{"\u{1F512}"}</span>
+        <h1 className="text-xl font-semibold text-white mb-2">
+          This chapter isn&apos;t unlocked yet
+        </h1>
+        <p className="text-sm text-white/50 mb-6">
+          Your quest continues in Session 1 for now &mdash; more chapters are
+          coming soon.
+        </p>
+        <Link
+          href="/"
+          className="rounded-xl bg-[var(--color-primary)] px-6 py-3 text-white font-medium min-h-[44px]"
+        >
+          Back to home
+        </Link>
+      </div>
+    );
+  }
+
   // Main question flow
   if (!currentQuestion) {
     return (
@@ -716,8 +739,8 @@ export default function Session({
           questionText={currentQuestion.question_text}
           questionIndex={currentIndex}
           totalQuestions={sessionQuestions.length}
-          blockName={currentBlock?.name ?? ""}
-          timeEstimate={`~${timeEstimate} left`}
+          blockName=""
+          timeEstimate=""
           direction={direction}
           canUndo={canUndo}
           onUndo={handleUndo}

@@ -27,7 +27,14 @@ export default function ProgressBar({
     totalQuestions > 0 ? (totalQuestionsAnswered / totalQuestions) * 100 : 0;
 
   return (
-    <div className="w-full max-w-lg mx-auto">
+    <div
+      className="w-full max-w-lg mx-auto"
+      role="progressbar"
+      aria-valuenow={totalQuestionsAnswered}
+      aria-valuemin={0}
+      aria-valuemax={totalQuestions}
+      aria-label={`Quest progress: ${totalQuestionsAnswered} of ${totalQuestions} questions answered`}
+    >
       {/* Block name pill + time estimate */}
       <div className="flex items-center justify-between mb-2">
         <span className="rounded-full bg-[var(--color-primary)]/20 px-3 py-1 text-xs font-medium text-[var(--color-primary)]">

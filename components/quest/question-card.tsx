@@ -74,11 +74,15 @@ export default function QuestionCard({
               </svg>
             </button>
           )}
-          <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/70">
-            {blockName}
-          </span>
+          {blockName && (
+            <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/70">
+              {blockName}
+            </span>
+          )}
         </div>
-        <span className="text-xs text-white/50">{timeEstimate}</span>
+        {timeEstimate && (
+          <span className="text-xs text-white/50">{timeEstimate}</span>
+        )}
       </div>
 
       {/* Question content */}
