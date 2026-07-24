@@ -33,6 +33,16 @@
   /* Spacing */
   --cq-card-padding: 1.5rem;
   --cq-gap: 1rem;
+
+  /* Aliases used throughout quest/dashboard components.
+     These resolve to the active class theme because the [data-theme]
+     overrides below apply to this same :root element. Without these
+     definitions every var(--color-primary) button, progress fill, and
+     glow rendered transparent. */
+  --color-primary: var(--cq-primary);
+  --color-accent: var(--cq-accent);
+  --color-glow: var(--cq-glow);
+  --border-radius: var(--cq-radius);
 }
 
 /* --- Theme: purple-teal (Shadow Court) --- */
