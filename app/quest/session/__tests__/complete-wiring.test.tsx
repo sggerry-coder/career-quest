@@ -232,6 +232,12 @@ describe("session complete wiring", () => {
     expect(responsesCalls).toHaveLength(1);
     expect(responsesCalls[0].payload).toHaveLength(12);
 
+    // SCORE-01: raw MBTI counts are persisted alongside computed scores
+    const scoresCall = h.calls.find((c) => c.table === "assessment_scores");
+    expect(scoresCall?.payload).toMatchObject({
+      mbti_raw_counts: { EI: 3, SN: 3, TF: 1, JP: 2 },
+    });
+
     const studentUpdates = h.calls.filter((c) => c.table === "students");
     expect(studentUpdates).toHaveLength(1);
     expect(studentUpdates[0].payload).toMatchObject({

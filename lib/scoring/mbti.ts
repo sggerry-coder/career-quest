@@ -51,6 +51,21 @@ export function calculateAllMbti(
 }
 
 /**
+ * Build per-dichotomy response counts from raw MBTI response arrays.
+ * Persisted alongside computed scores so deriveEmergingType can enforce
+ * its minimum-response rule for returning students on the dashboard.
+ */
+export function buildMbtiRawCounts(
+  raw: Record<string, number[]>
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const dichotomy of MBTI_DICHOTOMIES) {
+    counts[dichotomy] = raw[dichotomy]?.length ?? 0;
+  }
+  return counts;
+}
+
+/**
  * Determine if a dichotomy score is too close to center to be definitive.
  * With 2 questions per dichotomy, scores of -33, 0, +33 are "still emerging".
  */

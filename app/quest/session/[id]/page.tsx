@@ -24,6 +24,7 @@ import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
 import { classDefinitions } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { validateScoresBeforePersist } from "@/lib/validation/score-validation";
+import { buildMbtiRawCounts } from "@/lib/scoring/mbti";
 import { classifySupabaseError } from "@/lib/validation/error-classification";
 import type { PersistResult } from "@/lib/validation/error-classification";
 import type { Question, ClientResponse } from "@/lib/types/quest";
@@ -174,6 +175,7 @@ export default function Session({
         riasec_scores: scoreState.riasec,
         mi_scores: scoreState.mi,
         mbti_indicators: scoreState.mbti,
+        mbti_raw_counts: buildMbtiRawCounts(scoreState.mbti_raw),
         values_compass: scoreState.values,
         strengths: scoreState.strengths,
         updated_at: new Date().toISOString(),

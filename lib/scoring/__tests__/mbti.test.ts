@@ -4,6 +4,7 @@ import {
   calculateAllMbti,
   isStillEmerging,
   deriveEmergingType,
+  buildMbtiRawCounts,
 } from "../mbti";
 
 describe("calculateMbtiDichotomy", () => {
@@ -159,6 +160,27 @@ describe("deriveEmergingType with rawCounts", () => {
     // EI: -80 → I, SN: 60 → N, TF: -50 → T, JP: 70 → P
     expect(result.type).toBe("INTP");
     expect(result.hasEmerging).toBe(false);
+  });
+});
+
+describe("buildMbtiRawCounts", () => {
+  it("counts raw responses per dichotomy", () => {
+    const raw = { EI: [1, 2, 3], SN: [-2, -1], TF: [2], JP: [] };
+    expect(buildMbtiRawCounts(raw)).toEqual({ EI: 3, SN: 2, TF: 1, JP: 0 });
+  });
+
+  it("returns 0 for missing dichotomies", () => {
+    expect(buildMbtiRawCounts({})).toEqual({ EI: 0, SN: 0, TF: 0, JP: 0 });
+  });
+
+  it("round-trips into deriveEmergingType's minimum-response rule", () => {
+    const raw = { EI: [3, 3], SN: [3, 3, 3], TF: [3, 3, 3], JP: [3, 3, 3] };
+    const counts = buildMbtiRawCounts(raw);
+    const scores = { EI: 100, SN: 100, TF: 100, JP: 100 };
+    const result = deriveEmergingType(scores, counts);
+    // EI has only 2 responses -> forced underscore despite max score
+    expect(result.type).toBe("_NFP");
+    expect(result.hasEmerging).toBe(true);
   });
 });
 

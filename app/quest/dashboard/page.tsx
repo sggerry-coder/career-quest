@@ -34,6 +34,9 @@ interface ScoresData {
   riasec_scores: Record<string, number>;
   mi_scores: Record<string, number>;
   mbti_indicators: Record<string, number>;
+  // Null for rows persisted before migration 00004 added the column;
+  // deriveEmergingType then falls back to score-only detection.
+  mbti_raw_counts: Record<string, number> | null;
   values_compass: Record<string, number>;
   strengths: string[];
 }
@@ -99,7 +102,7 @@ export default function Dashboard() {
           supabase
             .from("assessment_scores")
             .select(
-              "riasec_scores, mi_scores, mbti_indicators, values_compass, strengths"
+              "riasec_scores, mi_scores, mbti_indicators, mbti_raw_counts, values_compass, strengths"
             )
             .eq("student_id", user.id)
             .single(),
@@ -158,7 +161,10 @@ export default function Dashboard() {
   const hasCompletedSession1 = student.has_completed_session1;
   const xp = calculateXp(student.current_session, hasCompletedSession1);
   const classLabel = deriveClassLabel(scores.riasec_scores);
-  const { display: emergingTypeCode, hasEmerging } = deriveEmergingType(scores.mbti_indicators);
+  const { display: emergingTypeCode, hasEmerging } = deriveEmergingType(
+    scores.mbti_indicators,
+    scores.mbti_raw_counts ?? undefined
+  );
 
   return (
     <div className="min-h-dvh bg-gradient-to-b from-[#0f0a1e] to-[#1a1035] px-4 py-6 pb-20">
