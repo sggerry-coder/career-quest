@@ -23,7 +23,7 @@ import { useScores } from "@/hooks/use-scores";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
-import { classDefinitions, applyClassTheme } from "@/lib/theme";
+import { classDefinitions, applyClassTheme, cacheTone, readCachedTone } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { runFinalPersist } from "@/lib/persistence/final-persist";
 import {
@@ -76,7 +76,11 @@ export default function Session({
 
   const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse, takeSnapshot, removeLastResponse, restoreScores } = useScores();
 
-  const [studentTone, setStudentTone] = useState<"quest" | "explorer">("quest");
+  // Initialize from the tone cache (P2.5) so returning students never see a
+  // flash of the wrong narration voice; the profile fetch corrects drift.
+  const [studentTone, setStudentTone] = useState<"quest" | "explorer">(
+    () => readCachedTone() ?? "quest"
+  );
 
   // Mid-session checkpoint resume (P1.1):
   // "checking"  -- waiting for the student profile fetch + snapshot lookup
@@ -121,6 +125,7 @@ export default function Session({
         }
         if (data?.tone === "quest" || data?.tone === "explorer") {
           setStudentTone(data.tone);
+          cacheTone(data.tone);
         }
         if (data?.self_map && typeof data.self_map === "object") {
           existingSelfMap.current = data.self_map as Record<string, unknown>;

@@ -1,7 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, type ReactNode } from "react";
-import { themes, type ThemeName, type ThemeConfig } from "@/lib/theme";
+import {
+  themes,
+  cacheThemeName,
+  readCachedThemeName,
+  type ThemeName,
+  type ThemeConfig,
+} from "@/lib/theme";
 
 interface ThemeContextValue {
   theme: ThemeConfig;
@@ -39,11 +45,16 @@ export function ThemeProvider({
   const currentTheme = themes[initialTheme];
 
   useEffect(() => {
-    applyThemeProperties(currentTheme);
+    // Prefer the cached class theme (already applied pre-paint by the
+    // inline script in the root layout) over the static default, so
+    // hydration never flips a returning student back to purple (P2.5).
+    const cached = readCachedThemeName();
+    applyThemeProperties(cached ? themes[cached] : currentTheme);
   }, [currentTheme]);
 
   const setTheme = (themeName: ThemeName) => {
     const newTheme = themes[themeName];
+    cacheThemeName(themeName);
     applyThemeProperties(newTheme);
   };
 

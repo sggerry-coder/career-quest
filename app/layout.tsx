@@ -10,6 +10,13 @@ export const metadata: Metadata = {
   description: "Discover your career path through a gamified quest",
 };
 
+// Instant theme (P2.5): restore the cached class theme synchronously before
+// first paint so returning magenta/blue students never see a purple flash.
+// Runs inline at the top of <body>; the Supabase profile fetch remains the
+// source of truth and corrects drift after hydration. Keep the key in sync
+// with THEME_CACHE_KEY in lib/theme.ts.
+const themeInitScript = `try{var t=localStorage.getItem("cq-theme");if(t==="purple-teal"||t==="magenta-violet"||t==="blue-indigo"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,6 +31,7 @@ export default function RootLayout({
           minHeight: "100vh",
         }}
       >
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <ThemeProvider initialTheme="purple-teal">
           {children}
         </ThemeProvider>

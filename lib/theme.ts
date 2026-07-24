@@ -54,8 +54,63 @@ export function getThemeForClass(classId: string): ThemeConfig {
   return themes[classDef.theme];
 }
 
+// ---------------------------------------------------------------------------
+// Instant-theme cache (P2.5)
+//
+// The theme name and tone are cached in localStorage so an inline script in
+// the root layout can set data-theme synchronously before first paint,
+// killing the default-purple flash. The Supabase profile fetch remains the
+// source of truth and corrects any drift (re-caching as it does).
+// ---------------------------------------------------------------------------
+
+export const THEME_CACHE_KEY = "cq-theme";
+export const TONE_CACHE_KEY = "cq-tone";
+
+/** Cache the active theme name for pre-paint restoration. */
+export function cacheThemeName(name: ThemeName): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(THEME_CACHE_KEY, name);
+  } catch {
+    // Silent catch -- caching is best-effort
+  }
+}
+
+/** Read the cached theme name, or null when absent/invalid. */
+export function readCachedThemeName(): ThemeName | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = window.localStorage.getItem(THEME_CACHE_KEY);
+    return value && value in themes ? (value as ThemeName) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Cache the student's tone alongside the theme. */
+export function cacheTone(tone: "quest" | "explorer"): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(TONE_CACHE_KEY, tone);
+  } catch {
+    // Silent catch
+  }
+}
+
+/** Read the cached tone, or null when absent/invalid. */
+export function readCachedTone(): "quest" | "explorer" | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const value = window.localStorage.getItem(TONE_CACHE_KEY);
+    return value === "quest" || value === "explorer" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Apply the visual theme for a student's chosen class to the document.
+ * Apply the visual theme for a student's chosen class to the document and
+ * cache it for instant restoration on the next page load.
  * Used to restore the class theme for returning students, since the root
  * ThemeProvider only knows the default theme.
  */
@@ -63,6 +118,7 @@ export function applyClassTheme(classId: string): void {
   if (typeof document === "undefined") return;
   const theme = getThemeForClass(classId);
   document.documentElement.setAttribute("data-theme", theme.name);
+  cacheThemeName(theme.name);
 }
 
 export function getClassName(

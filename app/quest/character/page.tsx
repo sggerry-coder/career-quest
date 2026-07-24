@@ -9,7 +9,7 @@ import { EducationCards } from "@/components/character/education-cards";
 import { DestinationPicker } from "@/components/character/destination-picker";
 import { CuriositiesPicker } from "@/components/character/curiosities-picker";
 import { provisionStudent } from "@/lib/persistence/provision-student";
-import { classes } from "@/data/classes";
+import { applyClassTheme, cacheTone } from "@/lib/theme";
 
 type WizardStep = 0 | 1 | 2;
 
@@ -52,14 +52,12 @@ export default function CharacterCreation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Apply theme when class is selected
+  // Apply + cache the theme when a class is selected so the next page load
+  // paints in the right colours instantly (P2.5)
   const handleClassSelect = useCallback(
     (classId: string) => {
       setSelectedClass(classId);
-      const classDef = classes.find((c) => c.id === classId);
-      if (classDef) {
-        document.documentElement.setAttribute("data-theme", classDef.theme);
-      }
+      applyClassTheme(classId);
     },
     []
   );
@@ -113,6 +111,9 @@ export default function CharacterCreation() {
         setIsSubmitting(false);
         return;
       }
+
+      // Cache tone for instant restoration on future loads (P2.5)
+      cacheTone(tone);
 
       // Navigate to Session 1
       router.push("/quest/session/1");
