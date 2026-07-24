@@ -12,6 +12,7 @@ import SelfVsMeasured from "@/components/charts/self-vs-measured";
 import BadgeRow from "@/components/badges/badge-row";
 import XpBar from "@/components/ui/xp-bar";
 import { badges as allBadgeDefinitions } from "@/data/badges";
+import { calculateXp, getCurrentMilestone, getUnlockedCosmetics } from "@/lib/xp";
 import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
 import { applyClassTheme } from "@/lib/theme";
@@ -47,13 +48,21 @@ interface AchievementRow {
   badge_id: string;
 }
 
-// XP calculation based on spec
-function calculateXp(currentSession: number, hasCompletedSession1: boolean): number {
-  let xp = 100; // character creation
-  if (hasCompletedSession1) {
-    xp += 50 + 100 + 50 + 100 + 25 + 25; // warmup + riasec + mi + mbti + values + confirmatory
-  }
-  return xp;
+// Cosmetic unlock tiers (P2.2): each tier applies a real accent to the
+// profile frame. Highest unlocked tier wins.
+const COSMETIC_FRAME_CLASSES: Record<string, string> = {
+  gold_trim:
+    "rounded-2xl border-2 border-amber-400/60 bg-gradient-to-r from-amber-400/10 to-transparent shadow-[0_0_18px_rgba(251,191,36,0.25)] p-3",
+  accent:
+    "rounded-2xl border border-[var(--color-accent)]/50 bg-white/5 p-3",
+  background: "rounded-2xl bg-white/5 border border-white/10 p-3",
+};
+
+function getFrameClass(unlocked: string[]): string {
+  if (unlocked.includes("gold_trim")) return COSMETIC_FRAME_CLASSES.gold_trim;
+  if (unlocked.includes("accent")) return COSMETIC_FRAME_CLASSES.accent;
+  if (unlocked.includes("background")) return COSMETIC_FRAME_CLASSES.background;
+  return "";
 }
 
 // CLASS name mapping for avatar
@@ -166,6 +175,8 @@ export default function Dashboard() {
   const classIcon = CLASS_ICONS[student.avatar_class] ?? "\u{2728}";
   const hasCompletedSession1 = student.has_completed_session1;
   const xp = calculateXp(student.current_session, hasCompletedSession1);
+  const milestone = getCurrentMilestone(student.current_session);
+  const frameClass = getFrameClass(getUnlockedCosmetics(xp));
   const classLabel = deriveClassLabel(scores.riasec_scores);
   const { display: emergingTypeCode, hasEmerging } = deriveEmergingType(
     scores.mbti_indicators,
@@ -175,8 +186,9 @@ export default function Dashboard() {
   return (
     <div className="min-h-dvh bg-gradient-to-b from-[#0f0a1e] to-[#1a1035] px-4 py-6 pb-20">
       <div className="mx-auto max-w-3xl">
-        {/* === Top bar: avatar + class + level + XP === */}
-        <div className="flex items-center gap-4 mb-6">
+        {/* === Top bar: avatar + class + level + XP ===
+            Frame accent comes from unlocked cosmetic tiers (P2.2) */}
+        <div className={`flex items-center gap-4 mb-6 ${frameClass}`}>
           <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/40 text-2xl flex-shrink-0">
             {classIcon}
           </div>
@@ -192,7 +204,11 @@ export default function Dashboard() {
             <p className="text-xs text-white/40 mb-1">
               Level {student.age}
             </p>
-            <XpBar currentXp={xp} maxXp={1000} />
+            <XpBar
+              currentXp={xp}
+              maxXp={milestone.maxXp}
+              milestoneLabel={milestone.label}
+            />
           </div>
         </div>
 
