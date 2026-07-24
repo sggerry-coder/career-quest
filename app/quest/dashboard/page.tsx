@@ -8,6 +8,7 @@ import MiPreviewBars from "@/components/charts/mi-preview-bars";
 import MbtiSliders from "@/components/charts/mbti-sliders";
 import ValuesSliders from "@/components/charts/values-sliders";
 import EmergingType from "@/components/charts/emerging-type";
+import SelfVsMeasured from "@/components/charts/self-vs-measured";
 import BadgeRow from "@/components/badges/badge-row";
 import XpBar from "@/components/ui/xp-bar";
 import { badges as allBadgeDefinitions } from "@/data/badges";
@@ -287,6 +288,14 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          {/* === Self-perception vs measured profile (P2.1) === */}
+          <div className="mb-6">
+            <SelfVsMeasured
+              selfMap={student.self_map}
+              detectedStrengths={scores.strengths ?? []}
+            />
+          </div>
         </SectionErrorBoundary>
 
         {/* === Quest Log === */}

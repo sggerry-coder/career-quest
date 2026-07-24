@@ -23,7 +23,7 @@ const INTEREST_SOURCES = [
   { value: "none", label: "Haven't thought about it" },
 ];
 
-const STRENGTHS_GRID = [
+export const STRENGTHS_GRID = [
   { value: "building", label: "Building / Fixing", emoji: "\u{1F527}" },
   { value: "puzzles", label: "Solving Puzzles", emoji: "\u{1F9E9}" },
   { value: "creating", label: "Creating / Designing", emoji: "\u{1F3A8}" },

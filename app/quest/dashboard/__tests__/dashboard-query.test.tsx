@@ -100,7 +100,8 @@ describe("dashboard data wiring", () => {
     // Populated dashboard, not the "No results yet" empty state
     expect(await screen.findByText("Aria")).toBeDefined();
     expect(screen.queryByText("No results yet")).toBeNull();
-    expect(screen.getByText("Creative Thinking")).toBeDefined();
+    // Appears in Detected Strengths and in the self-vs-measured card (P2.1)
+    expect(screen.getAllByText("Creative Thinking").length).toBeGreaterThanOrEqual(1);
 
     const studentEqs = h.eqCalls.filter((c) => c.table === "students");
     expect(studentEqs).toEqual([
