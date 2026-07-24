@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface SelfMapData {
+export interface SelfMapData {
   clarity: number;
   sources: string[];
   perceived_strengths: string[];

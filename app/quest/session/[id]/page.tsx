@@ -11,7 +11,7 @@ import ProgressBar from "@/components/quest/progress-bar";
 import BlockTransition from "@/components/quest/block-transition";
 import EngagementCheckpoint from "@/components/quest/engagement-checkpoint";
 import DiscoveryModePrompt from "@/components/quest/discovery-mode-prompt";
-import SelfMapCapture from "@/components/selfmap/self-map-capture";
+import SelfMapCapture, { type SelfMapData } from "@/components/selfmap/self-map-capture";
 import RevealSequence from "@/components/quest/reveal-sequence";
 import CompletionScreen from "@/components/quest/completion-screen";
 import BadgeUnlock from "@/components/badges/badge-unlock";
@@ -71,7 +71,14 @@ export default function Session({
 
   const [studentTone, setStudentTone] = useState<"quest" | "explorer">("quest");
 
-  // Fetch the student's avatar_class and tone from Supabase on mount (FLOW-03)
+  // Existing self_map from character creation (e.g. curiosities) so the
+  // session's self-map answers can be merged in without clobbering it.
+  const existingSelfMap = useRef<Record<string, unknown>>({});
+
+  // Self-map reflection answers captured mid-session, written at final persist
+  const selfMapData = useRef<SelfMapData | null>(null);
+
+  // Fetch the student's avatar_class, tone and self_map from Supabase on mount (FLOW-03)
   useEffect(() => {
     async function loadStudentProfile(): Promise<void> {
       try {
@@ -80,7 +87,7 @@ export default function Session({
         if (!user) return;
         const { data } = await supabase
           .from("students")
-          .select("avatar_class, tone")
+          .select("avatar_class, tone, self_map")
           .eq("id", user.id)
           .single();
         if (data?.avatar_class) {
@@ -88,6 +95,9 @@ export default function Session({
         }
         if (data?.tone === "quest" || data?.tone === "explorer") {
           setStudentTone(data.tone);
+        }
+        if (data?.self_map && typeof data.self_map === "object") {
+          existingSelfMap.current = data.self_map as Record<string, unknown>;
         }
       } catch {
         // Silent catch per project conventions -- falls back to defaults
@@ -185,10 +195,22 @@ export default function Session({
         return { success: false, errorType, message: String((scoresResult.error as { message?: string }).message ?? "Unknown error") };
       }
 
-      // Mark student as completed
+      // Mark student as completed; merge self-map reflections (clarity,
+      // sources, perceived strengths) into the existing self_map without
+      // dropping character-creation data such as curiosities
+      const studentUpdate: Record<string, unknown> = {
+        current_session: 1,
+        has_completed_session1: true,
+      };
+      if (selfMapData.current) {
+        studentUpdate.self_map = {
+          ...existingSelfMap.current,
+          ...selfMapData.current,
+        };
+      }
       const studentResult = await supabase
         .from("students")
-        .update({ current_session: 1, has_completed_session1: true })
+        .update(studentUpdate)
         .eq("id", studentId);
       if (studentResult.error) {
         const errorType = classifySupabaseError(studentResult.error);
@@ -409,9 +431,10 @@ export default function Session({
     dispatch({ type: "DISMISS_DISCOVERY" });
   }, [dispatch]);
 
-  // Handle self-map completion
+  // Handle self-map completion -- keep the reflection data for final persist
   const handleSelfMapComplete = useCallback(
-    (): void => {
+    (data: SelfMapData): void => {
+      selfMapData.current = data;
       dispatch({ type: "ENTER_REVEAL" });
     },
     [dispatch]
