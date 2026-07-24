@@ -15,6 +15,7 @@ import DiscoveryModePrompt from "@/components/quest/discovery-mode-prompt";
 import SelfMapCapture, { type SelfMapData } from "@/components/selfmap/self-map-capture";
 import RevealSequence from "@/components/quest/reveal-sequence";
 import CompletionScreen from "@/components/quest/completion-screen";
+import ResumePrompt from "@/components/quest/resume-prompt";
 import BadgeUnlock from "@/components/badges/badge-unlock";
 import ConfirmationToast from "@/components/ui/confirmation-toast";
 import { useQuestState } from "@/hooks/use-quest-state";
@@ -25,6 +26,12 @@ import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
 import { classDefinitions, applyClassTheme } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { runFinalPersist } from "@/lib/persistence/final-persist";
+import {
+  saveSessionSnapshot,
+  loadSessionSnapshot,
+  clearSessionSnapshot,
+  type SessionSnapshot,
+} from "@/lib/persistence/session-snapshot";
 import type { PersistResult } from "@/lib/validation/error-classification";
 import type { Question, ClientResponse } from "@/lib/types/quest";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
@@ -55,6 +62,7 @@ export default function Session({
   params: Promise<{ id: string }>;
 }): React.JSX.Element {
   const { id } = use(params);
+  
   const { state: questState, dispatch } = useQuestState();
   const {
     flowPhase,
@@ -66,9 +74,20 @@ export default function Session({
     avatarClass,
   } = questState;
 
-  const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse, removeLastResponse } = useScores();
+  const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse, removeLastResponse, restoreScores } = useScores();
 
   const [studentTone, setStudentTone] = useState<"quest" | "explorer">("quest");
+
+  // Mid-session checkpoint resume (P1.1):
+  // "checking"  -- waiting for the student profile fetch + snapshot lookup
+  // "prompt"    -- a resumable snapshot exists; ask Resume / Start over
+  // "active"    -- normal flow (fresh start, resumed, or nothing to resume)
+  const [resumeStatus, setResumeStatus] = useState<"checking" | "prompt" | "active">("checking");
+  const [pendingSnapshot, setPendingSnapshot] = useState<SessionSnapshot | null>(null);
+  // The resume decision is made exactly once per mount -- a re-run of the
+  // profile effect must never flip an active session back to the prompt
+  // (e.g. after the checkpoint effect has started writing snapshots).
+  const resumeDecided = useRef(false);
 
   // Existing self_map from character creation (e.g. curiosities) so the
   // session's self-map answers can be merged in without clobbering it.
@@ -77,16 +96,23 @@ export default function Session({
   // Self-map reflection answers captured mid-session, written at final persist
   const selfMapData = useRef<SelfMapData | null>(null);
 
-  // Fetch the student's avatar_class, tone and self_map from Supabase on mount (FLOW-03)
+  // Fetch the student's avatar_class, tone and self_map from Supabase on mount
+  // (FLOW-03), then check for a resumable mid-session checkpoint (P1.1).
   useEffect(() => {
     async function loadStudentProfile(): Promise<void> {
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+          if (!resumeDecided.current) {
+            resumeDecided.current = true;
+            setResumeStatus("active");
+          }
+          return;
+        }
         const { data } = await supabase
           .from("students")
-          .select("avatar_class, tone, self_map")
+          .select("avatar_class, tone, self_map, has_completed_session1")
           .eq("id", user.id)
           .single();
         if (data?.avatar_class) {
@@ -99,8 +125,30 @@ export default function Session({
         if (data?.self_map && typeof data.self_map === "object") {
           existingSelfMap.current = data.self_map as Record<string, unknown>;
         }
+
+        // Offer resume only when Session 1 is not yet complete and the
+        // snapshot actually contains progress worth restoring. Decide once.
+        if (resumeDecided.current) return;
+        resumeDecided.current = true;
+        if (data?.has_completed_session1 !== true) {
+          const snapshot = loadSessionSnapshot(user.id);
+          if (
+            snapshot &&
+            (snapshot.questState.responses.length > 0 ||
+              snapshot.questState.currentIndex > 0)
+          ) {
+            setPendingSnapshot(snapshot);
+            setResumeStatus("prompt");
+            return;
+          }
+        }
+        setResumeStatus("active");
       } catch {
         // Silent catch per project conventions -- falls back to defaults
+        if (!resumeDecided.current) {
+          resumeDecided.current = true;
+          setResumeStatus("active");
+        }
       }
     }
     loadStudentProfile();
@@ -209,6 +257,47 @@ export default function Session({
       handlePersistStart();
     }
   }, [flowPhase, studentId, handlePersistStart]);
+
+  // === Mid-session checkpoint (P1.1) ===
+
+  /** Resume from the saved checkpoint: rehydrate scores first, then quest state. */
+  const handleResume = useCallback((): void => {
+    if (pendingSnapshot) {
+      restoreScores(pendingSnapshot.scoreState);
+      dispatch({ type: "RESTORE_STATE", state: pendingSnapshot.questState });
+      if (pendingSnapshot.selfMap) {
+        selfMapData.current = pendingSnapshot.selfMap;
+      }
+    }
+    setPendingSnapshot(null);
+    setResumeStatus("active");
+  }, [pendingSnapshot, dispatch, restoreScores]);
+
+  /** Start over: discard the checkpoint and begin from question 1. */
+  const handleStartOver = useCallback((): void => {
+    if (studentId) {
+      clearSessionSnapshot(studentId);
+    }
+    setPendingSnapshot(null);
+    setResumeStatus("active");
+  }, [studentId]);
+
+  // Save a checkpoint after every state-changing dispatch (answers, block
+  // transitions, self-map, confirmatory...). Skipped until the resume
+  // decision is made so a fresh reducer state can't clobber the snapshot.
+  useEffect(() => {
+    if (resumeStatus !== "active" || !studentId) return;
+    if (questState.responses.length === 0 && questState.currentIndex === 0) return;
+    if (persistResult?.success) return;
+    saveSessionSnapshot(studentId, questState, scoreState, selfMapData.current);
+  }, [resumeStatus, studentId, questState, scoreState, persistResult]);
+
+  // Clear the checkpoint once final persistence has succeeded.
+  useEffect(() => {
+    if (persistResult?.success && studentId) {
+      clearSessionSnapshot(studentId);
+    }
+  }, [persistResult, studentId]);
 
   // Badge celebration overlay shown before the completion screen
   const [showBadgeUnlock, setShowBadgeUnlock] = useState(true);
@@ -492,6 +581,27 @@ export default function Session({
   );
 
   // === RENDER ===
+
+  // Resume gate (P1.1): hold rendering until the snapshot check resolves,
+  // then offer Resume / Start over when a checkpoint exists.
+  if (sessionQuestions.length > 0 && resumeStatus === "checking") {
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <p className="text-white/50">Loading your quest...</p>
+      </div>
+    );
+  }
+
+  if (sessionQuestions.length > 0 && resumeStatus === "prompt") {
+    return (
+      <ResumePrompt
+        tone={studentTone}
+        questionsAnswered={pendingSnapshot?.questState.responses.length ?? 0}
+        onResume={handleResume}
+        onStartOver={handleStartOver}
+      />
+    );
+  }
 
   // Block transition interstitial
   if (flowPhase === "block_transition") {

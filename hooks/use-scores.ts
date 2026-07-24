@@ -477,6 +477,22 @@ export function useScores() {
     setScoreState((prev) => applyFootprintUndo(prev));
   }, []);
 
+  /**
+   * Rehydrate score state from a mid-session checkpoint (P1.1).
+   * Derived scores are recalculated from the restored raw arrays so a stale
+   * or hand-edited snapshot can never leave derived values inconsistent.
+   */
+  const restoreScores = useCallback((restored: ScoreState) => {
+    setScoreState(() => {
+      const next = structuredClone({
+        ...structuredClone(INITIAL_SCORE_STATE),
+        ...restored,
+      });
+      recalculateAllDerived(next);
+      return next;
+    });
+  }, []);
+
   return {
     scoreState,
     processResponse,
@@ -484,5 +500,6 @@ export function useScores() {
     processIpsativeResponse,
     takeSnapshot,
     removeLastResponse,
+    restoreScores,
   };
 }

@@ -35,7 +35,8 @@ export type QuestAction =
   | { type: "COMPLETE_SESSION" }
   | { type: "UNDO" }
   | { type: "SKIP"; sessionQuestions: Question[] }
-  | { type: "SET_AVATAR_CLASS"; avatarClass: string };
+  | { type: "SET_AVATAR_CLASS"; avatarClass: string }
+  | { type: "RESTORE_STATE"; state: QuestState };
 
 export interface QuestState {
   flowPhase: FlowPhase;
@@ -404,6 +405,28 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
         ...state,
         avatarClass: action.avatarClass,
       };
+
+    case "RESTORE_STATE": {
+      // Rehydrate a mid-session checkpoint (P1.1). Merge over INITIAL_STATE
+      // so any field missing from an older snapshot falls back to a safe
+      // default, and clamp numeric fields to preserve reducer invariants.
+      const restored = action.state;
+      return {
+        ...INITIAL_STATE,
+        ...restored,
+        currentIndex: Math.max(0, restored.currentIndex ?? 0),
+        confirmIndex: Math.max(0, restored.confirmIndex ?? 0),
+        questions_answered: Math.max(0, restored.questions_answered ?? 0),
+        consecutiveNeutrals: Math.max(0, restored.consecutiveNeutrals ?? 0),
+        responses: restored.responses ?? [],
+        adaptiveQuestions: restored.adaptiveQuestions ?? [],
+        // A restored answer is never undoable: score-state footprints for it
+        // were rebuilt from the snapshot, but the pre-answer UI position wasn't.
+        last_response_undoable: false,
+        direction: "right",
+        persistence_failed: false,
+      };
+    }
 
     default:
       return state;

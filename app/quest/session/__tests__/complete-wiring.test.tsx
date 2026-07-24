@@ -188,6 +188,10 @@ beforeEach(() => {
   for (const key of Object.keys(h.failures)) delete h.failures[key];
   h.pushMock.mockClear();
 
+  // Checkpoints (P1.1) written by earlier tests must not leak into the next
+  // render, or the resume prompt would block the completion screen.
+  window.localStorage.clear();
+
   // jsdom does not implement matchMedia (used by CompletionScreen confetti)
   window.matchMedia = ((query: string) => ({
     matches: false,

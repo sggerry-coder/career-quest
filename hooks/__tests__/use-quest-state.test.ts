@@ -461,3 +461,136 @@ describe("other actions", () => {
     expect(next.confirmIndex).toBe(0);
   });
 });
+
+describe("RESTORE_STATE (P1.1 checkpoint resume)", () => {
+  const RIASEC_START = 5;
+  const ENGAGEMENT_INDEX = RIASEC_START + 7; // = 12
+
+  function makeAdaptiveQuestion(id: string): Question {
+    return {
+      id,
+      session_number: 1,
+      block: "confirmatory",
+      question_text: `adaptive ${id}`,
+      question_type: "likert",
+      options: [],
+      reverse_scored: false,
+      framework: "riasec",
+      framework_target: "R",
+      is_adaptive: true,
+    };
+  }
+
+  it("preserves reducer invariants from a mid-riasec snapshot", () => {
+    const snapshot = stateAtIndex(10, {
+      engagementShown: false,
+      consecutiveNeutrals: 2,
+      discovery_mode_active: false,
+      avatarClass: "mage",
+    });
+
+    const next = questReducer(makeInitialState(), {
+      type: "RESTORE_STATE",
+      state: snapshot,
+    });
+
+    expect(next.flowPhase).toBe("questions");
+    expect(next.currentIndex).toBe(10);
+    expect(next.questions_answered).toBe(10);
+    expect(next.responses).toHaveLength(10);
+    expect(next.current_block).toBe("riasec");
+    expect(next.consecutiveNeutrals).toBe(2);
+    expect(next.engagementShown).toBe(false);
+    expect(next.avatarClass).toBe("mage");
+    // Restored answers are never undoable; direction resets forward
+    expect(next.last_response_undoable).toBe(false);
+    expect(next.direction).toBe("right");
+    expect(next.persistence_failed).toBe(false);
+  });
+
+  it("continues the flow correctly after restoring: engagement still fires once", () => {
+    // Restore just before the engagement checkpoint with it not yet shown
+    const restored = questReducer(makeInitialState(), {
+      type: "RESTORE_STATE",
+      state: stateAtIndex(11, { engagementShown: false }),
+    });
+
+    const q = session1CoreQuestions[11];
+    const next = questReducer(restored, {
+      type: "ANSWER_QUESTION",
+      response: makeResponse(q.id, 4, q.framework, q.framework_target),
+      question: q,
+      sessionQuestions: session1CoreQuestions,
+    });
+
+    expect(next.flowPhase).toBe("engagement");
+    expect(next.currentIndex).toBe(ENGAGEMENT_INDEX);
+  });
+
+  it("does NOT re-fire engagement when the snapshot already showed it", () => {
+    const restored = questReducer(makeInitialState(), {
+      type: "RESTORE_STATE",
+      state: stateAtIndex(11, { engagementShown: true }),
+    });
+
+    const q = session1CoreQuestions[11];
+    const next = questReducer(restored, {
+      type: "ANSWER_QUESTION",
+      response: makeResponse(q.id, 4, q.framework, q.framework_target),
+      question: q,
+      sessionQuestions: session1CoreQuestions,
+    });
+
+    expect(next.flowPhase).not.toBe("engagement");
+    expect(next.currentIndex).toBe(12);
+  });
+
+  it("restores into confirmatory with adaptive questions and finishes cleanly", () => {
+    const adaptive = [makeAdaptiveQuestion("a1"), makeAdaptiveQuestion("a2")];
+    const snapshot = makeInitialState({
+      flowPhase: "confirmatory",
+      currentIndex: 35,
+      confirmIndex: 1,
+      adaptiveQuestions: adaptive,
+      questions_answered: 36,
+    });
+
+    const restored = questReducer(makeInitialState(), {
+      type: "RESTORE_STATE",
+      state: snapshot,
+    });
+
+    expect(restored.flowPhase).toBe("confirmatory");
+    expect(restored.confirmIndex).toBe(1);
+    expect(restored.adaptiveQuestions).toHaveLength(2);
+
+    // Answering the last confirmatory question completes the session
+    const next = questReducer(restored, {
+      type: "ANSWER_CONFIRMATORY",
+      response: makeResponse("a2", 4, "riasec", "R"),
+    });
+    expect(next.flowPhase).toBe("complete");
+  });
+
+  it("clamps corrupt numeric fields and fills missing ones with defaults", () => {
+    const partial = {
+      flowPhase: "questions",
+      currentIndex: -3,
+      confirmIndex: -1,
+      questions_answered: -2,
+      responses: [],
+    } as unknown as QuestState;
+
+    const next = questReducer(makeInitialState(), {
+      type: "RESTORE_STATE",
+      state: partial,
+    });
+
+    expect(next.currentIndex).toBe(0);
+    expect(next.confirmIndex).toBe(0);
+    expect(next.questions_answered).toBe(0);
+    expect(next.adaptiveQuestions).toEqual([]);
+    expect(next.current_block).toBe("warmup");
+    expect(next.avatarClass).toBe("wanderer");
+  });
+});
