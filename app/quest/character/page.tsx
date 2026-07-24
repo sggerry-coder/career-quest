@@ -8,7 +8,7 @@ import { AvatarSelect } from "@/components/character/avatar-select";
 import { EducationCards } from "@/components/character/education-cards";
 import { DestinationPicker } from "@/components/character/destination-picker";
 import { CuriositiesPicker } from "@/components/character/curiosities-picker";
-import { createClient } from "@/lib/supabase/client";
+import { provisionStudent } from "@/lib/persistence/provision-student";
 import { classes } from "@/data/classes";
 
 type WizardStep = 0 | 1 | 2;
@@ -91,40 +91,20 @@ export default function CharacterCreation() {
     setError(null);
 
     try {
-      const supabase = createClient();
+      // Provision (or replace in place) the student record. When an auth
+      // session already exists this reuses the same user and clears the
+      // previous run's data instead of orphaning it (P2.3).
+      const result = await provisionStudent({
+        name: name.trim(),
+        age,
+        educationSystem,
+        avatarClass: selectedClass,
+        tone,
+        destinations,
+        curiosities,
+      });
 
-      // 1. Anonymous auth
-      const { data: authData, error: authError } =
-        await supabase.auth.signInAnonymously();
-
-      if (authError || !authData.user) {
-        setError(
-          tone === "quest"
-            ? "The quest portal is temporarily sealed... Try again"
-            : "Connection issue. Please try again."
-        );
-        setIsSubmitting(false);
-        return;
-      }
-
-      const userId = authData.user.id;
-
-      // 2. Insert student row
-      const { error: studentError } = await supabase
-        .from("students")
-        .insert({
-          id: userId,
-          name: name.trim(),
-          age,
-          education_system: educationSystem,
-          avatar_class: selectedClass,
-          tone,
-          preferred_destinations: destinations,
-          self_map: { curiosities },
-          current_session: 0,
-        });
-
-      if (studentError) {
+      if (!result.success) {
         setError(
           tone === "quest"
             ? "The quest portal is temporarily sealed... Try again"
@@ -134,44 +114,7 @@ export default function CharacterCreation() {
         return;
       }
 
-      // 3. Insert empty assessment_scores (non-blocking)
-      await supabase
-        .from("assessment_scores")
-        .insert({
-          student_id: userId,
-          riasec_scores: { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 },
-          mi_scores: {
-            linguistic: 0,
-            logical: 0,
-            spatial: 0,
-            musical: 0,
-            bodily: 0,
-            interpersonal: 0,
-            intrapersonal: 0,
-            naturalistic: 0,
-          },
-          mbti_indicators: { EI: 0, SN: 0, TF: 0, JP: 0 },
-          values_compass: {
-            security_adventure: 0,
-            income_impact: 0,
-            prestige_fulfilment: 0,
-            structure_flexibility: 0,
-            solo_team: 0,
-          },
-          strengths: [],
-        });
-        // Non-blocking — will be created at first checkpoint
-
-      // 4. Insert "Quest Started" badge (non-blocking)
-      await supabase
-        .from("achievements")
-        .insert({
-          student_id: userId,
-          badge_id: "quest_started",
-        });
-        // Non-blocking — badge shown from client state
-
-      // 5. Navigate to Session 1
+      // Navigate to Session 1
       router.push("/quest/session/1");
     } catch {
       setError(

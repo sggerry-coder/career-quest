@@ -25,6 +25,9 @@ export default function Home() {
   const router = useRouter();
   const [state, setState] = useState<LandingState>({ status: "loading" });
   const [introSkipped, setIntroSkipped] = useState(false);
+  // Guard for "Start a new quest instead" (P2.3): replacing the adventurer
+  // discards the previous run's results, so it needs explicit confirmation.
+  const [confirmingNewQuest, setConfirmingNewQuest] = useState(false);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -225,14 +228,69 @@ export default function Home() {
               : "Continue"}
           </button>
 
-          <button
-            onClick={handleStartQuest}
-            className="cq-button cq-button-ghost"
-            style={{ fontSize: "0.875rem" }}
-            aria-label="Start a new quest"
-          >
-            Start a new quest instead
-          </button>
+          {!confirmingNewQuest ? (
+            <button
+              onClick={() => setConfirmingNewQuest(true)}
+              className="cq-button cq-button-ghost"
+              style={{ fontSize: "0.875rem" }}
+              aria-label="Start a new quest"
+            >
+              Start a new quest instead
+            </button>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              role="alertdialog"
+              aria-label="Confirm starting a new quest"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "0.75rem",
+                padding: "1rem 1.25rem",
+                background: "var(--cq-bg-card)",
+                border: "1px solid var(--cq-border)",
+                borderRadius: "var(--cq-radius)",
+                maxWidth: "360px",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "0.875rem",
+                  color: "var(--cq-text-primary)",
+                  fontWeight: 600,
+                }}
+              >
+                {displayTone === "quest"
+                  ? "This replaces your current adventurer — your Chapter 1 results will be lost."
+                  : "This replaces your current profile — your Session 1 results will be lost."}
+              </p>
+              <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+                <button
+                  onClick={() => setConfirmingNewQuest(false)}
+                  className="cq-button cq-button-ghost"
+                  style={{ fontSize: "0.875rem" }}
+                  aria-label={
+                    displayTone === "quest"
+                      ? "Keep my adventurer"
+                      : "Keep my profile"
+                  }
+                >
+                  {displayTone === "quest"
+                    ? "Keep my adventurer"
+                    : "Keep my profile"}
+                </button>
+                <button
+                  onClick={handleStartQuest}
+                  className="cq-button cq-button-primary"
+                  style={{ fontSize: "0.875rem" }}
+                  aria-label="Yes, start fresh"
+                >
+                  Yes, start fresh
+                </button>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
       </main>
     );
