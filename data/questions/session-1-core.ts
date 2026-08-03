@@ -3,6 +3,25 @@ import type { Question } from "@/lib/types/quest";
 // =============================================================================
 // BLOCK 1: WARM-UP (5 questions)
 // Multiple choice with hidden framework_signals + strength_signal
+//
+// Design rules for this block (set 2026-08-03 after student feedback that
+// options like "Hang out with friends and help someone" forced a half-true
+// answer):
+//
+//  1. One idea per option. An "or" is only allowed when both halves carry the
+//     same signal ("Make art or music" — both Artistic). Never merge two
+//     different signals into one label, or a student who wants one half gets
+//     scored for the other.
+//  2. Six options, one per RIASEC type. Because only one option can be picked,
+//     two options sharing a type would give that type two chances to be chosen
+//     and inflate it.
+//  3. Equal weight: every option gives riasec_X: 2 plus one mi_*: 1. No blended
+//     riasec signals here — a split like { riasec_I: 1, riasec_A: 1 } makes an
+//     option worth less to each type than its neighbours.
+//  4. Six different strength_signals per question. Strengths are a raw
+//     frequency count over these 5 answers (lib/scoring/strengths.ts), and the
+//     winner is shown as "Top Strength", so no strength may have two paths to
+//     being picked within one question.
 // =============================================================================
 
 export const warmupQuestions: Question[] = [
@@ -18,28 +37,42 @@ export const warmupQuestions: Question[] = [
         value: 1,
         emoji: "🔧",
         framework_signals: { riasec_R: 2, mi_bodily: 1 },
-        strength_signal: "Achiever",
+        strength_signal: "Adaptability",
       },
       {
-        label: "Read, research, or learn something new",
+        label: "Research something you're curious about",
         value: 2,
-        emoji: "📚",
-        framework_signals: { riasec_I: 2, mi_linguistic: 1 },
+        emoji: "🔍",
+        framework_signals: { riasec_I: 2, mi_logical: 1 },
         strength_signal: "Analytical",
       },
       {
-        label: "Create art, music, or write something",
+        label: "Make art or music",
         value: 3,
         emoji: "🎨",
         framework_signals: { riasec_A: 2, mi_spatial: 1 },
         strength_signal: "Creativity",
       },
       {
-        label: "Hang out with friends and help someone",
+        label: "Help someone out",
         value: 4,
         emoji: "🤝",
         framework_signals: { riasec_S: 2, mi_interpersonal: 1 },
         strength_signal: "Empathy",
+      },
+      {
+        label: "Get people together and plan something",
+        value: 5,
+        emoji: "👥",
+        framework_signals: { riasec_E: 2, mi_interpersonal: 1 },
+        strength_signal: "Command",
+      },
+      {
+        label: "Sort and organise your space",
+        value: 6,
+        emoji: "🗂️",
+        framework_signals: { riasec_C: 2, mi_logical: 1 },
+        strength_signal: "Achiever",
       },
     ],
     reverse_scored: false,
@@ -55,32 +88,46 @@ export const warmupQuestions: Question[] = [
     question_type: "multiple_choice",
     options: [
       {
-        label: "The leader who organises everything",
+        label: "The one who builds the actual thing",
         value: 1,
+        emoji: "🛠️",
+        framework_signals: { riasec_R: 2, mi_bodily: 1 },
+        strength_signal: "Adaptability",
+      },
+      {
+        label: "The one who digs into the facts",
+        value: 2,
+        emoji: "🔬",
+        framework_signals: { riasec_I: 2, mi_logical: 1 },
+        strength_signal: "Analytical",
+      },
+      {
+        label: "The one who comes up with the ideas",
+        value: 3,
+        emoji: "💡",
+        framework_signals: { riasec_A: 2, mi_intrapersonal: 1 },
+        strength_signal: "Ideation",
+      },
+      {
+        label: "The one who checks everyone is okay",
+        value: 4,
+        emoji: "💚",
+        framework_signals: { riasec_S: 2, mi_interpersonal: 1 },
+        strength_signal: "Empathy",
+      },
+      {
+        label: "The one who leads and sets the direction",
+        value: 5,
         emoji: "👑",
         framework_signals: { riasec_E: 2, mi_interpersonal: 1 },
         strength_signal: "Command",
       },
       {
-        label: "The ideas person who brainstorms",
-        value: 2,
-        emoji: "💡",
-        framework_signals: { riasec_I: 1, riasec_A: 1, mi_intrapersonal: 1 },
-        strength_signal: "Ideation",
-      },
-      {
-        label: "The one who gets things done quietly",
-        value: 3,
+        label: "The one who tracks the plan and deadlines",
+        value: 6,
         emoji: "✅",
-        framework_signals: { riasec_R: 1, riasec_C: 1, mi_logical: 1 },
+        framework_signals: { riasec_C: 2, mi_logical: 1 },
         strength_signal: "Achiever",
-      },
-      {
-        label: "The peacekeeper who makes sure everyone is okay",
-        value: 4,
-        emoji: "💚",
-        framework_signals: { riasec_S: 2, mi_interpersonal: 1 },
-        strength_signal: "Empathy",
       },
     ],
     reverse_scored: false,
@@ -96,31 +143,45 @@ export const warmupQuestions: Question[] = [
     question_type: "multiple_choice",
     options: [
       {
-        label: "Science experiments and labs",
+        label: "PE and sports",
         value: 1,
+        emoji: "⚽",
+        framework_signals: { riasec_R: 2, mi_bodily: 1 },
+        strength_signal: "Adaptability",
+      },
+      {
+        label: "Science experiments and labs",
+        value: 2,
         emoji: "🔬",
         framework_signals: { riasec_I: 2, mi_logical: 1 },
         strength_signal: "Analytical",
       },
       {
-        label: "Art, drama, or creative writing",
-        value: 2,
+        label: "Art and drama",
+        value: 3,
         emoji: "🎭",
-        framework_signals: { riasec_A: 2, mi_linguistic: 1, mi_spatial: 1 },
+        framework_signals: { riasec_A: 2, mi_spatial: 1 },
         strength_signal: "Creativity",
       },
       {
-        label: "Business, economics, or debating",
-        value: 3,
-        emoji: "💼",
-        framework_signals: { riasec_E: 2, mi_logical: 1 },
-        strength_signal: "Command",
+        label: "Psychology and social studies",
+        value: 4,
+        emoji: "🧩",
+        framework_signals: { riasec_S: 2, mi_interpersonal: 1 },
+        strength_signal: "Empathy",
       },
       {
-        label: "PE, sports, or design technology",
-        value: 4,
-        emoji: "⚽",
-        framework_signals: { riasec_R: 2, mi_bodily: 2 },
+        label: "Debating and public speaking",
+        value: 5,
+        emoji: "🗣️",
+        framework_signals: { riasec_E: 2, mi_linguistic: 1 },
+        strength_signal: "Communication",
+      },
+      {
+        label: "Maths and working with numbers",
+        value: 6,
+        emoji: "📊",
+        framework_signals: { riasec_C: 2, mi_logical: 1 },
         strength_signal: "Achiever",
       },
     ],
@@ -137,32 +198,46 @@ export const warmupQuestions: Question[] = [
     question_type: "multiple_choice",
     options: [
       {
-        label: "Mind-reading (understand everyone)",
+        label: "Fix anything with a single touch",
         value: 1,
+        emoji: "🛠️",
+        framework_signals: { riasec_R: 2, mi_bodily: 1 },
+        strength_signal: "Adaptability",
+      },
+      {
+        label: "Know the answer to any question",
+        value: 2,
+        emoji: "🔮",
+        framework_signals: { riasec_I: 2, mi_logical: 1 },
+        strength_signal: "Analytical",
+      },
+      {
+        label: "Imagine something and make it real",
+        value: 3,
+        emoji: "✨",
+        framework_signals: { riasec_A: 2, mi_spatial: 1 },
+        strength_signal: "Ideation",
+      },
+      {
+        label: "Feel exactly what other people feel",
+        value: 4,
         emoji: "🧠",
-        framework_signals: { riasec_S: 1, riasec_I: 1, mi_interpersonal: 1 },
+        framework_signals: { riasec_S: 2, mi_interpersonal: 1 },
         strength_signal: "Empathy",
       },
       {
-        label: "Time control (organise everything perfectly)",
-        value: 2,
-        emoji: "⏰",
-        framework_signals: { riasec_C: 2, mi_logical: 1 },
-        strength_signal: "Achiever",
-      },
-      {
-        label: "Persuasion (convince anyone of anything)",
-        value: 3,
+        label: "Convince anyone of anything",
+        value: 5,
         emoji: "🗣️",
         framework_signals: { riasec_E: 2, mi_linguistic: 1 },
         strength_signal: "Communication",
       },
       {
-        label: "Invention (create anything you imagine)",
-        value: 4,
-        emoji: "🛠️",
-        framework_signals: { riasec_R: 1, riasec_A: 1, mi_spatial: 1 },
-        strength_signal: "Ideation",
+        label: "Control time and never miss a deadline",
+        value: 6,
+        emoji: "⏰",
+        framework_signals: { riasec_C: 2, mi_logical: 1 },
+        strength_signal: "Achiever",
       },
     ],
     reverse_scored: false,
@@ -178,32 +253,46 @@ export const warmupQuestions: Question[] = [
     question_type: "multiple_choice",
     options: [
       {
-        label: "Research it and analyse the facts",
-        value: 1,
-        emoji: "🔍",
-        framework_signals: { riasec_I: 2, mi_logical: 1 },
-        strength_signal: "Analytical",
-      },
-      {
-        label: "Talk to people and get advice",
-        value: 2,
-        emoji: "💬",
-        framework_signals: { riasec_S: 1, riasec_E: 1, mi_interpersonal: 1 },
-        strength_signal: "Communication",
-      },
-      {
         label: "Jump in and try things until something works",
-        value: 3,
+        value: 1,
         emoji: "🚀",
         framework_signals: { riasec_R: 2, mi_bodily: 1 },
         strength_signal: "Adaptability",
       },
       {
-        label: "Think creatively about unusual solutions",
-        value: 4,
+        label: "Research it and analyse the facts",
+        value: 2,
+        emoji: "🔍",
+        framework_signals: { riasec_I: 2, mi_logical: 1 },
+        strength_signal: "Analytical",
+      },
+      {
+        label: "Think up an unusual solution",
+        value: 3,
         emoji: "✨",
-        framework_signals: { riasec_A: 1, riasec_I: 1, mi_intrapersonal: 1 },
+        framework_signals: { riasec_A: 2, mi_intrapersonal: 1 },
         strength_signal: "Ideation",
+      },
+      {
+        label: "Talk it through with someone you trust",
+        value: 4,
+        emoji: "💬",
+        framework_signals: { riasec_S: 2, mi_interpersonal: 1 },
+        strength_signal: "Empathy",
+      },
+      {
+        label: "Rally people to tackle it together",
+        value: 5,
+        emoji: "📣",
+        framework_signals: { riasec_E: 2, mi_interpersonal: 1 },
+        strength_signal: "Command",
+      },
+      {
+        label: "Make a step-by-step plan",
+        value: 6,
+        emoji: "📋",
+        framework_signals: { riasec_C: 2, mi_logical: 1 },
+        strength_signal: "Achiever",
       },
     ],
     reverse_scored: false,
