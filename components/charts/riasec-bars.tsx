@@ -4,7 +4,13 @@ import { motion } from "framer-motion";
 
 interface RiasecBarsProps {
   scores: Record<string, number>;
-  classLabel: string;
+  /**
+   * Class badge to show under the bars. Omit it where the surrounding screen
+   * already presents the class itself — the reveal sequence animates its own
+   * ClassLabel in as a separate beat, and rendering both printed
+   * "CLASS: EXPLORER" twice, one directly above the other.
+   */
+  classLabel?: string;
 }
 
 const RIASEC_TYPES = [
@@ -62,12 +68,14 @@ export default function RiasecBars({ scores, classLabel }: RiasecBarsProps) {
           );
         })}
       </div>
-      {/* CLASS label badge */}
-      <div className="mt-4 flex justify-center">
-        <span className="rounded-full bg-[var(--color-primary)]/20 px-4 py-1.5 text-sm font-bold text-[var(--color-primary)] uppercase tracking-wider">
-          CLASS: {classLabel}
-        </span>
-      </div>
+      {/* CLASS label badge — only where the screen doesn't show it already */}
+      {classLabel && (
+        <div className="mt-4 flex justify-center">
+          <span className="rounded-full bg-[var(--color-primary)]/20 px-4 py-1.5 text-sm font-bold text-[var(--color-primary)] uppercase tracking-wider">
+            CLASS: {classLabel}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

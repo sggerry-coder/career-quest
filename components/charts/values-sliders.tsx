@@ -17,6 +17,23 @@ const REMAINING_DIMENSIONS = [
   { key: "structure_flexibility", leftLabel: "Structure", rightLabel: "Flexibility" },
 ];
 
+/** Below this, the answer is too close to centre to call a side. */
+const BALANCED_THRESHOLD = 20;
+
+/**
+ * Put the reading into words. The dot alone left students unable to say which
+ * side they landed on — the Character Traits card prints its tendency
+ * underneath and this card did not, so it read as though nothing was measured.
+ */
+export function describeLean(
+  score: number,
+  leftLabel: string,
+  rightLabel: string
+): string {
+  if (Math.abs(score) < BALANCED_THRESHOLD) return "Balanced for now";
+  return `Leans ${score < 0 ? leftLabel : rightLabel}`;
+}
+
 export default function ValuesSliders({ scores }: ValuesSlidersProps) {
   return (
     <div className="w-full">
@@ -51,6 +68,17 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
                   }}
                 />
               </div>
+
+              {/* Which side you landed on, in words */}
+              <p
+                className={`text-xs mt-1 text-center ${
+                  Math.abs(score) < BALANCED_THRESHOLD
+                    ? "text-white/30 italic"
+                    : "text-white/60"
+                }`}
+              >
+                {describeLean(score, dim.leftLabel, dim.rightLabel)}
+              </p>
             </div>
           );
         })}

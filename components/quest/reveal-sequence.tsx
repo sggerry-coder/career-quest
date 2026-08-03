@@ -155,7 +155,9 @@ export default function RevealSequence({
               animate={{ opacity: 1, y: 0 }}
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
-              <RiasecBars scores={scoreState.riasec} classLabel={classLabel} />
+              {/* classLabel omitted: the animated ClassLabel below is the
+                  reveal beat for it, and passing it here printed it twice. */}
+              <RiasecBars scores={scoreState.riasec} />
               {Object.values(scoreState.riasec).every(v => v === 0) && (
                 <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
               )}
