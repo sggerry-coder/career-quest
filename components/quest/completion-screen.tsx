@@ -2,8 +2,13 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import PersistenceBanner from "@/components/ui/persistence-banner";
 
+/**
+ * The celebration. Mounting this screen *means the results are saved* — the
+ * session page renders it only once the final save is confirmed, so nothing
+ * here needs to represent or recover from a failure. A failed save shows
+ * SaveFailedScreen instead, and this screen is never reached.
+ */
 interface CompletionScreenProps {
   tone: "quest" | "explorer";
   classLabel: string;
@@ -15,9 +20,6 @@ interface CompletionScreenProps {
   riasecSnapshot?: Record<string, number> | null;
   onViewDashboard: () => void;
   onSaveExit: () => void;
-  persistResult: { success: boolean; errorType?: string } | null;
-  onRetryPersist: () => void;
-  onSignIn: () => void;
 }
 
 const RIASEC_LABELS: Record<string, string> = {
@@ -66,9 +68,6 @@ export default function CompletionScreen({
   riasecSnapshot = null,
   onViewDashboard,
   onSaveExit,
-  persistResult,
-  onRetryPersist,
-  onSignIn,
 }: CompletionScreenProps): React.JSX.Element {
   const hasFired = useRef(false);
 
@@ -117,8 +116,6 @@ export default function CompletionScreen({
     tone === "quest"
       ? "Your final answers held firm — a steady hand makes a clear prophecy."
       : "Your final answers were consistent — that makes your profile more reliable.";
-
-  const showBanner = persistResult !== null && !persistResult.success;
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-4">
@@ -263,19 +260,6 @@ export default function CompletionScreen({
           Save &amp; Exit
         </button>
       </motion.div>
-
-      {/* Persistence failure banner */}
-      {showBanner && (
-        <PersistenceBanner
-          errorType={
-            (persistResult?.errorType as "network" | "auth" | "unknown") ??
-            "unknown"
-          }
-          onRetry={onRetryPersist}
-          onSignIn={onSignIn}
-          visible={true}
-        />
-      )}
     </div>
   );
 }

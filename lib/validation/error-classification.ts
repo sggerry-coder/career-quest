@@ -18,9 +18,17 @@ export function classifySupabaseError(error: unknown): ErrorCategory {
 
   const err = error as { code?: string; status?: number; message?: string };
 
-  // Auth/permission errors are non-recoverable
+  // Auth/permission errors are non-recoverable.
+  //
+  // Match on `code` as well as `status`: supabase-js surfaces PostgrestError
+  // objects, which carry { message, details, hint, code } and NO status field.
+  // Checking status alone let a row-level-security denial fall through to
+  // "unknown", which the UI reports as "check your connection" -- sending the
+  // student to fix their wifi over a permissions problem.
   if (err.status === 401 || err.status === 403) return "auth";
-  if (err.code === "PGRST301") return "auth";
+  if (err.code === "PGRST301" || err.code === "PGRST302") return "auth";
+  // 42501 insufficient_privilege — RLS denied the write.
+  if (err.code === "42501") return "auth";
 
   // Network/timeout errors are recoverable
   if (err.message?.includes("fetch") || err.message?.includes("network")) return "network";

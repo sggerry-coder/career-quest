@@ -4,7 +4,7 @@
  * Locks in the Session 1 completion wiring (A1):
  * - flowPhase "complete" renders the real CompletionScreen (not a static stub)
  * - final persistence fires exactly once on entry to "complete"
- * - a persistence failure surfaces the PersistenceBanner with a working Retry
+ * - a failed save shows SaveFailedScreen and never the celebration
  * - View Dashboard navigates to /quest/dashboard
  */
 import React, { Suspense, act } from "react";
@@ -290,19 +290,31 @@ describe("session complete wiring", () => {
     expect(h.pushMock).toHaveBeenCalledWith("/quest/dashboard");
   });
 
-  it("shows PersistenceBanner on failure and Retry re-runs persistence", async () => {
+  it("never shows the celebration when the save failed", async () => {
     h.failures.assessment_scores = { message: "network fetch failed" };
     await renderCompletePage();
 
-    // Banner appears after the failed persist
     expect(
-      await screen.findByText(/Couldn.t save your progress/)
+      await screen.findByText(/We couldn.t save your results/)
     ).toBeDefined();
-    expect(h.calls.filter((c) => c.table === "assessment_scores")).toHaveLength(1);
 
-    // Clear the failure and retry
+    // The whole point: no confetti heading, and no route to an empty dashboard.
+    expect(screen.queryByText("Quest Chapter 1 Complete")).toBeNull();
+    expect(screen.queryByRole("button", { name: "View Dashboard" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save and Exit" })).toBeNull();
+
+    // And the student is told their answers survived.
+    expect(screen.getByRole("button", { name: "Leave for now" })).toBeDefined();
+    expect(h.calls.filter((c) => c.table === "assessment_scores")).toHaveLength(1);
+  });
+
+  it("recovers to the celebration when the retry succeeds", async () => {
+    h.failures.assessment_scores = { message: "network fetch failed" };
+    await renderCompletePage();
+    await screen.findByText(/We couldn.t save your results/);
+
     delete h.failures.assessment_scores;
-    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+    fireEvent.click(screen.getByRole("button", { name: "Try saving again" }));
 
     await waitFor(() => {
       expect(
@@ -310,9 +322,19 @@ describe("session complete wiring", () => {
       ).toHaveLength(2);
     });
 
-    // Second attempt marks completion
+    // Completion flag written, and only now does the celebration appear.
     await waitFor(() => {
       expect(h.calls.filter((c) => c.table === "students")).toHaveLength(1);
     });
+    expect(await screen.findByText("Quest Chapter 1 Complete")).toBeDefined();
+  });
+
+  it("keeps the mid-session checkpoint after a failed save", async () => {
+    h.failures.assessment_scores = { message: "network fetch failed" };
+    await renderCompletePage();
+    await screen.findByText(/We couldn.t save your results/);
+
+    // The failure screen promises the answers are still on this device.
+    expect(window.localStorage.getItem("cq-session1-snapshot-student-1")).not.toBeNull();
   });
 });

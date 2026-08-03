@@ -15,11 +15,14 @@ import DiscoveryModePrompt from "@/components/quest/discovery-mode-prompt";
 import SelfMapCapture, { type SelfMapData } from "@/components/selfmap/self-map-capture";
 import RevealSequence from "@/components/quest/reveal-sequence";
 import CompletionScreen from "@/components/quest/completion-screen";
+import SavingResults from "@/components/quest/saving-results";
+import SaveFailedScreen from "@/components/quest/save-failed-screen";
 import ResumePrompt from "@/components/quest/resume-prompt";
 import BadgeUnlock from "@/components/badges/badge-unlock";
 import ConfirmationToast from "@/components/ui/confirmation-toast";
 import { useQuestState } from "@/hooks/use-quest-state";
 import { useScores } from "@/hooks/use-scores";
+import { useFinalPersist } from "@/hooks/use-final-persist";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
@@ -169,9 +172,13 @@ export default function Session({
 
   // Persistence state for completion flow
   const router = useRouter();
-  const [persistResult, setPersistResult] = useState<PersistResult | null>(null);
   const [showSaveToast, setShowSaveToast] = useState(false);
   const [studentId, setStudentId] = useState<string | null>(null);
+  // Whether the auth lookup has finished, regardless of whether it found a
+  // user. Gating the completion screen on a save means we must fire that save
+  // even when there is no student id — otherwise an unauthenticated student
+  // waits on a spinner forever instead of being told to sign in.
+  const [authSettled, setAuthSettled] = useState(false);
 
   // Capture student ID from the avatar_class fetch (reuse auth user)
   useEffect(() => {
@@ -182,6 +189,8 @@ export default function Session({
         if (user) setStudentId(user.id);
       } catch {
         // Silent catch per project conventions
+      } finally {
+        setAuthSettled(true);
       }
     }
     loadStudentId();
@@ -216,52 +225,45 @@ export default function Session({
     });
   }, [studentId, scoreState, questState.responses]);
 
-  /** Retry persistence after a failure. */
-  const handleRetryPersist = useCallback(async (): Promise<void> => {
-    setPersistResult(null);
-    const result = await persistFinal();
-    setPersistResult(result);
-  }, [persistFinal]);
+  // Final-save state machine. The completion screen is gated on this, so a
+  // failed save can never be mistaken for a finished quest.
+  const {
+    status: saveStatus,
+    errorType: saveErrorType,
+    errorMessage: saveErrorMessage,
+    start: startPersist,
+    retry: retryPersist,
+  } = useFinalPersist(persistFinal);
 
   /** Navigate to landing for sign-in. */
   const handleSignIn = useCallback((): void => {
     router.push("/");
   }, [router]);
 
-  /** Save and exit: show toast then redirect. */
-  const handleSaveExit = useCallback(async (): Promise<void> => {
-    if (persistResult?.success) {
-      setShowSaveToast(true);
-      setTimeout(() => router.push("/"), 2200);
-    } else {
-      const result = await persistFinal();
-      setPersistResult(result);
-      if (result.success) {
-        setShowSaveToast(true);
-        setTimeout(() => router.push("/"), 2200);
-      }
-    }
-  }, [persistResult, persistFinal, router]);
+  /** Leave without saving; the checkpoint stays for a resume next visit. */
+  const handleLeave = useCallback((): void => {
+    router.push("/");
+  }, [router]);
 
-  // Auto-persist exactly once when the session reaches the complete phase
-  const hasPersisted = useRef(false);
-  const handlePersistStart = useCallback(() => {
-    if (hasPersisted.current) return;
-    hasPersisted.current = true;
-    persistFinal().then(
-      (result) => setPersistResult(result),
-      () => setPersistResult({ success: false, errorType: "unknown", message: "Unexpected error" })
-    );
-  }, [persistFinal]);
+  /**
+   * Save and exit. Only reachable from CompletionScreen, which renders only
+   * once the save succeeded, so there is no failure branch to handle here.
+   */
+  const handleSaveExit = useCallback((): void => {
+    setShowSaveToast(true);
+    setTimeout(() => router.push("/"), 2200);
+  }, [router]);
 
-  // Fire persistence on entry to the complete phase (guarded by hasPersisted).
-  // Waits for studentId so the auth lookup finishing late cannot strand the
-  // one-shot persist in a guaranteed-failure state.
+  // Fire persistence on entry to the complete phase. Waits for the auth lookup
+  // to settle rather than for a non-null id: with the completion screen gated
+  // on a successful save, never firing would strand a signed-out student on
+  // the saving spinner. Firing with a null id returns an auth failure, which
+  // routes to the sign-in variant of the failure screen. start() is one-shot.
   useEffect(() => {
-    if (flowPhase === "complete" && studentId !== null) {
-      handlePersistStart();
+    if (flowPhase === "complete" && authSettled) {
+      startPersist();
     }
-  }, [flowPhase, studentId, handlePersistStart]);
+  }, [flowPhase, authSettled, startPersist]);
 
   // === Mid-session checkpoint (P1.1) ===
 
@@ -293,16 +295,18 @@ export default function Session({
   useEffect(() => {
     if (resumeStatus !== "active" || !studentId) return;
     if (questState.responses.length === 0 && questState.currentIndex === 0) return;
-    if (persistResult?.success) return;
+    if (saveStatus === "saved") return;
     saveSessionSnapshot(studentId, questState, scoreState, selfMapData.current);
-  }, [resumeStatus, studentId, questState, scoreState, persistResult]);
+  }, [resumeStatus, studentId, questState, scoreState, saveStatus]);
 
-  // Clear the checkpoint once final persistence has succeeded.
+  // Clear the checkpoint once final persistence has succeeded. Declared after
+  // the effect above so a failed save keeps the snapshot the failure screen
+  // promises is still there.
   useEffect(() => {
-    if (persistResult?.success && studentId) {
+    if (saveStatus === "saved" && studentId) {
       clearSessionSnapshot(studentId);
     }
-  }, [persistResult, studentId]);
+  }, [saveStatus, studentId]);
 
   // Badge celebration overlay shown before the completion screen
   const [showBadgeUnlock, setShowBadgeUnlock] = useState(true);
@@ -692,8 +696,10 @@ export default function Session({
     );
   }
 
-  // Session complete: badge celebration, then the real completion screen.
-  // Persistence fires exactly once via the flowPhase effect above.
+  // Session complete: badge celebration, then -- only once the save is
+  // confirmed -- the real completion screen. Persistence fires exactly once via
+  // the flowPhase effect above, in parallel with the badge overlay, so a quick
+  // save is already done by the time the badge finishes.
   if (flowPhase === "complete") {
     return (
       <>
@@ -705,20 +711,29 @@ export default function Session({
           />
         ) : (
           <SectionErrorBoundary name="Completion">
-            <CompletionScreen
-              tone={studentTone}
-              classLabel={scoreState.class_label}
-              scoreState={{
-                riasec: scoreState.riasec,
-                strengths: scoreState.strengths,
-              }}
-              riasecSnapshot={scoreState.riasec_snapshot}
-              onViewDashboard={() => router.push("/quest/dashboard")}
-              onSaveExit={handleSaveExit}
-              persistResult={persistResult}
-              onRetryPersist={handleRetryPersist}
-              onSignIn={handleSignIn}
-            />
+            {saveStatus === "failed" ? (
+              <SaveFailedScreen
+                errorType={saveErrorType ?? "unknown"}
+                detail={saveErrorMessage}
+                onRetry={retryPersist}
+                onSignIn={handleSignIn}
+                onLeave={handleLeave}
+              />
+            ) : saveStatus === "saved" ? (
+              <CompletionScreen
+                tone={studentTone}
+                classLabel={scoreState.class_label}
+                scoreState={{
+                  riasec: scoreState.riasec,
+                  strengths: scoreState.strengths,
+                }}
+                riasecSnapshot={scoreState.riasec_snapshot}
+                onViewDashboard={() => router.push("/quest/dashboard")}
+                onSaveExit={handleSaveExit}
+              />
+            ) : (
+              <SavingResults tone={studentTone} />
+            )}
           </SectionErrorBoundary>
         )}
         <ConfirmationToast

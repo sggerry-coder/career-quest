@@ -16,6 +16,7 @@ import { calculateXp, getCurrentMilestone, getUnlockedCosmetics } from "@/lib/xp
 import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
 import { applyClassTheme } from "@/lib/theme";
+import { loadSessionSnapshot } from "@/lib/persistence/session-snapshot";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
 interface StudentData {
@@ -91,6 +92,10 @@ export default function Dashboard() {
   const [scores, setScores] = useState<ScoresData | null>(null);
   const [unlockedBadgeIds, setUnlockedBadgeIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  // A finished quest whose results only ever reached this device. Computed in
+  // the loader rather than at render so the prerendered HTML and the hydrated
+  // client agree — localStorage does not exist at build time.
+  const [hasUnsavedCheckpoint, setHasUnsavedCheckpoint] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -132,6 +137,11 @@ export default function Dashboard() {
         }
         if (scoresRes.data) {
           setScores(scoresRes.data as ScoresData);
+        } else if (loadSessionSnapshot(user.id)) {
+          // No scores row, but this device still holds the answers. The save
+          // failed rather than the quest never happening, so offer recovery
+          // instead of telling them to start over.
+          setHasUnsavedCheckpoint(true);
         }
         if (achievementsRes.data) {
           setUnlockedBadgeIds(
@@ -156,6 +166,28 @@ export default function Dashboard() {
   }
 
   if (!student || !scores) {
+    // Two very different situations shared one dead end before: never started,
+    // and finished but the save failed. Only the second has answers to rescue.
+    if (hasUnsavedCheckpoint) {
+      return (
+        <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
+          <h2 className="text-xl font-semibold text-white mb-2">
+            Your results haven&apos;t saved yet
+          </h2>
+          <p className="text-sm text-white/50 mb-6 max-w-xs">
+            Your answers are still on this device. Finish saving them and your
+            profile will appear here.
+          </p>
+          <Link
+            href="/quest/session/1"
+            className="rounded-xl bg-[var(--color-primary)] px-6 py-3 text-white font-medium min-h-[44px]"
+          >
+            Finish saving my results
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
         <h2 className="text-xl font-semibold text-white mb-2">No results yet</h2>
