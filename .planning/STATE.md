@@ -94,6 +94,7 @@ None yet.
 | 260803-uz4 | Raise Career Curiosities cap from 3 to 5 and explain the cap in the UI | 2026-08-03 | 56d107d | [260803-uz4-raise-career-curiosities-cap-from-3-to-5](./quick/260803-uz4-raise-career-curiosities-cap-from-3-to-5/) |
 | 260803-v6a | Unbundle warm-up options — six single-idea choices, one per interest type | 2026-08-03 | f7fda94 | [260803-v6a-unbundle-warm-up-options-six-single-idea](./quick/260803-v6a-unbundle-warm-up-options-six-single-idea/) |
 | 260803-vp2 | Fix duplicate class label and add Values Compass readout | 2026-08-03 | 4ae3129 | [260803-vp2-fix-duplicate-class-label-and-add-values](./quick/260803-vp2-fix-duplicate-class-label-and-add-values/) |
+| 260803-wlz | Four-point Likert scale and apply reverse scoring | 2026-08-03 | 12f8edd | [260803-wlz-four-point-likert-scale-and-apply-revers](./quick/260803-wlz-four-point-likert-scale-and-apply-revers/) |
 
 ### Persistence hardening (2026-08-03) — spec built and shipped
 

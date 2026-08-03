@@ -88,26 +88,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FLOW-01 | Phase 1 | Complete |
 | FLOW-02 | Phase 1 | Complete |
 | FLOW-03 | Phase 1 | Complete |
-| COMP-01 | Phase 2 | Complete |
-| COMP-02 | Phase 2 | Complete |
-| COMP-03 | Phase 2 | Complete |
-| COMP-04 | Phase 2 | Complete |
-| DATA-01 | Phase 2 | Complete |
-| DATA-02 | Phase 2 | Complete |
-| DATA-03 | Phase 2 | Complete |
-| SCORE-01 | Phase 3 | Complete |
+| COMP-01 | Phase 2 | Complete (code) |
+| COMP-02 | Phase 2 | ❌ Unsatisfied — see v1.0 audit (unreachable) |
+| COMP-03 | Phase 2 | ❌ Unsatisfied — see v1.0 audit (never persisted + dashboard query broken) |
+| COMP-04 | Phase 2 | ❌ Unsatisfied — see v1.0 audit (unreachable) |
+| DATA-01 | Phase 2 | ❌ Unsatisfied — see v1.0 audit (unreachable) |
+| DATA-02 | Phase 2 | ❌ Unsatisfied — logic correct but consumer unreachable |
+| DATA-03 | Phase 2 | ❌ Unsatisfied — logic correct but never called live |
+| SCORE-01 | Phase 3 | 🟡 Partial — degrades for returning students |
 | SCORE-02 | Phase 3 | Complete |
 | SCORE-03 | Phase 3 | Complete |
-| AUDIT-01 | Phase 4 | Complete |
+| AUDIT-01 | Phase 4 | 🟡 Partial — missed 2 critical bugs; vitest worktree inflation |
 | AUDIT-02 | Phase 4 | Complete |
 | AUDIT-03 | Phase 4 | Complete |
-| AUDIT-04 | Phase 4 | Complete |
+| AUDIT-04 | Phase 4 | 🟡 Partial — boundaries wired; network recovery unreachable |
 
-**Coverage:**
+**Coverage (post-audit 2026-07-24):**
 - v1 requirements: 17 total
-- Mapped to phases: 17
-- Unmapped: 0
+- Fully satisfied: 8
+- Partial: 3 (SCORE-01, AUDIT-01, AUDIT-04)
+- Unsatisfied: 6 (COMP-02/03/04, DATA-01/02/03)
 
 ---
 *Requirements defined: 2026-04-01*
-*Last updated: 2026-04-03 — v1.0 milestone complete, all 17 requirements delivered*
+*Last updated: 2026-07-24 — v1.0 milestone AUDIT found gaps; earlier "all delivered" claim was based on per-phase verification that missed the Phase 1→2 integration seam. See .planning/v1.0-MILESTONE-AUDIT.md.*
