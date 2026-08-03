@@ -92,6 +92,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260803-uz4 | Raise Career Curiosities cap from 3 to 5 and explain the cap in the UI | 2026-08-03 | 56d107d | [260803-uz4-raise-career-curiosities-cap-from-3-to-5](./quick/260803-uz4-raise-career-curiosities-cap-from-3-to-5/) |
+| 260803-v6a | Unbundle warm-up options — six single-idea choices, one per interest type | 2026-08-03 | f7fda94 | [260803-v6a-unbundle-warm-up-options-six-single-idea](./quick/260803-v6a-unbundle-warm-up-options-six-single-idea/) |
 
 ### Blockers/Concerns
 
