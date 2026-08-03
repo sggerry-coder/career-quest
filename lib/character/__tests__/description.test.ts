@@ -61,4 +61,22 @@ describe("describeCharacter", () => {
     expect(text).not.toContain(" and .");
     expect(text).not.toContain(", .");
   });
+
+  it("returns just the class name when no clauses are certain", () => {
+    const text = describeCharacter({
+      derived: guardian, tone: "quest", mbti: unclearMbti, values: flatValues,
+    });
+    expect(text).toBe("A Guardian.");
+    expect(text).not.toContain(" who");
+    expect(text.endsWith(".")).toBe(true);
+  });
+
+  it("omits class name in explorer-tone unformed message", () => {
+    const text = describeCharacter({
+      derived: unformed, tone: "explorer", mbti: unclearMbti, values: flatValues,
+    });
+    expect(text).toContain("still taking shape");
+    expect(text).not.toContain("Guardian");
+    expect(text).not.toContain("Helper");
+  });
 });
