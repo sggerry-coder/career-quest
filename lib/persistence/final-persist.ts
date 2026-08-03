@@ -134,18 +134,28 @@ export async function runFinalPersist(
     }
 
     // Write computed scores
+    // onConflict is required, not optional. assessment_scores has its primary
+    // key on `id` (default gen_random_uuid()) and a separate unique constraint
+    // on student_id. Without naming student_id, Supabase resolves on the
+    // primary key, generates a fresh id, and INSERTs -- so the save succeeded
+    // once per student and then failed forever with
+    // "duplicate key value violates unique constraint
+    //  assessment_scores_student_id_key".
     const scoresResult = await retryWithBackoff(
       () =>
-        supabase.from("assessment_scores").upsert({
-          student_id: studentId,
-          riasec_scores: scores.riasec,
-          mi_scores: scores.mi,
-          mbti_indicators: scores.mbti,
-          mbti_raw_counts: buildMbtiRawCounts(scores.mbti_raw),
-          values_compass: scores.values,
-          strengths: scores.strengths,
-          updated_at: new Date().toISOString(),
-        }),
+        supabase.from("assessment_scores").upsert(
+          {
+            student_id: studentId,
+            riasec_scores: scores.riasec,
+            mi_scores: scores.mi,
+            mbti_indicators: scores.mbti,
+            mbti_raw_counts: buildMbtiRawCounts(scores.mbti_raw),
+            values_compass: scores.values,
+            strengths: scores.strengths,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "student_id" }
+        ),
       retryDelays
     );
     if (scoresResult.error) return failureFrom(scoresResult.error);

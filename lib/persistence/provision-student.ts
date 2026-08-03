@@ -107,11 +107,17 @@ export async function provisionStudent(
 
     // 4. Reset assessment scores to zero (non-blocking; created at first
     //    checkpoint if this fails).
-    await supabase.from("assessment_scores").upsert({
-      student_id: userId,
-      ...ZERO_SCORES,
-      updated_at: new Date().toISOString(),
-    });
+    // onConflict: student_id for the same reason as final-persist -- the
+    // primary key is `id`, so without it a returning student hits the
+    // student_id unique constraint and their old scores are never reset.
+    await supabase.from("assessment_scores").upsert(
+      {
+        student_id: userId,
+        ...ZERO_SCORES,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "student_id" }
+    );
 
     // 5. Quest Started badge (non-blocking; shown from client state).
     await supabase.from("achievements").upsert(

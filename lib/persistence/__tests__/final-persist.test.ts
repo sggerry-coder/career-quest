@@ -18,7 +18,12 @@ import type { ClientResponse } from "@/lib/types/quest";
 // ---------------------------------------------------------------------------
 
 const h = vi.hoisted(() => {
-  const calls: Array<{ table: string; method: string; payload: unknown }> = [];
+  const calls: Array<{
+    table: string;
+    method: string;
+    payload: unknown;
+    options?: unknown;
+  }> = [];
   // table -> number of times the write should fail before succeeding
   const failCounts: Record<string, number> = {};
   // table -> error object to fail with
@@ -34,8 +39,8 @@ const h = vi.hoisted(() => {
 
   function makeTableApi(table: string) {
     return {
-      upsert: (payload: unknown) => {
-        calls.push({ table, method: "upsert", payload });
+      upsert: (payload: unknown, options?: unknown) => {
+        calls.push({ table, method: "upsert", payload, options });
         return Promise.resolve(result(table));
       },
       update: (payload: unknown) => ({
@@ -264,5 +269,33 @@ describe("runFinalPersist", () => {
       message: "No authenticated user",
     });
     expect(h.calls).toHaveLength(0);
+  });
+
+  // Regression: assessment_scores has its primary key on `id` and a separate
+  // unique constraint on student_id. Supabase resolves an upsert on the primary
+  // key unless told otherwise, so omitting onConflict generated a fresh id and
+  // INSERTed -- the save worked once per student and then failed forever with
+  // "duplicate key value violates unique constraint
+  // assessment_scores_student_id_key". Reported from production 2026-08-03.
+  it("upserts assessment_scores on student_id, not the primary key", async () => {
+    await runFinalPersist(makeInput(), { retryDelays: [] });
+
+    const scoresCall = h.calls.find(
+      (c) => c.table === "assessment_scores" && c.method === "upsert"
+    );
+    expect(scoresCall?.options).toEqual({ onConflict: "student_id" });
+  });
+
+  it("names a conflict target on every upsert it makes", async () => {
+    await runFinalPersist(makeInput(), { retryDelays: [] });
+
+    const upserts = h.calls.filter((c) => c.method === "upsert");
+    expect(upserts.length).toBeGreaterThan(0);
+    for (const call of upserts) {
+      expect(
+        (call.options as { onConflict?: string } | undefined)?.onConflict,
+        `${call.table} upsert must name its conflict target`
+      ).toBeTruthy();
+    }
   });
 });
