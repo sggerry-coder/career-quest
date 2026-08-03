@@ -109,6 +109,19 @@ was rejected and the whole save failed. Found by probing the live PostgREST sche
 publishable key (read-only, one request per column); every other column the save writes was
 present. The user applied the SQL on 2026-08-03 and the column now exists, verified.
 
+**Second root cause, found by the new failure screen (`d6de0f1`-era, see git log).** With the
+schema fixed, the re-run failed on `duplicate key value violates unique constraint
+assessment_scores_student_id_key`. `assessment_scores` keys on `id` with a separate unique
+constraint on `student_id`; Supabase resolves an upsert on the primary key unless told
+otherwise, so the write generated a fresh id and INSERTed. **The final save worked exactly
+once per student and failed permanently after that.** `provision-student.ts` had the same
+bug unchecked, so "start a new quest" silently failed to zero a returning student's scores.
+Both now pass `{ onConflict: "student_id" }`, with a test asserting every upsert in the final
+save names a conflict target.
+
+This is the payoff from printing the raw error: the previous build would have said "check
+your connection" and the cause would still be unknown.
+
 Two code defects that turned a schema error into a wifi complaint, both now fixed:
 - `classifySupabaseError` only checked `status`, which PostgrestError does not carry, so
   permission and schema errors fell through to "unknown" → "check your connection".
