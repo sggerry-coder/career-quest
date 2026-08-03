@@ -1344,16 +1344,22 @@ git commit -m "feat(quest): let the class crystallise at block boundaries"
 
 ---
 
-### Task 8: Show the class, relics and description
+### Task 8: Persist and show the class, relics and description
 
 **Files:**
 - Create: `components/character/relic-shelf.tsx`
-- Modify: `components/quest/reveal-sequence.tsx` (class label + description), `app/quest/dashboard/page.tsx` (relics + description)
-- Test: `components/character/__tests__/relic-shelf.test.tsx`
+- Modify: `lib/persistence/final-persist.ts` (persist the emergent class), `app/quest/session/[id]/page.tsx` (pass it), `components/quest/reveal-sequence.tsx` (class label + description), `app/quest/dashboard/page.tsx` (relics, description, class maps)
+- Test: `components/character/__tests__/relic-shelf.test.tsx`, `lib/persistence/__tests__/final-persist.test.ts`
 
 **Interfaces:**
-- Consumes: `earnedRelics` (Task 3), `describeCharacter` (Task 4), `deriveCharacterClass` and `characterClassDisplayName` (Task 1).
-- Produces: `<RelicShelf relics={Relic[]} tone="quest" | "explorer" />`.
+- Consumes: `earnedRelics` (Task 3), `describeCharacter` (Task 4), `deriveCharacterClass`, `characterClassDisplayName` and `CHARACTER_CLASSES` (Task 1).
+- Produces: `<RelicShelf relics={Relic[]} tone="quest" | "explorer" />`; `FinalPersistInput` gains `characterClass: string`.
+
+**Why persistence is part of this task.** `runFinalPersist` currently writes
+`current_session`, `has_completed_session1` and `self_map` — but never `avatar_class`. The
+dashboard reads `avatar_class` for its theme, class name and icon. Without this, a student
+who became a Guardian mid-quest would return to a slate-grey Wanderer dashboard forever.
+The class must be written at the final save.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1494,12 +1500,67 @@ In `app/quest/dashboard/page.tsx`, add below the Self-vs-Measured card:
 />
 ```
 
-- [ ] **Step 6: Verify and commit**
+The dashboard's existing `CLASS_NAMES` and `CLASS_ICONS` lookups (used at lines 206-207)
+are keyed on the retired ids and will fall through to the raw id string. Replace both with
+the registry from Task 1:
+
+```tsx
+import { CHARACTER_CLASSES, type CharacterClassId } from "@/lib/character/classes";
+
+const classId = (student.avatar_class ?? "wanderer") as CharacterClassId;
+const classDef = CHARACTER_CLASSES[classId] ?? CHARACTER_CLASSES.wanderer;
+const className = classDef.name[student.tone];
+const classIcon = classDef.icon;
+```
+
+- [ ] **Step 6: Persist the class the student became**
+
+Add a failing test to `lib/persistence/__tests__/final-persist.test.ts`:
+
+```ts
+  it("saves the class the student became, so the dashboard is not stuck on Wanderer", async () => {
+    await runFinalPersist(makeInput({ characterClass: "guardian" }), { retryDelays: [] });
+
+    const studentUpdate = h.calls.find(
+      (c) => c.table === "students" && c.method === "update"
+    );
+    expect(studentUpdate?.payload).toMatchObject({ avatar_class: "guardian" });
+  });
+```
+
+`makeInput` must gain `characterClass: "wanderer"` as its default so existing tests keep
+passing.
+
+Then in `lib/persistence/final-persist.ts`, add `characterClass: string;` to
+`FinalPersistInput`, destructure it alongside `selfMap`, and extend the update at line 165:
+
+```ts
+    const studentUpdate: Record<string, unknown> = {
+      current_session: 1,
+      has_completed_session1: true,
+      // What the student became. avatar_class used to hold what they picked
+      // before the app knew anything about them.
+      avatar_class: characterClass,
+    };
+```
+
+Finally, in `app/quest/session/[id]/page.tsx`, pass it from `persistFinal`:
+
+```ts
+    return runFinalPersist({
+      studentId,
+      characterClass: emergentClass.primary,
+      responses: questState.responses,
+```
+
+Add `emergentClass.primary` to that `useCallback`'s dependency array.
+
+- [ ] **Step 7: Verify and commit**
 
 ```bash
 npx tsc --noEmit && npm run lint && npm test
-git add components/character/ components/quest/reveal-sequence.tsx app/quest/dashboard/page.tsx
-git commit -m "feat(character): show the class, its description and earned relics"
+git add components/character/ components/quest/reveal-sequence.tsx app/quest/dashboard/page.tsx lib/persistence/final-persist.ts lib/persistence/__tests__/final-persist.test.ts "app/quest/session/[id]/page.tsx"
+git commit -m "feat(character): persist and show the class, description and relics"
 ```
 
 ---
