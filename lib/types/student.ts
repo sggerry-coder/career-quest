@@ -23,7 +23,7 @@ export interface SelfMap {
   clarity: number;               // 1-5 (direction clarity slider)
   sources: string[];             // where career ideas come from
   perceived_strengths: string[]; // 0-3 self-identified strengths
-  curiosities: string[];         // 0-3 career curiosity categories
+  curiosities: string[];         // 0-5 career curiosity categories
 }
 
 export interface FamilyContext {

@@ -22,7 +22,7 @@ const curiosityOptions = [
 ];
 
 const DONT_KNOW_ID = "dont_know";
-const MAX_SELECTIONS = 3;
+const MAX_SELECTIONS = 5;
 
 export function CuriositiesPicker({
   value,
@@ -63,12 +63,16 @@ export function CuriositiesPicker({
       </label>
       <p style={{ fontSize: "0.875rem", color: "var(--cq-text-secondary)" }}>
         Any areas that spark your interest? Pick up to {MAX_SELECTIONS}.
-        {!isDontKnow && remainingPicks > 0 && remainingPicks < MAX_SELECTIONS && (
-          <span style={{ color: "var(--cq-accent)" }}>
-            {" "}
-            ({remainingPicks} remaining)
-          </span>
-        )}
+        {/* One live region for both hints: reaching the cap disables the
+            remaining chips, so it has to be announced rather than left to the
+            student to infer from taps that do nothing. */}
+        <span style={{ color: "var(--cq-accent)" }} aria-live="polite">
+          {!isDontKnow &&
+            remainingPicks < MAX_SELECTIONS &&
+            (remainingPicks > 0
+              ? ` (${remainingPicks} remaining)`
+              : ` (${MAX_SELECTIONS} of ${MAX_SELECTIONS} — tap one to swap)`)}
+        </span>
       </p>
 
       <div
@@ -114,7 +118,9 @@ export function CuriositiesPicker({
                     ? "var(--cq-text-muted)"
                     : "var(--cq-text-secondary)",
                 cursor: isDisabled ? "not-allowed" : "pointer",
-                opacity: isDisabled || (isDontKnow && !isSelected) ? 0.5 : 1,
+                // Capped-out chips must stay readable: the student has to be
+                // able to tell what they'd be swapping out.
+                opacity: isDisabled ? 0.65 : isDontKnow && !isSelected ? 0.5 : 1,
                 transition: "all 0.2s ease",
                 boxShadow: isSelected ? "0 0 10px var(--cq-glow)" : "none",
                 minHeight: "44px",
