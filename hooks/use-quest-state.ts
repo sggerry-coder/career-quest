@@ -6,6 +6,7 @@ import type {
   Question,
   QuestionBlock,
 } from "@/lib/types/quest";
+import { LIKERT_MIN, LIKERT_MAX } from "@/lib/scoring/likert";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -45,7 +46,7 @@ export interface QuestState {
   transitionNarration: string;
   adaptiveQuestions: Question[];
   confirmIndex: number;
-  consecutiveNeutrals: number;
+  consecutiveMild: number;
   current_block: QuestionBlock;
   questions_answered: number;
   responses: ClientResponse[];
@@ -62,8 +63,7 @@ export interface QuestState {
 // ---------------------------------------------------------------------------
 
 const ENGAGEMENT_OFFSET = 7;
-const NEUTRAL_VALUE = 3;
-const CONSECUTIVE_NEUTRAL_THRESHOLD = 3;
+const CONSECUTIVE_MILD_THRESHOLD = 3;
 
 const INITIAL_STATE: QuestState = {
   flowPhase: "questions",
@@ -72,7 +72,7 @@ const INITIAL_STATE: QuestState = {
   transitionNarration: "",
   adaptiveQuestions: [],
   confirmIndex: 0,
-  consecutiveNeutrals: 0,
+  consecutiveMild: 0,
   current_block: "warmup",
   questions_answered: 0,
   responses: [],
@@ -95,18 +95,28 @@ function findBlockStartIndex(block: string, questions: Question[]): number {
   return questions.findIndex((q) => q.block === block);
 }
 
+/** True for the two inner points of the scale — a lean, but not a strong one. */
+export function isMildAnswer(value: number): boolean {
+  return value > LIKERT_MIN && value < LIKERT_MAX;
+}
+
 /**
- * Detect if discovery mode should trigger:
- * 3+ consecutive riasec responses with value === 3 (neutral).
+ * Detect if discovery mode should trigger: 3+ consecutive riasec ratings with
+ * no strong feeling either way.
+ *
+ * Was "3 answers of exactly 3 (Neutral)". The scale lost its midpoint on
+ * 2026-08-03, which would have made that condition unreachable and the whole
+ * discovery-mode branch dead. The nearest honest equivalent on a four-point
+ * scale is a run of mild answers.
  */
 function shouldTriggerDiscoveryMode(responses: ClientResponse[]): boolean {
   const riasecResponses = responses.filter(
     (r) => r.framework === "riasec"
   );
-  if (riasecResponses.length < CONSECUTIVE_NEUTRAL_THRESHOLD) return false;
+  if (riasecResponses.length < CONSECUTIVE_MILD_THRESHOLD) return false;
 
-  const lastThree = riasecResponses.slice(-CONSECUTIVE_NEUTRAL_THRESHOLD);
-  return lastThree.every((r) => r.response_value === NEUTRAL_VALUE);
+  const lastThree = riasecResponses.slice(-CONSECUTIVE_MILD_THRESHOLD);
+  return lastThree.every((r) => isMildAnswer(r.response_value));
 }
 
 /**
@@ -204,20 +214,20 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
       const newResponses = [...state.responses, action.response];
       const questionsAnswered = state.questions_answered + 1;
 
-      // Discovery mode detection
+      // Discovery mode detection — a run of answers with no strong feeling
       let discoveryMode = state.discovery_mode_active;
-      let consecutiveNeutrals = state.consecutiveNeutrals;
+      let consecutiveMild = state.consecutiveMild;
       if (
         !discoveryMode &&
         action.question.block === "riasec" &&
         action.question.question_type === "likert"
       ) {
-        if (action.response.response_value === NEUTRAL_VALUE) {
-          consecutiveNeutrals = state.consecutiveNeutrals + 1;
+        if (isMildAnswer(action.response.response_value)) {
+          consecutiveMild = state.consecutiveMild + 1;
         } else {
-          consecutiveNeutrals = 0;
+          consecutiveMild = 0;
         }
-        if (consecutiveNeutrals >= CONSECUTIVE_NEUTRAL_THRESHOLD) {
+        if (consecutiveMild >= CONSECUTIVE_MILD_THRESHOLD) {
           discoveryMode = true;
         }
         // Also check via full response history as fallback
@@ -244,7 +254,7 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
         responses: newResponses,
         questions_answered: questionsAnswered,
         discovery_mode_active: discoveryMode,
-        consecutiveNeutrals,
+        consecutiveMild,
         last_response_undoable: true,
         direction: "right",
       };
@@ -417,7 +427,7 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
         currentIndex: Math.max(0, restored.currentIndex ?? 0),
         confirmIndex: Math.max(0, restored.confirmIndex ?? 0),
         questions_answered: Math.max(0, restored.questions_answered ?? 0),
-        consecutiveNeutrals: Math.max(0, restored.consecutiveNeutrals ?? 0),
+        consecutiveMild: Math.max(0, restored.consecutiveMild ?? 0),
         responses: restored.responses ?? [],
         adaptiveQuestions: restored.adaptiveQuestions ?? [],
         // A restored answer is never undoable: score-state footprints for it

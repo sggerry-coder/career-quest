@@ -393,6 +393,9 @@ export default function Session({
         framework: currentQuestion.framework,
         framework_target: currentQuestion.framework_target,
         answered_at: Date.now(),
+        // Carried so the scoring layer can flip reverse-worded items; the
+        // stored response_value stays exactly what the student picked.
+        reverse_scored: currentQuestion.reverse_scored,
       };
 
       // Dispatch to reducer (ATOMIC state transition -- FLOW-01 fix)
@@ -501,6 +504,7 @@ export default function Session({
         framework: q.framework,
         framework_target: q.framework_target,
         answered_at: Date.now(),
+        reverse_scored: q.reverse_scored,
       };
 
       dispatch({ type: "ANSWER_CONFIRMATORY", response });

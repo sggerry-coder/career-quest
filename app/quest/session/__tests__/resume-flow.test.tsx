@@ -75,7 +75,7 @@ const INITIAL_QUEST_STATE: QuestState = {
   transitionNarration: "",
   adaptiveQuestions: [],
   confirmIndex: 0,
-  consecutiveNeutrals: 0,
+  consecutiveMild: 0,
   current_block: "warmup",
   questions_answered: 0,
   responses: [],

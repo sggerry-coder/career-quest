@@ -35,7 +35,7 @@ function makeInitialState(overrides?: Partial<QuestState>): QuestState {
     transitionNarration: "",
     adaptiveQuestions: [],
     confirmIndex: 0,
-    consecutiveNeutrals: 0,
+    consecutiveMild: 0,
     current_block: "warmup",
     questions_answered: 0,
     responses: [],
@@ -260,7 +260,7 @@ describe("discovery mode", () => {
     const state: QuestState = {
       ...baseState,
       responses,
-      consecutiveNeutrals: 2,
+      consecutiveMild: 2,
     };
 
     const q = session1CoreQuestions[7]; // riasec likert
@@ -280,7 +280,7 @@ describe("discovery mode", () => {
     const state = stateAtIndex(7, {
       engagementShown: true,
       discovery_mode_active: true,
-      consecutiveNeutrals: 2,
+      consecutiveMild: 2,
     });
     const q = session1CoreQuestions[7];
     const action: QuestAction = {
@@ -484,7 +484,7 @@ describe("RESTORE_STATE (P1.1 checkpoint resume)", () => {
   it("preserves reducer invariants from a mid-riasec snapshot", () => {
     const snapshot = stateAtIndex(10, {
       engagementShown: false,
-      consecutiveNeutrals: 2,
+      consecutiveMild: 2,
       discovery_mode_active: false,
       avatarClass: "mage",
     });
@@ -499,7 +499,7 @@ describe("RESTORE_STATE (P1.1 checkpoint resume)", () => {
     expect(next.questions_answered).toBe(10);
     expect(next.responses).toHaveLength(10);
     expect(next.current_block).toBe("riasec");
-    expect(next.consecutiveNeutrals).toBe(2);
+    expect(next.consecutiveMild).toBe(2);
     expect(next.engagementShown).toBe(false);
     expect(next.avatarClass).toBe("mage");
     // Restored answers are never undoable; direction resets forward

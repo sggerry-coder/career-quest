@@ -42,11 +42,18 @@ export interface Question {
 
 export interface ClientResponse {
   question_id: string;
+  /** The student's answer exactly as given, never flipped. */
   response_value: number;
   response_label: string;
   framework: string;
   framework_target: string;
   answered_at: number;
+  /**
+   * Carried from the question so the scoring layer can flip reverse-worded
+   * items. The raw answer is stored unflipped so the saved data always
+   * reflects what the student actually picked.
+   */
+  reverse_scored?: boolean;
 }
 
 export interface SessionResponse {

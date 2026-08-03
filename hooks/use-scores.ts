@@ -13,6 +13,7 @@ import {
   calculateAllMbti,
 } from "@/lib/scoring/mbti";
 import { calculateAllValues } from "@/lib/scoring/values";
+import { reverseLikert } from "@/lib/scoring/likert";
 import { getTopStrengths } from "@/lib/scoring/strengths";
 
 export interface ResponseSignalFootprint {
@@ -87,6 +88,23 @@ function cloneRaw(raw: Record<string, number[]>): Record<string, number[]> {
 }
 
 /**
+ * The value that should enter the raw score arrays.
+ *
+ * Reverse-worded rating items measure their type negatively — "I would rather
+ * sit in a library than work outdoors with tools" is evidence *against*
+ * Realistic. They were previously added as-is, so four of the six RIASEC types
+ * had half their rating evidence counted upside-down.
+ *
+ * Only rating (Likert) items are flipped. Ipsative, forced-choice and spectrum
+ * items use their own ranges and are never marked reverse_scored.
+ */
+export function scoredValue(response: ClientResponse): number {
+  return response.reverse_scored
+    ? reverseLikert(response.response_value)
+    : response.response_value;
+}
+
+/**
  * Build a signal footprint for a single-framework processResponse call.
  */
 export function buildProcessResponseFootprint(
@@ -102,7 +120,7 @@ export function buildProcessResponseFootprint(
   };
 
   if (response.framework === "riasec" && response.framework_target !== "none") {
-    footprint.riasec_additions[response.framework_target] = [response.response_value];
+    footprint.riasec_additions[response.framework_target] = [scoredValue(response)];
   } else if (response.framework === "mbti" && response.framework_target !== "none") {
     footprint.mbti_additions[response.framework_target] = [response.response_value];
   } else if (response.framework === "values" && response.framework_target !== "none") {
@@ -310,7 +328,7 @@ export function useScores() {
           // Likert response -- append to riasec_raw
           next.riasec_raw[response.framework_target] = [
             ...(next.riasec_raw[response.framework_target] || []),
-            response.response_value,
+            scoredValue(response),
           ];
         }
         // Recalculate RIASEC

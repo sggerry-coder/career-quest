@@ -7,77 +7,84 @@ import {
   deriveClassLabel,
 } from "../riasec";
 
+// Scale is 1-4 with no midpoint (2026-08-03). Formula:
+// ((sum - count * 1) / (count * 3)) * 100
 describe("calculateRiasecType", () => {
-  it("normalizes 3 responses of [5,5,5] to 100", () => {
-    expect(calculateRiasecType([5, 5, 5])).toBe(100);
+  it("normalizes 3 responses of [4,4,4] to 100", () => {
+    expect(calculateRiasecType([4, 4, 4])).toBe(100);
   });
 
   it("normalizes 3 responses of [1,1,1] to 0", () => {
     expect(calculateRiasecType([1, 1, 1])).toBe(0);
   });
 
-  it("normalizes [3,4,2] to approximately 41.7", () => {
-    // (9 - 3) / (3 * 4) * 100 = 6/12 * 100 = 50
-    expect(calculateRiasecType([3, 4, 2])).toBeCloseTo(50, 1);
+  it("puts a balanced set at the centre", () => {
+    // (2+3+2+3 - 4) / (4 * 3) * 100 = 6/12 * 100 = 50
+    expect(calculateRiasecType([2, 3, 2, 3])).toBeCloseTo(50, 1);
   });
 
-  it("handles a single response of [3]", () => {
-    // (3 - 1) / (1 * 4) * 100 = 2/4 * 100 = 50
-    expect(calculateRiasecType([3])).toBe(50);
+  it("handles a single mild-dislike response of [2]", () => {
+    // (2 - 1) / (1 * 3) * 100 = 1/3 * 100 = 33.3
+    expect(calculateRiasecType([2])).toBeCloseTo(33.3, 1);
   });
 
-  it("handles two responses of [4, 2]", () => {
-    // (6 - 2) / (2 * 4) * 100 = 4/8 * 100 = 50
-    expect(calculateRiasecType([4, 2])).toBe(50);
+  it("handles a single mild-like response of [3]", () => {
+    // (3 - 1) / (1 * 3) * 100 = 2/3 * 100 = 66.7
+    expect(calculateRiasecType([3])).toBeCloseTo(66.7, 1);
   });
 
-  it("handles four responses of [5, 4, 3, 2]", () => {
-    // (14 - 4) / (4 * 4) * 100 = 10/16 * 100 = 62.5
-    expect(calculateRiasecType([5, 4, 3, 2])).toBe(62.5);
+  it("handles two opposite extremes of [4, 1]", () => {
+    // (5 - 2) / (2 * 3) * 100 = 3/6 * 100 = 50
+    expect(calculateRiasecType([4, 1])).toBe(50);
   });
 
-  it("handles five responses of [1, 2, 3, 4, 5]", () => {
-    // (15 - 5) / (5 * 4) * 100 = 10/20 * 100 = 50
-    expect(calculateRiasecType([1, 2, 3, 4, 5])).toBe(50);
+  it("handles four responses of [4, 3, 2, 1]", () => {
+    // (10 - 4) / (4 * 3) * 100 = 6/12 * 100 = 50
+    expect(calculateRiasecType([4, 3, 2, 1])).toBe(50);
   });
 
   it("returns 0 for empty array", () => {
     expect(calculateRiasecType([])).toBe(0);
   });
 
-  it("clamps values to 1-5 range", () => {
-    // [0, 7] → clamped to [1, 5] → (6 - 2) / (2*4) * 100 = 50
+  it("clamps values to the 1-4 range", () => {
+    // [0, 7] → clamped to [1, 4] → (5 - 2) / (2*3) * 100 = 50
     expect(calculateRiasecType([0, 7])).toBe(50);
   });
 
+  it("clamps a legacy 5 from the old scale down to 4", () => {
+    // Old checkpoints and stored rows can still hold 5s.
+    expect(calculateRiasecType([5])).toBe(calculateRiasecType([4]));
+  });
+
   it("rounds non-integer values to nearest integer", () => {
-    // [2.7] → rounds to 3 → (3 - 1) / (1*4) * 100 = 50
-    expect(calculateRiasecType([2.7])).toBe(50);
+    // [2.7] → rounds to 3 → (3 - 1) / (1*3) * 100 = 66.7
+    expect(calculateRiasecType([2.7])).toBeCloseTo(66.7, 1);
   });
 });
 
 describe("calculateAllRiasec", () => {
   it("normalizes all 6 types from raw scores", () => {
     const raw = {
-      R: [5, 5],
+      R: [4, 4],
       I: [1, 1],
-      A: [3, 3],
-      S: [4, 4],
+      A: [2, 3],
+      S: [4, 3],
       E: [2, 2],
-      C: [5, 1],
+      C: [4, 1],
     };
     const result = calculateAllRiasec(raw);
     expect(result.R).toBe(100);
     expect(result.I).toBe(0);
     expect(result.A).toBe(50);
-    expect(result.S).toBe(75);
-    expect(result.E).toBe(25);
+    expect(result.S).toBeCloseTo(83.3, 1);
+    expect(result.E).toBeCloseTo(33.3, 1);
     expect(result.C).toBe(50);
   });
 
   it("handles missing types (empty arrays) as 0", () => {
     const raw = {
-      R: [5],
+      R: [4],
       I: [],
       A: [],
       S: [],

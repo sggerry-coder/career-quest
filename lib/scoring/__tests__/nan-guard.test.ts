@@ -80,13 +80,14 @@ describe("NaN safety guards", () => {
 
   describe("Boundary values — single response sets", () => {
     it("calculateAllRiasec with single response per type produces finite results", () => {
+      // Scale is 1-4; the 5 is a legacy value and must clamp, not blow up.
       const result = calculateAllRiasec({ R: [3], I: [1], A: [5], S: [2], E: [4], C: [3] });
       assertAllFinite(result, "riasec-single-response");
-      // Single response of 3: (3-1)/(1*4)*100 = 50
-      expect(result.R).toBe(50);
-      // Single response of 1: (1-1)/(1*4)*100 = 0
+      // Single response of 3: (3-1)/(1*3)*100 = 66.7
+      expect(result.R).toBeCloseTo(66.7, 1);
+      // Single response of 1: (1-1)/(1*3)*100 = 0
       expect(result.I).toBe(0);
-      // Single response of 5: (5-1)/(1*4)*100 = 100
+      // Legacy 5 clamps to 4: (4-1)/(1*3)*100 = 100
       expect(result.A).toBe(100);
     });
 

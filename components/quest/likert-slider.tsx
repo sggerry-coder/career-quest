@@ -1,23 +1,23 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { LIKERT_POINTS, LIKERT_MIN, LIKERT_MAX } from "@/lib/scoring/likert";
 
 interface LikertSliderProps {
   value: number | null;
   onChange: (value: number) => void;
 }
 
-const POINTS = [
-  { value: 1, emoji: "\u{1F612}", label: "Strongly Dislike" },
-  { value: 2, emoji: "\u{1F615}", label: "Dislike" },
-  { value: 3, emoji: "\u{1F610}", label: "Neutral" },
-  { value: 4, emoji: "\u{1F642}", label: "Like" },
-  { value: 5, emoji: "\u{1F929}", label: "Strongly Like" },
-];
+// Four points, no midpoint — see lib/scoring/likert.ts for why.
+const POINTS = LIKERT_POINTS;
 
 export default function LikertSlider({ value, onChange }: LikertSliderProps) {
   return (
-    <div className="w-full" role="radiogroup" aria-label="Rate on a scale of 1 to 5">
+    <div
+      className="w-full"
+      role="radiogroup"
+      aria-label={`Rate on a scale of ${LIKERT_MIN} to ${LIKERT_MAX}`}
+    >
       {/* Emoji labels row */}
       <div className="flex items-center justify-between mb-3 px-1">
         {POINTS.map((point) => (

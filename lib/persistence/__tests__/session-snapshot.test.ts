@@ -22,7 +22,7 @@ function makeQuestState(overrides?: Partial<QuestState>): QuestState {
     transitionNarration: "",
     adaptiveQuestions: [],
     confirmIndex: 0,
-    consecutiveNeutrals: 1,
+    consecutiveMild: 1,
     current_block: "riasec",
     questions_answered: 10,
     responses: Array.from({ length: 10 }, (_, i) => ({

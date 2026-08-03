@@ -1,3 +1,5 @@
+import { LIKERT_MIN, LIKERT_RANGE, sanitizeLikert } from "@/lib/scoring/likert";
+
 const RIASEC_TYPES = ["R", "I", "A", "S", "E", "C"] as const;
 export type RiasecType = (typeof RIASEC_TYPES)[number];
 
@@ -11,24 +13,19 @@ const RIASEC_DISPLAY_NAMES: Record<RiasecType, string> = {
 };
 
 /**
- * Clamp and round a raw Likert/ipsative response value to integer 1-5.
- */
-function sanitizeValue(v: number): number {
-  const rounded = Math.round(v);
-  return Math.max(1, Math.min(5, rounded));
-}
-
-/**
  * Normalize raw Likert responses for a single RIASEC type.
- * Formula: ((sum - count) / (count * 4)) * 100
+ * Formula: ((sum - count * LIKERT_MIN) / (count * LIKERT_RANGE)) * 100
  * Returns 0-100. Returns 0 for empty input.
+ *
+ * Reverse-worded items must already be flipped by the caller (see
+ * reverseLikert) — this function cannot tell them apart.
  */
 export function calculateRiasecType(rawScores: number[]): number {
   if (rawScores.length === 0) return 0;
-  const sanitized = rawScores.map(sanitizeValue);
+  const sanitized = rawScores.map(sanitizeLikert);
   const count = sanitized.length;
   const sum = sanitized.reduce((a, b) => a + b, 0);
-  return ((sum - count) / (count * 4)) * 100;
+  return ((sum - count * LIKERT_MIN) / (count * LIKERT_RANGE)) * 100;
 }
 
 /**
