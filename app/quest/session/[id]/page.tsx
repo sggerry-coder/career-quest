@@ -23,10 +23,11 @@ import ConfirmationToast from "@/components/ui/confirmation-toast";
 import { useQuestState } from "@/hooks/use-quest-state";
 import { useScores } from "@/hooks/use-scores";
 import { useFinalPersist } from "@/hooks/use-final-persist";
+import { useEmergentClass } from "@/hooks/use-emergent-class";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
-import { classDefinitions, applyClassTheme, cacheTone, readCachedTone } from "@/lib/theme";
+import { classDefinitions, cacheTone, readCachedTone } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { runFinalPersist } from "@/lib/persistence/final-persist";
 import {
@@ -79,6 +80,18 @@ export default function Session({
 
   const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse, takeSnapshot, removeLastResponse, restoreScores } = useScores();
 
+  // The class crystallises from the student's answers at block boundaries
+  // (never per answer, so it cannot flip like a slot machine). Replaces the
+  // Supabase-fetched avatar_class as the source of truth for narration/theme.
+  const { derived: emergentClass } = useEmergentClass({
+    riasec: scoreState.riasec,
+    blockKey: questState.current_block,
+  });
+
+  useEffect(() => {
+    dispatch({ type: "SET_AVATAR_CLASS", avatarClass: emergentClass.primary });
+  }, [emergentClass.primary, dispatch]);
+
   // Initialize from the tone cache (P2.5) so returning students never see a
   // flash of the wrong narration voice; the profile fetch corrects drift.
   const [studentTone, setStudentTone] = useState<"quest" | "explorer">(
@@ -119,13 +132,9 @@ export default function Session({
         }
         const { data } = await supabase
           .from("students")
-          .select("avatar_class, tone, self_map, has_completed_session1")
+          .select("tone, self_map, has_completed_session1")
           .eq("id", user.id)
           .single();
-        if (data?.avatar_class) {
-          dispatch({ type: "SET_AVATAR_CLASS", avatarClass: data.avatar_class });
-          applyClassTheme(data.avatar_class);
-        }
         if (data?.tone === "quest" || data?.tone === "explorer") {
           setStudentTone(data.tone);
           cacheTone(data.tone);
