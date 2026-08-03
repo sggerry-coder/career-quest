@@ -16,6 +16,7 @@ import { calculateXp, getCurrentMilestone, getUnlockedCosmetics } from "@/lib/xp
 import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
 import { applyClassTheme } from "@/lib/theme";
+import { CHARACTER_CLASSES, type CharacterClassId } from "@/lib/character/classes";
 import { loadSessionSnapshot } from "@/lib/persistence/session-snapshot";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
@@ -66,28 +67,14 @@ function getFrameClass(unlocked: string[]): string {
   return "";
 }
 
-// CLASS name mapping for avatar
-const CLASS_NAMES: Record<string, { quest: string; explorer: string }> = {
-  wanderer: { quest: "Wanderer", explorer: "Still forming" },
-  warsmith: { quest: "Warsmith", explorer: "Maker" },
-  mage: { quest: "Mage", explorer: "Investigator" },
-  bard: { quest: "Bard", explorer: "Creator" },
-  guardian: { quest: "Guardian", explorer: "Helper" },
-  vanguard: { quest: "Vanguard", explorer: "Leader" },
-  paladin: { quest: "Paladin", explorer: "Organizer" },
-  rogue: { quest: "Rogue", explorer: "Explorer" },
-};
-
-const CLASS_ICONS: Record<string, string> = {
-  wanderer: "\u{1F9ED}",
-  warsmith: "\u{1F528}",
-  mage: "\u{1F52E}",
-  bard: "\u{1F3AD}",
-  guardian: "\u{1F6E1}\u{FE0F}",
-  vanguard: "\u{1F6A9}",
-  paladin: "\u{2696}\u{FE0F}",
-  rogue: "\u{1F5DD}\u{FE0F}",
-};
+// Avatar class lookups go through CHARACTER_CLASSES (lib/character/classes.ts)
+// -- the single source of truth for class name/icon -- rather than a local
+// copy. An unrecognised or missing avatar_class resolves to "wanderer".
+function resolveCharacterClass(avatarClass: string): CharacterClassId {
+  return avatarClass in CHARACTER_CLASSES
+    ? (avatarClass as CharacterClassId)
+    : "wanderer";
+}
 
 export default function Dashboard() {
   const [student, setStudent] = useState<StudentData | null>(null);
@@ -204,9 +191,9 @@ export default function Dashboard() {
     );
   }
 
-  const className =
-    CLASS_NAMES[student.avatar_class]?.[student.tone] ?? student.avatar_class;
-  const classIcon = CLASS_ICONS[student.avatar_class] ?? "\u{2728}";
+  const classId = resolveCharacterClass(student.avatar_class);
+  const className = CHARACTER_CLASSES[classId].name[student.tone];
+  const classIcon = CHARACTER_CLASSES[classId].icon;
   const hasCompletedSession1 = student.has_completed_session1;
   const xp = calculateXp(student.current_session, hasCompletedSession1);
   const milestone = getCurrentMilestone(student.current_session);
