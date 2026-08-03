@@ -87,10 +87,11 @@ const PROFILE: StudentProfile = {
   name: "Riley",
   age: 15,
   educationSystem: "igcse",
-  avatarClass: "mage",
+  avatarClass: "wanderer",
   tone: "quest",
   destinations: ["uk"],
   curiosities: ["space"],
+  figure: "figure_a",
 };
 
 beforeEach(() => {
@@ -122,10 +123,10 @@ describe("provisionStudent", () => {
     expect(studentUpsert?.payload).toMatchObject({
       id: "anon-new",
       name: "Riley",
-      avatar_class: "mage",
+      avatar_class: "wanderer",
       current_session: 0,
       has_completed_session1: false,
-      self_map: { curiosities: ["space"] },
+      self_map: { curiosities: ["space"], figure: "figure_a" },
     });
     // No destructive clears for a fresh student
     expect(h.calls.filter((c) => c.method === "delete")).toHaveLength(0);

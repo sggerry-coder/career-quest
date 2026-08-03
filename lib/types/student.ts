@@ -24,6 +24,7 @@ export interface SelfMap {
   sources: string[];             // where career ideas come from
   perceived_strengths: string[]; // 0-3 self-identified strengths
   curiosities: string[];         // 0-5 career curiosity categories
+  figure?: string;               // chosen character figure (character creation)
 }
 
 export interface FamilyContext {

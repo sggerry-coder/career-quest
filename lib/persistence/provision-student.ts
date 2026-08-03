@@ -19,6 +19,7 @@ export interface StudentProfile {
   tone: "quest" | "explorer";
   destinations: string[];
   curiosities: string[];
+  figure: string;
 }
 
 export type ProvisionResult =
@@ -87,10 +88,13 @@ export async function provisionStudent(
       name: profile.name,
       age: profile.age,
       education_system: profile.educationSystem,
+      // avatar_class starts as "wanderer" and is overwritten as the class
+      // crystallises during the quest. It records what the student became,
+      // not what they picked.
       avatar_class: profile.avatarClass,
       tone: profile.tone,
       preferred_destinations: profile.destinations,
-      self_map: { curiosities: profile.curiosities },
+      self_map: { curiosities: profile.curiosities, figure: profile.figure },
       current_session: 0,
       has_completed_session1: false,
     });

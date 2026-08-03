@@ -1,15 +1,23 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ToneToggle, type Tone } from "@/components/character/tone-toggle";
-import { AvatarSelect } from "@/components/character/avatar-select";
 import { EducationCards } from "@/components/character/education-cards";
 import { DestinationPicker } from "@/components/character/destination-picker";
 import { CuriositiesPicker } from "@/components/character/curiosities-picker";
 import { provisionStudent } from "@/lib/persistence/provision-student";
-import { applyClassTheme, cacheTone } from "@/lib/theme";
+import { cacheTone } from "@/lib/theme";
+
+// Neutral figures, not gendered -- personalisation without asking a
+// 13-year-old to declare their gender to a school app.
+const FIGURES = [
+  { id: "figure_a", emoji: "\u{1F9CD}", label: "Figure A" },
+  { id: "figure_b", emoji: "\u{1F9CE}", label: "Figure B" },
+  { id: "figure_c", emoji: "\u{1F9D1}", label: "Figure C" },
+  { id: "figure_d", emoji: "\u{1F464}", label: "Figure D" },
+];
 
 type WizardStep = 0 | 1 | 2;
 
@@ -35,9 +43,10 @@ export default function CharacterCreation() {
   const [step, setStep] = useState<WizardStep>(0);
   const [direction, setDirection] = useState(1);
 
-  // Step 0: Tone + Avatar
+  // Step 0: Tone + Figure (defaults to the first figure so nothing blocks
+  // progress; the student can still change it).
   const [tone, setTone] = useState<Tone>("quest");
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [figure, setFigure] = useState<string>(FIGURES[0].id);
 
   // Step 1: Name + Age + Education
   const [name, setName] = useState("");
@@ -52,17 +61,9 @@ export default function CharacterCreation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Apply + cache the theme when a class is selected so the next page load
-  // paints in the right colours instantly (P2.5)
-  const handleClassSelect = useCallback(
-    (classId: string) => {
-      setSelectedClass(classId);
-      applyClassTheme(classId);
-    },
-    []
-  );
-
-  const canProceedStep0 = selectedClass !== null;
+  // Step 0 only offers tone + a cosmetic figure, both of which already have
+  // defaults, so there is nothing to block progress on.
+  const canProceedStep0 = true;
   const canProceedStep1 =
     name.trim().length > 0 && age !== null && educationSystem !== null;
   const canProceedStep2 =
@@ -83,7 +84,7 @@ export default function CharacterCreation() {
   };
 
   const handleBeginQuest = async () => {
-    if (!canProceedStep2 || !selectedClass || !age || !educationSystem) return;
+    if (!canProceedStep2 || !age || !educationSystem) return;
 
     setIsSubmitting(true);
     setError(null);
@@ -91,15 +92,17 @@ export default function CharacterCreation() {
     try {
       // Provision (or replace in place) the student record. When an auth
       // session already exists this reuses the same user and clears the
-      // previous run's data instead of orphaning it (P2.3).
+      // previous run's data instead of orphaning it (P2.3). Every student
+      // starts as "wanderer" -- the class crystallises from their answers.
       const result = await provisionStudent({
         name: name.trim(),
         age,
         educationSystem,
-        avatarClass: selectedClass,
+        avatarClass: "wanderer",
         tone,
         destinations,
         curiosities,
+        figure,
       });
 
       if (!result.success) {
@@ -207,11 +210,47 @@ export default function CharacterCreation() {
 
               <ToneToggle value={tone} onChange={setTone} />
 
-              <AvatarSelect
-                selectedClass={selectedClass}
-                onSelect={handleClassSelect}
-                tone={tone}
-              />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "1rem",
+                }}
+              >
+                <h2
+                  style={{
+                    fontSize: "1.0625rem",
+                    fontWeight: 600,
+                    color: "var(--cq-text-primary)",
+                  }}
+                >
+                  Choose Your Figure
+                </h2>
+                <div
+                  role="radiogroup"
+                  aria-label="Choose your figure"
+                  className="flex gap-3"
+                >
+                  {FIGURES.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={figure === f.id}
+                      aria-label={f.label}
+                      onClick={() => setFigure(f.id)}
+                      className={`flex h-16 w-16 items-center justify-center rounded-xl border-2 text-3xl transition-colors ${
+                        figure === f.id
+                          ? "border-[var(--cq-primary)] bg-[var(--cq-primary)]/10"
+                          : "border-white/10 bg-white/5 hover:bg-white/10"
+                      }`}
+                    >
+                      <span aria-hidden="true">{f.emoji}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           )}
 
