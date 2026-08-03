@@ -8,9 +8,10 @@ its own spec. ("Chapter" below always means the renamed session, never a project
 ## Problem
 
 A student declares who they are before the app knows anything about them. Character
-creation asks them to pick an avatar class — Mage, Ranger, Warrior — which then drives the
-colour theme and narration for the whole quest. The choice is a costume, unconnected to
-anything measured.
+creation asks them to pick an avatar class — Sorceress, Valkyrie, Huntress — which then
+drives the colour theme and narration for the whole quest. The choice is a costume,
+unconnected to anything measured. (Several of those names are also gendered, which sits
+badly with not asking a student's gender.)
 
 Meanwhile `deriveClassLabel()` already computes a real class from their answers
 (MAKER-INVESTIGATOR, EXPLORER, SEEKER) and shows it at the reveal. So the app has two class
@@ -34,11 +35,11 @@ Invert it. **The class becomes the result of playing, not a costume picked in ad
 
 ## The three layers
 
-Two Healers must not be clones. Three independent layers, each from a different source:
+Two Guardians must not be clones. Three independent layers, each from a different source:
 
 | Layer | Source | Example |
 |---|---|---|
-| **Class** | Interests (RIASEC) | Healer |
+| **Class** | Interests (RIASEC) | Guardian |
 | **Focus** | Personality + values | works alone, prefers steady ground to risk |
 | **Relics** | Demonstrated strengths | Healer's Kit — chose to help three times |
 
@@ -49,23 +50,30 @@ label; this is a rename layer over it, not new logic.
 
 | Interest type | Class |
 |---|---|
-| Maker (R) | **Artificer** |
-| Investigator (I) | **Scholar** |
+| Maker (R) | **Warsmith** |
+| Investigator (I) | **Mage** |
 | Creator (A) | **Bard** |
-| Helper (S) | **Healer** |
-| Leader (E) | **Champion** |
-| Organizer (C) | **Warden** |
+| Helper (S) | **Guardian** |
+| Leader (E) | **Vanguard** |
+| Organizer (C) | **Paladin** |
 
 Plus two honest states, both already produced by the existing logic:
 
-- **Adventurer** — genuinely open, no clear lean (currently `EXPLORER`). A real answer, not a
+- **Rogue** — genuinely open, no clear lean (currently `EXPLORER`). A real answer, not a
   failure state.
 - **Wanderer** — not enough signal yet (currently `SEEKER`). Also the starting state.
 
-Strong in two types gives a dual class: **Healer-Scholar**.
+Strong in two types gives a dual class: **Guardian-Mage**.
 
 **The naming rule: the app never names a student before it has earned the right to.** The
 existing thresholds in `deriveClassLabel` decide this; no new maths is introduced.
+
+**Names considered and rejected.** An earlier draft used Artificer / Scholar / Healer /
+Champion / Warden, which read as job titles rather than classes worth earning. A classic-RPG
+set was chosen instead. Two names from that set were then swapped: **Templar → Paladin**
+(Templar carries a specific crusading and religious association, awkward in a classroom) and
+**Warlord → Vanguard** (a cohort report full of Warlords reads badly to a facilitator, even
+though students would enjoy it). No name in the final set is gendered.
 
 ## Crystallisation
 
@@ -79,7 +87,7 @@ The class emerges in stages rather than appearing at the end.
 | The reveal | Class confirmed or sharpened, with the written description. |
 | Chapter 2 | The story can shift it. |
 
-Once named, a class may **deepen** (Healer → Healer-Scholar) but must not flip question by
+Once named, a class may **deepen** (Guardian → Guardian-Mage) but must not flip question by
 question. Re-evaluate at block boundaries only, never per answer.
 
 ## Relics
@@ -112,7 +120,7 @@ Chapters 1–2 make no API calls.
 Slots: class + focus (personality letters above threshold, strongest value leans) + the
 leading relic.
 
-> *"A Healer who thinks things through alone before speaking, and would rather have steady
+> *"A Guardian who thinks things through alone before speaking, and would rather have steady
 > ground than a big gamble."*
 
 **Degrades honestly.** A personality letter below the "still emerging" threshold is omitted
@@ -128,19 +136,19 @@ into families the way 16Personalities groups Analysts, Diplomats, Sentinels and 
 | Class | Family | Primary | Accent | Radius | Character |
 |---|---|---|---|---|---|
 | Wanderer | neutral | `#475569` | `#94a3b8` | 10px | Colourless. Nothing claimed yet. |
-| Scholar | Analyst | `#8b5cf6` | `#2dd4bf` | 6px | Violet, precise corners |
-| Healer | Diplomat | `#059669` | `#6ee7b7` | 16px | Jade, soft corners |
-| Warden | Sentinel | `#3b82f6` | `#38bdf8` | 4px | Steel blue, near-square |
-| Champion | Mover | `#b45309` | `#fbbf24` | 12px | Deep gold |
+| Mage | Analyst | `#8b5cf6` | `#2dd4bf` | 6px | Violet, precise corners |
+| Guardian | Diplomat | `#059669` | `#6ee7b7` | 16px | Jade, soft corners |
+| Paladin | Sentinel | `#3b82f6` | `#38bdf8` | 4px | Steel blue, near-square |
+| Vanguard | Mover | `#b45309` | `#fbbf24` | 12px | Deep gold |
 | Bard | Creator | `#db2777` | `#f0abfc` | 20px | Magenta, fluid |
-| Artificer | Maker | `#c2410c` | `#fb923c` | 8px | Copper, solid |
-| Adventurer | Open | `#0d9488` | `#5eead4` | 14px | Teal, fresh |
+| Warsmith | Maker | `#c2410c` | `#fb923c` | 8px | Copper, solid |
+| Rogue | Open | `#0d9488` | `#5eead4` | 14px | Teal, fresh |
 
-Scholar reuses the existing `purple-teal` values, Warden reuses `blue-indigo`.
+Mage reuses the existing `purple-teal` values, Paladin reuses `blue-indigo`.
 
 **Contrast.** Every primary above was chosen to clear roughly 4.5:1 against white text at
 normal weight. Two existing themes do **not**: `magenta-violet` `#ec4899` (~3.3:1) and any
-bright amber. Bard and Champion therefore use deepened variants (`#db2777`, `#b45309`) rather
+bright amber. Bard and Vanguard therefore use deepened variants (`#db2777`, `#b45309`) rather
 than inheriting the current values. Ratios are approximate and must be verified against the
 real dark background during implementation.
 
@@ -175,7 +183,7 @@ are. Renaming those would mean a migration and a much larger diff for no user-vi
 ## Testing
 
 - Class derivation, including the not-enough-signal case returning Wanderer rather than
-  guessing, and the open case returning Adventurer.
+  guessing, and the open case returning Rogue.
 - A class deepens but never flips: feeding answers that move scores mid-block must not
   rename the student until the block boundary.
 - Relic threshold at exactly two demonstrations, and that relics leave every score untouched
