@@ -10,11 +10,22 @@ interface SpectrumSliderProps {
   rightLabel: string;
 }
 
-const POSITIONS = [-3, -2, -1, 0, 1, 2, 3];
-const MIN_POS = -3;
-const MAX_POS = 3;
+/**
+ * Six positions, no midpoint (2026-08-03). The centre used to be a "Neutral"
+ * option and became the default answer for anyone unsure, which told us
+ * nothing. Same reasoning as the four-point rating scale in
+ * lib/scoring/likert.ts. Scoring is unaffected: the range is still -3..+3.
+ */
+const POSITIONS = [-3, -2, -1, 1, 2, 3];
 
-const DEGREE: Record<number, string> = {
+/** Word shown inside each segment. Short enough for six across a phone. */
+const DEGREE_SHORT: Record<number, string> = {
+  1: "A bit",
+  2: "Some",
+  3: "A lot",
+};
+
+const DEGREE_SPOKEN: Record<number, string> = {
   1: "slightly",
   2: "moderately",
   3: "strongly",
@@ -22,9 +33,8 @@ const DEGREE: Record<number, string> = {
 
 /** Accessible name for a spectrum position. */
 function positionLabel(pos: number, leftLabel: string, rightLabel: string): string {
-  if (pos === 0) return "Neutral";
   const side = pos < 0 ? leftLabel : rightLabel;
-  return `${side} — ${DEGREE[Math.abs(pos)]}`;
+  return `${side} — ${DEGREE_SPOKEN[Math.abs(pos)]}`;
 }
 
 /**
@@ -40,14 +50,18 @@ export default function SpectrumSlider({
   leftLabel,
   rightLabel,
 }: SpectrumSliderProps) {
-  // Roving tabindex: the focused segment is provisional until committed.
-  const [focusedPos, setFocusedPos] = useState<number>(value ?? 0);
+  // Roving tabindex over POSITIONS by index. Index-based, not arithmetic on
+  // the value: with the midpoint gone, `pos - 1` from 1 would land on 0, which
+  // is no longer a position.
+  const initialIndex = Math.max(0, POSITIONS.indexOf(value ?? NaN));
+  const [focusedIndex, setFocusedIndex] = useState<number>(initialIndex);
+  const focusedPos = POSITIONS[focusedIndex];
   const segmentRefs = useRef<Map<number, HTMLButtonElement>>(new Map());
 
-  const moveFocus = useCallback((next: number): void => {
-    const clamped = Math.max(MIN_POS, Math.min(MAX_POS, next));
-    setFocusedPos(clamped);
-    segmentRefs.current.get(clamped)?.focus();
+  const moveFocus = useCallback((nextIndex: number): void => {
+    const clamped = Math.max(0, Math.min(POSITIONS.length - 1, nextIndex));
+    setFocusedIndex(clamped);
+    segmentRefs.current.get(POSITIONS[clamped])?.focus();
   }, []);
 
   const handleKeyDown = useCallback(
@@ -56,20 +70,20 @@ export default function SpectrumSlider({
         case "ArrowLeft":
         case "ArrowDown":
           e.preventDefault();
-          moveFocus(focusedPos - 1);
+          moveFocus(focusedIndex - 1);
           break;
         case "ArrowRight":
         case "ArrowUp":
           e.preventDefault();
-          moveFocus(focusedPos + 1);
+          moveFocus(focusedIndex + 1);
           break;
         case "Home":
           e.preventDefault();
-          moveFocus(MIN_POS);
+          moveFocus(0);
           break;
         case "End":
           e.preventDefault();
-          moveFocus(MAX_POS);
+          moveFocus(POSITIONS.length - 1);
           break;
         case "Enter":
         case " ":
@@ -80,10 +94,13 @@ export default function SpectrumSlider({
           break;
       }
     },
-    [focusedPos, moveFocus, onChange]
+    [focusedIndex, focusedPos, moveFocus, onChange]
   );
 
-  const thumbPct = value !== null ? ((value + 3) / 6) * 100 : 50;
+  // Centre of the selected segment, so the thumb lines up with the word.
+  const selectedIndex = value !== null ? POSITIONS.indexOf(value) : -1;
+  const thumbPct =
+    selectedIndex >= 0 ? ((selectedIndex + 0.5) / POSITIONS.length) * 100 : 50;
 
   return (
     <div className="w-full">
@@ -127,32 +144,28 @@ export default function SpectrumSlider({
               aria-label={positionLabel(pos, leftLabel, rightLabel)}
               tabIndex={pos === focusedPos ? 0 : -1}
               onClick={() => {
-                setFocusedPos(pos);
+                setFocusedIndex(POSITIONS.indexOf(pos));
                 onChange(pos);
               }}
-              onFocus={() => setFocusedPos(pos)}
-              className={`relative z-10 flex h-12 min-w-0 flex-1 items-center justify-center rounded-full text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${
-                isSelected
-                  ? "text-white"
-                  : pos === 0
-                    ? "text-white/40 hover:text-white/60"
-                    : "text-white/20 hover:text-white/50"
+              onFocus={() => setFocusedIndex(POSITIONS.indexOf(pos))}
+              className={`relative z-10 flex h-12 min-w-0 flex-1 items-center justify-center rounded-full text-[11px] font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${
+                isSelected ? "text-white" : "text-white/55 hover:text-white/85"
               }`}
             >
-              <span aria-hidden="true">
-                {pos === 0 ? "•" : "·"}
-              </span>
+              {/* A readable word, not a dot. Students could not tell whether
+                  the old dots were tappable or whether the track had to be
+                  dragged, and went back to change answers they had not
+                  meant to give. */}
+              <span aria-hidden="true">{DEGREE_SHORT[Math.abs(pos)]}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Degree hints */}
-      <div className="flex items-center justify-between mt-2 px-2">
-        <span className="text-xs text-white/40">Strongly</span>
-        <span className="text-xs text-white/40">Neutral</span>
-        <span className="text-xs text-white/40">Strongly</span>
-      </div>
+      {/* Say what to do. Without this the control read as a drag-handle. */}
+      <p className="text-xs text-white/40 text-center mt-3">
+        Tap the option that fits you best
+      </p>
     </div>
   );
 }

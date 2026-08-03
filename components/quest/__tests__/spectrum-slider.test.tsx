@@ -29,7 +29,7 @@ function renderSlider(value: number | null = null) {
 }
 
 describe("SpectrumSlider", () => {
-  it("renders exactly one radiogroup with 7 radios and no stray buttons", () => {
+  it("renders exactly one radiogroup with 6 radios and no stray buttons", () => {
     renderSlider();
 
     const groups = screen.getAllByRole("radiogroup");
@@ -38,7 +38,8 @@ describe("SpectrumSlider", () => {
       "I like clear plans to I like open options"
     );
 
-    expect(screen.getAllByRole("radio")).toHaveLength(7);
+    // Six, not seven: the midpoint was removed on 2026-08-03.
+    expect(screen.getAllByRole("radio")).toHaveLength(6);
     // The old fallback row / track button surfaces must be gone
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
@@ -52,7 +53,9 @@ describe("SpectrumSlider", () => {
     expect(
       screen.getByRole("radio", { name: "I like clear plans — slightly" })
     ).toBeDefined();
-    expect(screen.getByRole("radio", { name: "Neutral" })).toBeDefined();
+    expect(
+      screen.queryByRole("radio", { name: "Neutral" })
+    ).toBeNull();
     expect(
       screen.getByRole("radio", { name: "I like open options — moderately" })
     ).toBeDefined();
@@ -72,27 +75,31 @@ describe("SpectrumSlider", () => {
   it("arrow keys move focus without committing", () => {
     const { onChange } = renderSlider();
 
-    const neutral = screen.getByRole("radio", { name: "Neutral" });
-    neutral.focus();
-    fireEvent.keyDown(neutral, { key: "ArrowRight" });
-
-    const slightRight = screen.getByRole("radio", {
-      name: "I like open options — slightly",
+    const start = screen.getByRole("radio", {
+      name: "I like clear plans — strongly",
     });
-    expect(document.activeElement).toBe(slightRight);
+    start.focus();
+    fireEvent.keyDown(start, { key: "ArrowRight" });
+
+    const nextLeft = screen.getByRole("radio", {
+      name: "I like clear plans — moderately",
+    });
+    expect(document.activeElement).toBe(nextLeft);
     expect(onChange).not.toHaveBeenCalled();
 
-    fireEvent.keyDown(slightRight, { key: "ArrowLeft" });
-    expect(document.activeElement).toBe(neutral);
+    fireEvent.keyDown(nextLeft, { key: "ArrowLeft" });
+    expect(document.activeElement).toBe(start);
     expect(onChange).not.toHaveBeenCalled();
   });
 
   it("Home and End jump to the poles without committing", () => {
     const { onChange } = renderSlider();
 
-    const neutral = screen.getByRole("radio", { name: "Neutral" });
-    neutral.focus();
-    fireEvent.keyDown(neutral, { key: "End" });
+    const start = screen.getByRole("radio", {
+      name: "I like clear plans — strongly",
+    });
+    start.focus();
+    fireEvent.keyDown(start, { key: "End" });
     expect(document.activeElement).toBe(
       screen.getByRole("radio", { name: "I like open options — strongly" })
     );
@@ -107,33 +114,39 @@ describe("SpectrumSlider", () => {
   it("Enter commits the focused position exactly once", () => {
     const { onChange } = renderSlider();
 
-    const neutral = screen.getByRole("radio", { name: "Neutral" });
-    neutral.focus();
-    fireEvent.keyDown(neutral, { key: "ArrowRight" });
+    const start = screen.getByRole("radio", {
+      name: "I like clear plans — strongly",
+    });
+    start.focus();
+    fireEvent.keyDown(start, { key: "ArrowRight" });
     fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" });
     fireEvent.keyDown(document.activeElement!, { key: "Enter" });
 
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith(2);
+    expect(onChange).toHaveBeenCalledWith(-1);
   });
 
   it("Space commits the focused position", () => {
     const { onChange } = renderSlider();
 
-    const neutral = screen.getByRole("radio", { name: "Neutral" });
-    neutral.focus();
-    fireEvent.keyDown(neutral, { key: " " });
+    const start = screen.getByRole("radio", {
+      name: "I like clear plans — strongly",
+    });
+    start.focus();
+    fireEvent.keyDown(start, { key: " " });
 
     expect(onChange).toHaveBeenCalledTimes(1);
-    expect(onChange).toHaveBeenCalledWith(0);
+    expect(onChange).toHaveBeenCalledWith(-3);
   });
 
   it("focus cannot move past the poles", () => {
     const { onChange } = renderSlider();
 
-    const neutral = screen.getByRole("radio", { name: "Neutral" });
-    neutral.focus();
-    fireEvent.keyDown(neutral, { key: "Home" });
+    const start = screen.getByRole("radio", {
+      name: "I like clear plans — strongly",
+    });
+    start.focus();
+    fireEvent.keyDown(start, { key: "Home" });
 
     const leftPole = screen.getByRole("radio", {
       name: "I like clear plans — strongly",
