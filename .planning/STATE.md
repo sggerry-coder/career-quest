@@ -101,9 +101,27 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-07-24
-Stopped at: v1.0 milestone audit found gaps — see .planning/v1.0-MILESTONE-AUDIT.md
+Last session: 2026-08-03
+Stopped at: Everything shipped to production — live site is current for the first time since 2026-03-31
 Resume file: none
+
+### Deployment (2026-08-03)
+
+**The live site was 93 commits stale.** `career-quest-coral.vercel.app` was serving
+`b3f8ea2` — 125 days old — while the working branch had every audit fix and enhancement.
+The user was reporting bugs already fixed months earlier (notably the "Keep going!" button
+rendering as plain text, fixed by `d28d318`, the very next commit after the deployed one).
+
+**Vercel has no GitHub integration.** Pushing to `main` does not deploy. Every deployment
+in `vercel ls` was made by hand. Production deploys require `npx vercel --prod --yes` from
+the repo root. This is now recorded in the user's project memory.
+
+Actions taken:
+- Pushed `fix/v1.0-completion-and-enhancements` to origin (first time).
+- Fast-forwarded `origin/main` to `05a83ff` (93 commits).
+- Deployed to production via CLI; aliased to `career-quest-coral.vercel.app`.
+- Verified live by fetching the deployed bundles: `--color-primary:var(--cq-primary)` now
+  defined in CSS, new warm-up option text present, curiosities swap hint present.
 
 ### Milestone Audit (2026-07-24) — gaps_found → FIXED on branch `fix/v1.0-completion-and-enhancements`
 
