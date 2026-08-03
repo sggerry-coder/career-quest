@@ -9,7 +9,16 @@ import type { ScoreState } from "@/hooks/use-scores";
  * 20 minutes of answers. Zero-schema: no server writes involved.
  */
 
-const SNAPSHOT_VERSION = 1;
+/**
+ * Bumped to 2 on 2026-08-03 with the move to a four-point rating scale.
+ *
+ * A version 1 checkpoint holds answers on the old 1-5 scale, where 3 meant
+ * "Neutral". On the new scale 3 means "Like", so resuming one would silently
+ * reinterpret every unsure answer as a positive one. Refusing to restore is
+ * the honest outcome: the student starts clean rather than getting a profile
+ * built from two different scales.
+ */
+const SNAPSHOT_VERSION = 2;
 const KEY_PREFIX = "cq-session1-snapshot-";
 
 export interface SessionSelfMap {
