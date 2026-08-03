@@ -147,242 +147,223 @@ export function getClassName(
   return classDef.name[tone];
 }
 
+/** Beats that play before the class is named. Identical for every class. */
+const PRE_NAMING = {
+  warmup_intro: {
+    quest: "Your story starts here. Let's see who you are...",
+    explorer: "Let's begin with a few quick questions...",
+  },
+  riasec_intro: {
+    quest: "Something is taking shape. What pulls you forward?",
+    explorer: "Now let's explore what interests you...",
+  },
+};
+
 export const classDefinitions: ClassDefinition[] = [
   {
-    id: "warrior",
-    name: { quest: "Warrior", explorer: "Strategist" },
-    icon: "⚔️",
-    theme: "purple-teal",
-    group: "Shadow Court",
+    id: "wanderer",
+    name: { quest: "Wanderer", explorer: "Still forming" },
+    icon: "\u{1F9ED}",
+    theme: "wanderer-slate",
+    group: "Unclaimed",
     tagline: {
-      quest: "Strength through strategy, victory through will.",
-      explorer: "Strategic thinking meets decisive action.",
+      quest: "No path chosen yet. Every road is still open.",
+      explorer: "Your profile is still forming.",
     },
     narration: {
-      warmup_intro: {
-        quest: "The Warrior steps into the arena. Let's see what drives you...",
-        explorer:
-          "Welcome, Strategist. Let's start with a few quick questions...",
-      },
-      riasec_intro: {
-        quest: "The Warrior enters the Arena of Interests...",
-        explorer: "Now let's explore your professional interests...",
-      },
+      ...PRE_NAMING,
       mbti_intro: {
-        quest: "Abilities mapped. Let's discover your nature, Warrior...",
-        explorer:
-          "Interests mapped. Let's explore your working style, Strategist...",
+        quest: "Interests mapped, though the picture is faint. Let's look closer...",
+        explorer: "Interests mapped. Let's explore how you work...",
       },
       reveal_intro: {
-        quest: "The prophecy takes shape for the Warrior...",
-        explorer: "Your profile is taking shape, Strategist...",
+        quest: "The road is still unfolding...",
+        explorer: "Here's what we have so far...",
       },
       badge_unlock: {
-        quest: "The Warrior has earned a new emblem!",
-        explorer: "Achievement unlocked, Strategist!",
+        quest: "A first mark on an unwritten story!",
+        explorer: "Achievement unlocked!",
+      },
+    },
+  },
+  {
+    id: "warsmith",
+    name: { quest: "Warsmith", explorer: "Maker" },
+    icon: "\u{1F528}",
+    theme: "warsmith-copper",
+    group: "Forge",
+    tagline: {
+      quest: "What is broken can be made stronger than before.",
+      explorer: "You learn by building and fixing.",
+    },
+    narration: {
+      ...PRE_NAMING,
+      mbti_intro: {
+        quest: "The forge knows your hands, Warsmith. Now let's learn your temper...",
+        explorer: "Interests mapped. Let's explore how you work, Maker...",
+      },
+      reveal_intro: {
+        quest: "The Warsmith's work is revealed...",
+        explorer: "Your profile is taking shape, Maker...",
+      },
+      badge_unlock: {
+        quest: "The Warsmith has forged a new mark!",
+        explorer: "Achievement unlocked, Maker!",
       },
     },
   },
   {
     id: "mage",
-    name: { quest: "Mage", explorer: "Analyst" },
-    icon: "🧙‍♂️",
+    name: { quest: "Mage", explorer: "Investigator" },
+    icon: "\u{1F52E}",
     theme: "purple-teal",
-    group: "Shadow Court",
+    group: "Arcanum",
     tagline: {
-      quest: "Knowledge is the greatest magic of all.",
-      explorer: "Deep analysis reveals hidden patterns.",
+      quest: "Every question is a door. You keep opening them.",
+      explorer: "You want to know how things actually work.",
     },
     narration: {
-      warmup_intro: {
-        quest: "The Mage opens the tome of self-discovery...",
-        explorer: "Welcome, Analyst. Let's begin exploring...",
-      },
-      riasec_intro: {
-        quest: "The Mage enters the Arena of Interests...",
-        explorer: "Now let's explore your professional interests...",
-      },
+      ...PRE_NAMING,
       mbti_intro: {
-        quest: "Abilities mapped. Let's discover your nature, Mage...",
-        explorer:
-          "Interests mapped. Let's explore your working style, Analyst...",
+        quest: "The tomes are open, Mage. Now let's read you...",
+        explorer: "Interests mapped. Let's explore how you work, Investigator...",
       },
       reveal_intro: {
-        quest: "The prophecy takes shape for the Mage...",
-        explorer: "Your profile is taking shape, Analyst...",
+        quest: "The Mage's reading takes form...",
+        explorer: "Your profile is taking shape, Investigator...",
       },
       badge_unlock: {
-        quest: "The Mage has earned a new emblem!",
-        explorer: "Achievement unlocked, Analyst!",
+        quest: "The Mage has inscribed a new sigil!",
+        explorer: "Achievement unlocked, Investigator!",
       },
     },
   },
   {
-    id: "ranger",
-    name: { quest: "Ranger", explorer: "Pathfinder" },
-    icon: "🏹",
-    theme: "purple-teal",
-    group: "Shadow Court",
+    id: "bard",
+    name: { quest: "Bard", explorer: "Creator" },
+    icon: "\u{1F3AD}",
+    theme: "bard-magenta",
+    group: "Chorus",
     tagline: {
-      quest: "Every trail leads to a new discovery.",
-      explorer: "Finding the right path through careful exploration.",
+      quest: "You make the thing that makes people feel something.",
+      explorer: "You think by making.",
     },
     narration: {
-      warmup_intro: {
-        quest: "The Ranger sets out on the path of discovery...",
-        explorer: "Welcome, Pathfinder. Let's chart your course...",
-      },
-      riasec_intro: {
-        quest: "The Ranger enters the Arena of Interests...",
-        explorer: "Now let's explore your professional interests...",
-      },
+      ...PRE_NAMING,
       mbti_intro: {
-        quest: "Abilities mapped. Let's discover your nature, Ranger...",
-        explorer:
-          "Interests mapped. Let's explore your working style, Pathfinder...",
+        quest: "The song is yours, Bard. Now let's find its key...",
+        explorer: "Interests mapped. Let's explore how you work, Creator...",
       },
       reveal_intro: {
-        quest: "The prophecy takes shape for the Ranger...",
-        explorer: "Your profile is taking shape, Pathfinder...",
+        quest: "The Bard's verse comes together...",
+        explorer: "Your profile is taking shape, Creator...",
       },
       badge_unlock: {
-        quest: "The Ranger has earned a new emblem!",
-        explorer: "Achievement unlocked, Pathfinder!",
+        quest: "The Bard has struck a new chord!",
+        explorer: "Achievement unlocked, Creator!",
       },
     },
   },
   {
-    id: "sorceress",
-    name: { quest: "Sorceress", explorer: "Visionary" },
-    icon: "🔮",
-    theme: "magenta-violet",
-    group: "Crimson Order",
+    id: "guardian",
+    name: { quest: "Guardian", explorer: "Helper" },
+    icon: "\u{1F6E1}\u{FE0F}",
+    theme: "guardian-jade",
+    group: "Covenant",
     tagline: {
-      quest: "See beyond what others see, shape what others cannot.",
-      explorer: "Turning creative vision into reality.",
+      quest: "You stand where someone else would have fallen.",
+      explorer: "You're drawn to work that helps people directly.",
     },
     narration: {
-      warmup_intro: {
-        quest: "The Sorceress gazes into the crystal of possibility...",
-        explorer: "Welcome, Visionary. Let's discover your potential...",
-      },
-      riasec_intro: {
-        quest: "The Sorceress enters the Arena of Interests...",
-        explorer: "Now let's explore your professional interests...",
-      },
+      ...PRE_NAMING,
       mbti_intro: {
-        quest: "Abilities mapped. Let's discover your nature, Sorceress...",
-        explorer:
-          "Interests mapped. Let's explore your working style, Visionary...",
+        quest: "You keep watch over others, Guardian. Now let's look at you...",
+        explorer: "Interests mapped. Let's explore how you work, Helper...",
       },
       reveal_intro: {
-        quest: "The prophecy takes shape for the Sorceress...",
-        explorer: "Your profile is taking shape, Visionary...",
+        quest: "The Guardian's shield bears its markings...",
+        explorer: "Your profile is taking shape, Helper...",
       },
       badge_unlock: {
-        quest: "The Sorceress has earned a new emblem!",
-        explorer: "Achievement unlocked, Visionary!",
+        quest: "The Guardian has earned a new emblem!",
+        explorer: "Achievement unlocked, Helper!",
       },
     },
   },
   {
-    id: "valkyrie",
-    name: { quest: "Valkyrie", explorer: "Defender" },
-    icon: "🛡️",
-    theme: "magenta-violet",
-    group: "Crimson Order",
+    id: "vanguard",
+    name: { quest: "Vanguard", explorer: "Leader" },
+    icon: "\u{1F6A9}",
+    theme: "vanguard-gold",
+    group: "Charge",
     tagline: {
-      quest: "Guardian of purpose, champion of the worthy.",
-      explorer: "Standing firm for what matters most.",
+      quest: "Someone has to go first. You already have.",
+      explorer: "You move things forward and bring people with you.",
     },
     narration: {
-      warmup_intro: {
-        quest: "The Valkyrie raises her shield and begins the quest...",
-        explorer: "Welcome, Defender. Let's explore what drives you...",
-      },
-      riasec_intro: {
-        quest: "The Valkyrie enters the Arena of Interests...",
-        explorer: "Now let's explore your professional interests...",
-      },
+      ...PRE_NAMING,
       mbti_intro: {
-        quest: "Abilities mapped. Let's discover your nature, Valkyrie...",
-        explorer:
-          "Interests mapped. Let's explore your working style, Defender...",
+        quest: "The line follows you, Vanguard. Now let's learn your nature...",
+        explorer: "Interests mapped. Let's explore how you work, Leader...",
       },
       reveal_intro: {
-        quest: "The prophecy takes shape for the Valkyrie...",
-        explorer: "Your profile is taking shape, Defender...",
+        quest: "The Vanguard's banner unfurls...",
+        explorer: "Your profile is taking shape, Leader...",
       },
       badge_unlock: {
-        quest: "The Valkyrie has earned a new emblem!",
-        explorer: "Achievement unlocked, Defender!",
+        quest: "The Vanguard has claimed a new honour!",
+        explorer: "Achievement unlocked, Leader!",
       },
     },
   },
   {
-    id: "huntress",
-    name: { quest: "Huntress", explorer: "Scout" },
-    icon: "🌙",
-    theme: "magenta-violet",
-    group: "Crimson Order",
+    id: "paladin",
+    name: { quest: "Paladin", explorer: "Organizer" },
+    icon: "\u{2696}\u{FE0F}",
+    theme: "paladin-steel",
+    group: "Order",
     tagline: {
-      quest: "Silent steps, sharp instincts, unerring aim.",
-      explorer: "Keen observation reveals the best opportunities.",
+      quest: "Order is not dull. Order is what holds when things break.",
+      explorer: "You bring structure to things that lack it.",
     },
     narration: {
-      warmup_intro: {
-        quest: "The Huntress tracks the trail of self-knowledge...",
-        explorer: "Welcome, Scout. Let's map your strengths...",
-      },
-      riasec_intro: {
-        quest: "The Huntress enters the Arena of Interests...",
-        explorer: "Now let's explore your professional interests...",
-      },
+      ...PRE_NAMING,
       mbti_intro: {
-        quest: "Abilities mapped. Let's discover your nature, Huntress...",
-        explorer:
-          "Interests mapped. Let's explore your working style, Scout...",
+        quest: "Your oath is kept, Paladin. Now let's learn your nature...",
+        explorer: "Interests mapped. Let's explore how you work, Organizer...",
       },
       reveal_intro: {
-        quest: "The prophecy takes shape for the Huntress...",
-        explorer: "Your profile is taking shape, Scout...",
+        quest: "The Paladin's oath is set down...",
+        explorer: "Your profile is taking shape, Organizer...",
       },
       badge_unlock: {
-        quest: "The Huntress has earned a new emblem!",
-        explorer: "Achievement unlocked, Scout!",
+        quest: "The Paladin has earned a new seal!",
+        explorer: "Achievement unlocked, Organizer!",
       },
     },
   },
   {
-    id: "wanderer",
-    name: { quest: "Wanderer", explorer: "Explorer" },
-    icon: "✨",
-    theme: "blue-indigo",
-    group: "Azure Path",
+    id: "rogue",
+    name: { quest: "Rogue", explorer: "Explorer" },
+    icon: "\u{1F5DD}\u{FE0F}",
+    theme: "rogue-teal",
+    group: "Free Company",
     tagline: {
-      quest: "Not all who wander are lost — some are just getting started.",
-      explorer: "Every direction holds possibility.",
+      quest: "You keep every door unlocked, including the ones nobody uses.",
+      explorer: "You're interested in a lot of things, and that's real.",
     },
     narration: {
-      warmup_intro: {
-        quest: "The Wanderer begins a journey into the unknown...",
-        explorer: "Welcome, Explorer. Let's see what we discover...",
-      },
-      riasec_intro: {
-        quest: "The Wanderer enters the Arena of Interests...",
-        explorer: "Now let's explore your professional interests...",
-      },
+      ...PRE_NAMING,
       mbti_intro: {
-        quest: "Abilities mapped. Let's discover your nature, Wanderer...",
-        explorer:
-          "Interests mapped. Let's explore your working style, Explorer...",
+        quest: "You keep your options open, Rogue. Now let's learn your nature...",
+        explorer: "Interests mapped. Let's explore how you work, Explorer...",
       },
       reveal_intro: {
-        quest: "The prophecy takes shape for the Wanderer...",
+        quest: "The Rogue's many paths lay out...",
         explorer: "Your profile is taking shape, Explorer...",
       },
       badge_unlock: {
-        quest: "The Wanderer has earned a new emblem!",
+        quest: "The Rogue has pocketed a new token!",
         explorer: "Achievement unlocked, Explorer!",
       },
     },

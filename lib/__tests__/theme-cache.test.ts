@@ -23,13 +23,13 @@ beforeEach(() => {
 
 describe("instant theme cache", () => {
   it("applyClassTheme sets data-theme and caches the theme name", () => {
-    applyClassTheme("sorceress"); // magenta-violet class
+    applyClassTheme("mage"); // purple-teal class
 
     expect(document.documentElement.getAttribute("data-theme")).toBe(
-      "magenta-violet"
+      "purple-teal"
     );
-    expect(window.localStorage.getItem(THEME_CACHE_KEY)).toBe("magenta-violet");
-    expect(readCachedThemeName()).toBe("magenta-violet");
+    expect(window.localStorage.getItem(THEME_CACHE_KEY)).toBe("purple-teal");
+    expect(readCachedThemeName()).toBe("purple-teal");
   });
 
   it("falls back to blue-indigo for unknown classes and still caches", () => {

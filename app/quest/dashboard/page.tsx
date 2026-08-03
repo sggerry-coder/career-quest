@@ -68,23 +68,25 @@ function getFrameClass(unlocked: string[]): string {
 
 // CLASS name mapping for avatar
 const CLASS_NAMES: Record<string, { quest: string; explorer: string }> = {
-  warrior: { quest: "Warrior", explorer: "Strategist" },
-  mage: { quest: "Mage", explorer: "Analyst" },
-  ranger: { quest: "Ranger", explorer: "Pathfinder" },
-  sorceress: { quest: "Sorceress", explorer: "Visionary" },
-  valkyrie: { quest: "Valkyrie", explorer: "Defender" },
-  huntress: { quest: "Huntress", explorer: "Scout" },
-  wanderer: { quest: "Wanderer", explorer: "Explorer" },
+  wanderer: { quest: "Wanderer", explorer: "Still forming" },
+  warsmith: { quest: "Warsmith", explorer: "Maker" },
+  mage: { quest: "Mage", explorer: "Investigator" },
+  bard: { quest: "Bard", explorer: "Creator" },
+  guardian: { quest: "Guardian", explorer: "Helper" },
+  vanguard: { quest: "Vanguard", explorer: "Leader" },
+  paladin: { quest: "Paladin", explorer: "Organizer" },
+  rogue: { quest: "Rogue", explorer: "Explorer" },
 };
 
 const CLASS_ICONS: Record<string, string> = {
-  warrior: "\u{2694}\u{FE0F}",
-  mage: "\u{1F9D9}",
-  ranger: "\u{1F3F9}",
-  sorceress: "\u{1F52E}",
-  valkyrie: "\u{1F6E1}\u{FE0F}",
-  huntress: "\u{1F319}",
-  wanderer: "\u{2728}",
+  wanderer: "\u{1F9ED}",
+  warsmith: "\u{1F528}",
+  mage: "\u{1F52E}",
+  bard: "\u{1F3AD}",
+  guardian: "\u{1F6E1}\u{FE0F}",
+  vanguard: "\u{1F6A9}",
+  paladin: "\u{2696}\u{FE0F}",
+  rogue: "\u{1F5DD}\u{FE0F}",
 };
 
 export default function Dashboard() {
