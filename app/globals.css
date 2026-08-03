@@ -72,6 +72,66 @@
   --cq-radius: 12px;
 }
 
+/* --- Class palettes (2026-08-04). Colour AND corner radius express the
+       class. Primaries are chosen to clear ~4.5:1 against white text; verify
+       in-browser against the real dark background. --- */
+
+[data-theme="wanderer-slate"] {
+  --cq-primary: #475569;
+  --cq-accent: #94a3b8;
+  --cq-glow: rgba(71, 85, 105, 0.4);
+  --cq-glow-accent: rgba(148, 163, 184, 0.3);
+  --cq-radius: 10px;
+}
+
+[data-theme="guardian-jade"] {
+  --cq-primary: #059669;
+  --cq-accent: #6ee7b7;
+  --cq-glow: rgba(5, 150, 105, 0.45);
+  --cq-glow-accent: rgba(110, 231, 183, 0.3);
+  --cq-radius: 16px;
+}
+
+[data-theme="paladin-steel"] {
+  --cq-primary: #3b82f6;
+  --cq-accent: #38bdf8;
+  --cq-glow: rgba(59, 130, 246, 0.4);
+  --cq-glow-accent: rgba(56, 189, 248, 0.3);
+  --cq-radius: 4px;
+}
+
+[data-theme="vanguard-gold"] {
+  --cq-primary: #b45309;
+  --cq-accent: #fbbf24;
+  --cq-glow: rgba(180, 83, 9, 0.45);
+  --cq-glow-accent: rgba(251, 191, 36, 0.3);
+  --cq-radius: 12px;
+}
+
+[data-theme="bard-magenta"] {
+  --cq-primary: #db2777;
+  --cq-accent: #f0abfc;
+  --cq-glow: rgba(219, 39, 119, 0.45);
+  --cq-glow-accent: rgba(240, 171, 252, 0.3);
+  --cq-radius: 20px;
+}
+
+[data-theme="warsmith-copper"] {
+  --cq-primary: #c2410c;
+  --cq-accent: #fb923c;
+  --cq-glow: rgba(194, 65, 12, 0.45);
+  --cq-glow-accent: rgba(251, 146, 60, 0.3);
+  --cq-radius: 8px;
+}
+
+[data-theme="rogue-teal"] {
+  --cq-primary: #0d9488;
+  --cq-accent: #5eead4;
+  --cq-glow: rgba(13, 148, 136, 0.45);
+  --cq-glow-accent: rgba(94, 234, 212, 0.3);
+  --cq-radius: 14px;
+}
+
 /* --- Tailwind v4 theme inline overrides --- */
 @theme inline {
   --color-background: var(--cq-bg-primary);

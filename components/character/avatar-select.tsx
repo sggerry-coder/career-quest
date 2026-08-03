@@ -23,12 +23,26 @@ const themeColors: Record<
   "purple-teal": { primary: "#8b5cf6", glow: "rgba(139,92,246,0.5)" },
   "magenta-violet": { primary: "#ec4899", glow: "rgba(236,72,153,0.4)" },
   "blue-indigo": { primary: "#3b82f6", glow: "rgba(59,130,246,0.4)" },
+  "wanderer-slate": { primary: "#475569", glow: "rgba(71,85,105,0.4)" },
+  "guardian-jade": { primary: "#059669", glow: "rgba(5,150,105,0.45)" },
+  "paladin-steel": { primary: "#3b82f6", glow: "rgba(59,130,246,0.4)" },
+  "vanguard-gold": { primary: "#b45309", glow: "rgba(180,83,9,0.45)" },
+  "bard-magenta": { primary: "#db2777", glow: "rgba(219,39,119,0.45)" },
+  "warsmith-copper": { primary: "#c2410c", glow: "rgba(194,65,12,0.45)" },
+  "rogue-teal": { primary: "#0d9488", glow: "rgba(13,148,136,0.45)" },
 };
 
 const themeRadius: Record<ClassDefinition["theme"], string> = {
   "purple-teal": "6px",
   "magenta-violet": "16px",
   "blue-indigo": "12px",
+  "wanderer-slate": "10px",
+  "guardian-jade": "16px",
+  "paladin-steel": "4px",
+  "vanguard-gold": "12px",
+  "bard-magenta": "20px",
+  "warsmith-copper": "8px",
+  "rogue-teal": "14px",
 };
 
 export function AvatarSelect({

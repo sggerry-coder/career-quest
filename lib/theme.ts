@@ -1,4 +1,14 @@
-export type ThemeName = "purple-teal" | "magenta-violet" | "blue-indigo";
+export type ThemeName =
+  | "purple-teal"
+  | "magenta-violet"
+  | "blue-indigo"
+  | "wanderer-slate"
+  | "guardian-jade"
+  | "paladin-steel"
+  | "vanguard-gold"
+  | "bard-magenta"
+  | "warsmith-copper"
+  | "rogue-teal";
 
 export interface ThemeConfig {
   name: ThemeName;
@@ -46,6 +56,13 @@ export const themes: Record<ThemeName, ThemeConfig> = {
     glow: "rgba(59,130,246,0.4)",
     borderRadius: "12px",
   },
+  "wanderer-slate": { name: "wanderer-slate", primary: "#475569", accent: "#94a3b8", glow: "rgba(71,85,105,0.4)", borderRadius: "10px" },
+  "guardian-jade": { name: "guardian-jade", primary: "#059669", accent: "#6ee7b7", glow: "rgba(5,150,105,0.45)", borderRadius: "16px" },
+  "paladin-steel": { name: "paladin-steel", primary: "#3b82f6", accent: "#38bdf8", glow: "rgba(59,130,246,0.4)", borderRadius: "4px" },
+  "vanguard-gold": { name: "vanguard-gold", primary: "#b45309", accent: "#fbbf24", glow: "rgba(180,83,9,0.45)", borderRadius: "12px" },
+  "bard-magenta": { name: "bard-magenta", primary: "#db2777", accent: "#f0abfc", glow: "rgba(219,39,119,0.45)", borderRadius: "20px" },
+  "warsmith-copper": { name: "warsmith-copper", primary: "#c2410c", accent: "#fb923c", glow: "rgba(194,65,12,0.45)", borderRadius: "8px" },
+  "rogue-teal": { name: "rogue-teal", primary: "#0d9488", accent: "#5eead4", glow: "rgba(13,148,136,0.45)", borderRadius: "14px" },
 };
 
 export function getThemeForClass(classId: string): ThemeConfig {
