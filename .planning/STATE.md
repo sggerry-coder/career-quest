@@ -93,6 +93,27 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260803-uz4 | Raise Career Curiosities cap from 3 to 5 and explain the cap in the UI | 2026-08-03 | 56d107d | [260803-uz4-raise-career-curiosities-cap-from-3-to-5](./quick/260803-uz4-raise-career-curiosities-cap-from-3-to-5/) |
 | 260803-v6a | Unbundle warm-up options — six single-idea choices, one per interest type | 2026-08-03 | f7fda94 | [260803-v6a-unbundle-warm-up-options-six-single-idea](./quick/260803-v6a-unbundle-warm-up-options-six-single-idea/) |
+| 260803-vp2 | Fix duplicate class label and add Values Compass readout | 2026-08-03 | 4ae3129 | [260803-vp2-fix-duplicate-class-label-and-add-values](./quick/260803-vp2-fix-duplicate-class-label-and-add-values/) |
+
+### Persistence hardening (2026-08-03) — spec built and shipped
+
+Spec: `docs/superpowers/specs/2026-08-03-session1-persist-hardening-design.md` (`53c84d3`).
+Implementation: `2f342c7`. Deployed to production and verified live.
+
+Triggered by a real failure the user hit on the deployed app: the celebration screen and
+"Couldn't save your progress" rendered at the same time, with View Dashboard enabled.
+
+**Root cause of that failure was NOT code.** Migration `00003_session_completion.sql` had
+never been applied — `students.has_completed_session1` did not exist, so the students update
+was rejected and the whole save failed. Found by probing the live PostgREST schema with the
+publishable key (read-only, one request per column); every other column the save writes was
+present. The user applied the SQL on 2026-08-03 and the column now exists, verified.
+
+Two code defects that turned a schema error into a wifi complaint, both now fixed:
+- `classifySupabaseError` only checked `status`, which PostgrestError does not carry, so
+  permission and schema errors fell through to "unknown" → "check your connection".
+- The failure detail was discarded. The failure screen now shows the raw message as fine
+  print, so the next occurrence names itself.
 
 ### Blockers/Concerns
 
