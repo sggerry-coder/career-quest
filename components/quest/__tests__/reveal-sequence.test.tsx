@@ -129,6 +129,40 @@ async function advanceToPhase(target: string): Promise<void> {
   }
 }
 
+describe("RevealSequence tells the student when their answers did not separate", () => {
+  /**
+   * acquiescence_flag was computed on every answer and read by no screen, so
+   * the app noticed a student tapping the same button twelve times and told
+   * them nothing -- it went straight on to name them a Mage-Guardian. The
+   * caveat belongs on the first screen that shows the interest bars.
+   */
+  async function renderWithFlag(flag: boolean): Promise<void> {
+    vi.useFakeTimers();
+    render(
+      <RevealSequence
+        scoreState={{ ...scoreState, acquiescence_flag: flag }}
+        tone="quest"
+        resolvedClass={{ primary: "guardian", secondary: null, isNamed: true }}
+        onRevealComplete={() => {}}
+      />
+    );
+    await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+    vi.useRealTimers();
+  }
+
+  it("says so on the interest card when the flag is set", async () => {
+    await renderWithFlag(true);
+    expect(
+      screen.getByText(/picked the same answer nearly every time/)
+    ).toBeDefined();
+  });
+
+  it("says nothing when the answers did separate", async () => {
+    await renderWithFlag(false);
+    expect(screen.queryByText(/same answer nearly every time/)).toBeNull();
+  });
+});
+
 describe("RevealSequence emerging_type beat", () => {
   it("never shows an unfillable four-letter card", async () => {
     // Session 1 gives 2 answers per dichotomy; deriveEmergingType needs 3.

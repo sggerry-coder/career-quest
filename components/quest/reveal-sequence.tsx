@@ -19,6 +19,14 @@ interface ScoreState {
   values: Record<string, number>;
   strengths: string[];
   class_label: string;
+  /**
+   * Set when the answers behind these scores cannot tell one interest from
+   * another -- the same tap over and over, or every type at once. Computed
+   * and persisted for a long time without a single screen reading it, which
+   * made it a check the app performed on itself rather than a thing the
+   * student was ever told.
+   */
+  acquiescence_flag?: boolean;
 }
 
 interface RevealSequenceProps {
@@ -177,9 +185,15 @@ export default function RevealSequence({
               {/* classLabel omitted: the animated ClassLabel below is the
                   reveal beat for it, and passing it here printed it twice. */}
               <RiasecBars scores={scoreState.riasec} />
-              {Object.values(scoreState.riasec).every(v => v === 0) && (
+              {scoreState.acquiescence_flag ? (
+                <p className="text-xs text-white/60 text-center mt-2">
+                  {tone === "quest"
+                    ? "You picked the same answer nearly every time, so these bars can't tell your interests apart yet — worth another run when you've got more time."
+                    : "You chose the same answer nearly every time, so these scores can't separate your interests yet — worth answering again when you have more time."}
+                </p>
+              ) : Object.values(scoreState.riasec).every(v => v === 0) ? (
                 <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
-              )}
+              ) : null}
             </motion.div>
           )}
 

@@ -66,11 +66,61 @@ export function mergeIpsativeScores(
 
 /**
  * Detect acquiescence bias: returns true if all 6 types score above 80.
+ *
+ * This is a check on the *shape of the result*: a profile where everything
+ * leads is a profile that discriminates nothing, and is no more usable for
+ * career guidance than a blank one. It is no longer a check on how the
+ * student answered -- see detectStraightLining for that. Reverse-worded items
+ * mean the two came apart: a student who taps "Strongly Like" on all twelve
+ * rating items scores {R:65, I:100, A:55, S:90, E:35, C:35}, which this
+ * function correctly reports as false while being exactly the behaviour the
+ * flag exists to catch.
  */
 export function detectAcquiescenceBias(
   scores: Record<string, number>
 ): boolean {
   return RIASEC_TYPES.every((type) => (scores[type] ?? 0) > 80);
+}
+
+/**
+ * How many identical answers in a row count as straight-lining.
+ *
+ * Session 1 asks 12 rating items, four of them reverse-worded (R-02, A-01,
+ * E-01, C-02). In the order they are asked, the longest stretch containing no
+ * reverse item is three questions, so any run of 8 spans at least two reverse
+ * items -- meaning the student agreed just as strongly with a statement and
+ * with its opposite, at least twice. That is not an answer, it is a tapping
+ * pattern. Below 8 the run is reachable by a genuinely consistent student and
+ * flagging them would be worse than not flagging anyone.
+ */
+export const STRAIGHT_LINING_RUN = 8;
+
+/**
+ * Detect straight-lining: the same answer, over and over, on rating items.
+ *
+ * Works on the responses rather than the scores, because the scores can no
+ * longer show it. Reverse scoring (correctly) flips four of the twelve items,
+ * so uniform tapping now produces a lopsided-looking profile -- the branch
+ * that added reverse scoring broke the one check built to catch the most
+ * common form of disengaged answering in a classroom, and a student who
+ * tapped "Strongly Like" 12 times was told with full confidence that they
+ * were a Mage-Guardian.
+ *
+ * Values are the raw answers exactly as given, never the flipped ones: it is
+ * the student's finger that repeats, not the scored value.
+ */
+export function detectStraightLining(
+  ratingValues: number[],
+  run: number = STRAIGHT_LINING_RUN
+): boolean {
+  if (run <= 0 || ratingValues.length < run) return false;
+
+  let streak = 1;
+  for (let i = 1; i < ratingValues.length; i += 1) {
+    streak = ratingValues[i] === ratingValues[i - 1] ? streak + 1 : 1;
+    if (streak >= run) return true;
+  }
+  return false;
 }
 
 /**

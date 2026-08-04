@@ -70,6 +70,7 @@ function makeScoreState(): ScoreState {
     values_raw: {},
     strengths: [],
     strength_signals: [],
+    rating_responses: [],
     acquiescence_flag: false,
     riasec_snapshot: null,
     class_label: "SEEKER",

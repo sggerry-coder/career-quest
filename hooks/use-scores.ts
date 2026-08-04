@@ -6,6 +6,7 @@ import {
   calculateAllRiasec,
   mergeIpsativeScores,
   detectAcquiescenceBias,
+  detectStraightLining,
   deriveClassLabel,
 } from "@/lib/scoring/riasec";
 import { calculateAllMi } from "@/lib/scoring/mi";
@@ -24,6 +25,8 @@ export interface ResponseSignalFootprint {
   values_additions: Record<string, number[]>;
   ipsative_additions: Record<string, number[]>;
   strength_signal?: string;
+  /** The raw answer appended to rating_responses, for undo. */
+  rating_response?: number;
 }
 
 export interface ScoreState {
@@ -38,6 +41,13 @@ export interface ScoreState {
   values_raw: Record<string, number[]>;
   strengths: string[];
   strength_signals: string[];
+  /**
+   * Every rating (Likert) answer in the order it was given, exactly as the
+   * student gave it -- never reverse-flipped. Straight-lining is a pattern in
+   * the taps, and reverse scoring erases it from the scores, so the scores
+   * cannot be asked about it. See detectStraightLining.
+   */
+  rating_responses: number[];
   acquiescence_flag: boolean;
   riasec_snapshot: Record<string, number> | null;
   class_label: string;
@@ -121,6 +131,7 @@ export function buildProcessResponseFootprint(
 
   if (response.framework === "riasec" && response.framework_target !== "none") {
     footprint.riasec_additions[response.framework_target] = [scoredValue(response)];
+    footprint.rating_response = response.response_value;
   } else if (response.framework === "mbti" && response.framework_target !== "none") {
     footprint.mbti_additions[response.framework_target] = [response.response_value];
   } else if (response.framework === "values" && response.framework_target !== "none") {
@@ -190,6 +201,22 @@ export function buildIpsativeFootprint(
 }
 
 /**
+ * Whether these answers can be trusted to tell one interest from another.
+ *
+ * Two independent ways of failing that, both of which leave the profile
+ * unusable for guidance: the student tapped the same button over and over
+ * (visible only in the responses, since reverse scoring rearranges it out of
+ * the scores), or the scores came out top-heavy on all six types at once
+ * (visible only in the scores). Either one sets the flag.
+ */
+function detectUndiscriminatingAnswers(state: ScoreState): boolean {
+  return (
+    detectStraightLining(state.rating_responses) ||
+    detectAcquiescenceBias(state.riasec)
+  );
+}
+
+/**
  * Recalculate all derived scores from raw arrays.
  * Used after undo to ensure consistency.
  */
@@ -204,7 +231,7 @@ function recalculateAllDerived(state: ScoreState): void {
   } else {
     state.riasec = likertNorm;
   }
-  state.acquiescence_flag = detectAcquiescenceBias(state.riasec);
+  state.acquiescence_flag = detectUndiscriminatingAnswers(state);
   state.class_label = deriveClassLabel(state.riasec);
   state.mi = calculateAllMi(state.mi_raw);
   state.mbti = calculateAllMbti(state.mbti_raw);
@@ -264,6 +291,12 @@ export function applyFootprintUndo(prev: ScoreState): ScoreState {
     }
   }
 
+  // Reverse the rating answer -- always the last one, since rating_responses
+  // is append-only and footprints are popped newest first.
+  if (footprint.rating_response !== undefined) {
+    next.rating_responses.pop();
+  }
+
   // Reverse strength signal
   if (footprint.strength_signal) {
     const idx = next.strength_signals.lastIndexOf(footprint.strength_signal);
@@ -305,6 +338,7 @@ const INITIAL_SCORE_STATE: ScoreState = {
   values_raw: cloneRaw(INITIAL_VALUES_RAW),
   strengths: [],
   strength_signals: [],
+  rating_responses: [],
   acquiescence_flag: false,
   riasec_snapshot: null,
   class_label: "SEEKER",
@@ -330,6 +364,11 @@ export function useScores() {
             ...(next.riasec_raw[response.framework_target] || []),
             scoredValue(response),
           ];
+          // The tap, not the score: what straight-lining is visible in.
+          next.rating_responses = [
+            ...next.rating_responses,
+            response.response_value,
+          ];
         }
         // Recalculate RIASEC
         const likertNorm = calculateAllRiasec(next.riasec_raw);
@@ -342,7 +381,7 @@ export function useScores() {
         } else {
           next.riasec = likertNorm;
         }
-        next.acquiescence_flag = detectAcquiescenceBias(next.riasec);
+        next.acquiescence_flag = detectUndiscriminatingAnswers(next);
         next.class_label = deriveClassLabel(next.riasec);
       } else if (response.framework === "mi") {
         // MI signals come via framework_signals on the option, not framework_target
@@ -429,7 +468,7 @@ export function useScores() {
         } else {
           next.riasec = likertNorm;
         }
-        next.acquiescence_flag = detectAcquiescenceBias(next.riasec);
+        next.acquiescence_flag = detectUndiscriminatingAnswers(next);
         next.class_label = deriveClassLabel(next.riasec);
         next.mi = calculateAllMi(next.mi_raw);
 
@@ -467,7 +506,7 @@ export function useScores() {
         const likertNorm = calculateAllRiasec(next.riasec_raw);
         const ipsativeNorm = calculateAllRiasec(next.riasec_ipsative_raw);
         next.riasec = mergeIpsativeScores(likertNorm, ipsativeNorm);
-        next.acquiescence_flag = detectAcquiescenceBias(next.riasec);
+        next.acquiescence_flag = detectUndiscriminatingAnswers(next);
         next.class_label = deriveClassLabel(next.riasec);
 
         next.signal_history = [...next.signal_history, footprint];
