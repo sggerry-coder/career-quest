@@ -41,13 +41,15 @@ export default function MbtiSliders({ scores }: MbtiSlidersProps) {
               {/* Track */}
               <div className="relative h-8 rounded-full bg-white/10">
                 {/* Center marker */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
+                {/* The centre reference. At /20 it was 1.41:1 against its own
+                    track and the dot's position meant nothing. */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/45" />
 
                 {/* Dot */}
                 <motion.div
                   className={`absolute top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full ${
                     isEmerging
-                      ? "bg-white/30"
+                      ? "bg-white/45"
                       : "bg-[var(--color-primary)] shadow-[0_0_12px_var(--color-glow)]"
                   }`}
                   initial={{ left: "50%" }}
@@ -62,7 +64,7 @@ export default function MbtiSliders({ scores }: MbtiSlidersProps) {
               </div>
 
               {/* Tendency label */}
-              <p className={`text-xs mt-1 text-center ${isEmerging ? "text-white/30 italic" : "text-white/60"}`}>
+              <p className={`text-xs mt-1 text-center ${isEmerging ? "text-white/55 italic" : "text-white/60"}`}>
                 {isEmerging ? "Still emerging..." : `${tendency} (${tendencyLetter})`}
               </p>
             </div>

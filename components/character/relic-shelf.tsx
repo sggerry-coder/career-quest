@@ -39,7 +39,7 @@ export default function RelicShelf({
               <p className="text-sm font-semibold text-white truncate">
                 {relic.name}
               </p>
-              <p className="text-[11px] text-white/45">
+              <p className="text-[11px] text-white/65">
                 You showed this {relic.timesShown} times
               </p>
             </div>

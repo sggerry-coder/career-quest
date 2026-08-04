@@ -232,7 +232,7 @@ export default function Dashboard() {
                 {className}
               </span>
             </div>
-            <p className="text-xs text-white/40 mb-1">
+            <p className="text-xs text-white/65 mb-1">
               Level {student.age}
             </p>
             <XpBar
@@ -293,25 +293,25 @@ export default function Dashboard() {
 
           {/* === Locked panels === */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-            <div className="rounded-2xl bg-white/5 border border-white/5 p-5 opacity-40">
+            <div className="rounded-2xl bg-white/5 border border-white/5 p-5">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">{"\u{1F512}"}</span>
-                <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">
+                <h3 className="text-sm font-semibold text-white/65 uppercase tracking-wider">
                   Full Learning Styles
                 </h3>
               </div>
-              <p className="text-xs text-white/20">
+              <p className="text-xs text-white/55">
                 More to come
               </p>
             </div>
-            <div className="rounded-2xl bg-white/5 border border-white/5 p-5 opacity-40">
+            <div className="rounded-2xl bg-white/5 border border-white/5 p-5">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-lg">{"\u{1F512}"}</span>
-                <h3 className="text-sm font-semibold text-white/40 uppercase tracking-wider">
+                <h3 className="text-sm font-semibold text-white/65 uppercase tracking-wider">
                   Full Values Compass
                 </h3>
               </div>
-              <p className="text-xs text-white/20">
+              <p className="text-xs text-white/55">
                 More to come
               </p>
             </div>
@@ -391,14 +391,14 @@ export default function Dashboard() {
               { num: 3, name: "Career Matching" },
               { num: 4, name: "Action Plan" },
             ].map((session) => (
-              <div key={session.num} className="flex items-center gap-3 opacity-40">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 text-xs text-white/20">
+              <div key={session.num} className="flex items-center gap-3">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/5 text-xs text-white/55">
                   {"\u{1F512}"}
                 </span>
-                <span className="text-sm text-white/30">
+                <span className="text-sm text-white/55">
                   {chapterLabel(session.num, tone)}: {session.name}
                 </span>
-                <span className="ml-auto text-xs text-white/20">Locked</span>
+                <span className="ml-auto text-xs text-white/55">Locked</span>
               </div>
             ))}
           </div>
@@ -409,7 +409,7 @@ export default function Dashboard() {
         <div className="flex justify-center">
           <button
             disabled
-            className="rounded-xl bg-white/10 px-8 py-3 font-medium text-white/30 cursor-not-allowed min-h-[44px]"
+            className="rounded-xl bg-white/10 px-8 py-3 font-medium text-white/55 cursor-not-allowed min-h-[44px]"
           >
             Begin {chapterLabel(2, tone)} — Coming soon
           </button>

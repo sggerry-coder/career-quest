@@ -55,7 +55,7 @@ export default function OptionGrid({
               {option.label}
             </span>
             {option.subtitle && (
-              <span className="text-xs text-white/40">{option.subtitle}</span>
+              <span className="text-xs text-white/65">{option.subtitle}</span>
             )}
           </motion.button>
         );

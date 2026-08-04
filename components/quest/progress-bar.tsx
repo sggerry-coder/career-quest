@@ -37,10 +37,11 @@ export default function ProgressBar({
     >
       {/* Block name pill + time estimate */}
       <div className="flex items-center justify-between mb-2">
-        <span className="rounded-full bg-[var(--color-primary)]/20 px-3 py-1 text-xs font-medium text-[var(--color-primary)]">
+        {/* Accent on the primary tint -- see components/charts/class-label. */}
+        <span className="rounded-full bg-[var(--color-primary)]/20 px-3 py-1 text-xs font-medium text-[var(--color-accent)]">
           {currentBlock}
         </span>
-        <span className="text-xs text-white/40">~{timeEstimate} left</span>
+        <span className="text-xs text-white/65">~{timeEstimate} left</span>
       </div>
 
       {/* Block progress bar */}
@@ -55,10 +56,10 @@ export default function ProgressBar({
 
       {/* Overall progress */}
       <div className="mt-1 flex items-center justify-between">
-        <span className="text-[10px] text-white/30">
+        <span className="text-[10px] text-white/55">
           {questionsAnsweredInBlock}/{totalQuestionsInBlock} in block
         </span>
-        <span className="text-[10px] text-white/30">
+        <span className="text-[10px] text-white/55">
           {totalQuestionsAnswered}/{totalQuestions} overall
         </span>
       </div>

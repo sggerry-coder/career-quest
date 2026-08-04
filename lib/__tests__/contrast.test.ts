@@ -7,26 +7,13 @@
  */
 import { describe, it, expect } from "vitest";
 import { themes, type ThemeName } from "@/lib/theme";
-
-/** WCAG 2.1 relative luminance of an #rrggbb colour. */
-export function relativeLuminance(hex: string): number {
-  const clean = hex.replace("#", "");
-  const [r, g, b] = [0, 2, 4].map((i) => {
-    const channel = parseInt(clean.slice(i, i + 2), 16) / 255;
-    return channel <= 0.03928
-      ? channel / 12.92
-      : Math.pow((channel + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-/** WCAG 2.1 contrast ratio between a colour and pure white. */
-export function contrastWithWhite(hex: string): number {
-  return 1.05 / (relativeLuminance(hex) + 0.05);
-}
+// The maths moved to lib/a11y/contrast so the text tiers, the class chip and
+// the focus ring could be measured against the same implementation rather
+// than a second copy of it. See lib/__tests__/text-contrast.test.ts.
+import { contrastWithWhite, AA_TEXT } from "@/lib/a11y/contrast";
 
 /** WCAG AA for normal-size text. */
-const MIN_RATIO = 4.5;
+const MIN_RATIO = AA_TEXT;
 
 describe("contrastWithWhite", () => {
   it("agrees with known reference values", () => {

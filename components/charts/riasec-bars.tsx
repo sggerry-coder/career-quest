@@ -42,10 +42,15 @@ export default function RiasecBars({ scores, classLabel }: RiasecBarsProps) {
               </span>
               <div className="flex-1 h-6 rounded-full bg-white/10 overflow-hidden relative">
                 <motion.div
+                  // The bar *is* the score. A 20% white fill measured 1.41:1
+                  // against its own bg-white/10 track, so a below-50 interest
+                  // was a number with no visible bar beside it. /45 clears the
+                  // 3:1 floor for meaningful non-text at 3.19:1 and still
+                  // reads as the quieter of the two states.
                   className={`h-full rounded-full ${
                     isHighlighted
                       ? "bg-[var(--color-accent)]"
-                      : "bg-white/20"
+                      : "bg-white/45"
                   }`}
                   initial={{ width: 0 }}
                   animate={{ width: `${score}%` }}
@@ -59,7 +64,7 @@ export default function RiasecBars({ scores, classLabel }: RiasecBarsProps) {
               </div>
               <span
                 className={`text-sm font-mono w-8 text-right flex-shrink-0 ${
-                  isHighlighted ? "text-white" : "text-white/40"
+                  isHighlighted ? "text-white" : "text-white/65"
                 }`}
               >
                 {score}
@@ -71,7 +76,11 @@ export default function RiasecBars({ scores, classLabel }: RiasecBarsProps) {
       {/* CLASS label badge — only where the screen doesn't show it already */}
       {classLabel && (
         <div className="mt-4 flex justify-center">
-          <span className="rounded-full bg-[var(--color-primary)]/20 px-4 py-1.5 text-sm font-bold text-[var(--color-primary)] uppercase tracking-wider">
+          {/* Accent, not primary: the primary is picked to carry white label
+              text, so as text on its own 20% tint it measured 1.85-2.90:1
+              across the palettes. The accent is the same class's other
+              colour, 5.48-9.16:1 there. */}
+          <span className="rounded-full bg-[var(--color-primary)]/20 px-4 py-1.5 text-sm font-bold text-[var(--color-accent)] uppercase tracking-wider">
             CLASS: {classLabel}
           </span>
         </div>

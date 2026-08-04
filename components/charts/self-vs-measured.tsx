@@ -75,7 +75,7 @@ export default function SelfVsMeasured({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Perceived strengths */}
         <div>
-          <p className="text-xs text-white/40 mb-2">You said you&apos;re good at</p>
+          <p className="text-xs text-white/65 mb-2">You said you&apos;re good at</p>
           <div className="flex flex-wrap gap-2">
             {perceived.length > 0 ? (
               perceived.map((value) => {
@@ -103,26 +103,27 @@ export default function SelfVsMeasured({
                 );
               })
             ) : (
-              <p className="text-xs text-white/30">No self-picks recorded</p>
+              <p className="text-xs text-white/55">No self-picks recorded</p>
             )}
           </div>
         </div>
 
         {/* Detected strengths */}
         <div>
-          <p className="text-xs text-white/40 mb-2">Your quest revealed</p>
+          <p className="text-xs text-white/65 mb-2">Your quest revealed</p>
           <div className="flex flex-wrap gap-2">
             {detectedStrengths.length > 0 ? (
               detectedStrengths.map((s) => (
                 <span
                   key={s}
-                  className="rounded-full bg-[var(--color-primary)]/15 px-3 py-1 text-xs font-medium text-[var(--color-primary)]"
+                  // Accent on the primary tint -- see charts/class-label.
+                  className="rounded-full bg-[var(--color-primary)]/15 px-3 py-1 text-xs font-medium text-[var(--color-accent)]"
                 >
                   {s}
                 </span>
               ))
             ) : (
-              <p className="text-xs text-white/30">Complete {chapterLabel(1, tone)} to find out</p>
+              <p className="text-xs text-white/55">Complete {chapterLabel(1, tone)} to find out</p>
             )}
           </div>
         </div>

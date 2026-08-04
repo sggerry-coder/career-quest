@@ -113,7 +113,7 @@ export default function QuestionCard({
           {canSkip && (
             <button
               onClick={onSkip}
-              className="mt-2 text-sm text-white/40 underline decoration-white/20 transition-colors hover:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 rounded px-2 py-1"
+              className="mt-2 text-sm text-white/65 underline decoration-white/65 transition-colors hover:text-white/85 focus:outline-none focus:ring-2 focus:ring-white/50 rounded px-2 py-1"
               aria-label="Skip this question"
               tabIndex={0}
             >

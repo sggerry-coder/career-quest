@@ -44,7 +44,7 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
       <h3 className="text-sm font-semibold text-white/70 mb-1 uppercase tracking-wider">
         Learning Styles
       </h3>
-      <p className="text-xs text-white/30 mb-4">
+      <p className="text-xs text-white/55 mb-4">
         {/* Singular when only one dimension has a reading -- which is a
             routine outcome now that unscored ones are no longer padded into
             the list, and "styles" above a single row is a small lie about
@@ -55,7 +55,7 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
       </p>
 
       {allZero ? (
-        <p className="text-xs text-white/30 text-center py-2">
+        <p className="text-xs text-white/55 text-center py-2">
           Answer more questions to refine
         </p>
       ) : (
@@ -90,11 +90,12 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
             })}
           </div>
 
-          {/* Remaining grayed out */}
-          <div className="flex flex-col gap-2 opacity-40">
+          {/* Not yet measured -- see charts/values-sliders for why this block
+              is no longer dimmed as a whole. */}
+          <div className="flex flex-col gap-2">
             {remaining.map((dim) => (
               <div key={dim.key} className="flex items-center gap-3">
-                <span className="text-xs text-white/30 w-28 flex-shrink-0 truncate">
+                <span className="text-xs text-white/55 w-28 flex-shrink-0 truncate">
                   {dim.label}
                 </span>
                 <div className="flex-1 h-3 rounded-full bg-white/5" />
@@ -103,7 +104,7 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
           </div>
         </>
       )}
-      <p className="text-xs text-white/20 mt-1 italic">
+      <p className="text-xs text-white/55 mt-1 italic">
         More detail to come
       </p>
     </div>

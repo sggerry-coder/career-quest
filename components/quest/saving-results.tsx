@@ -37,7 +37,7 @@ export default function SavingResults({
       >
         {heading}
       </p>
-      <p className="text-xs text-white/40 text-center max-w-xs">
+      <p className="text-xs text-white/65 text-center max-w-xs">
         Hang on a moment &mdash; don&apos;t close this page.
       </p>
     </div>

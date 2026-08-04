@@ -114,7 +114,7 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
                   className="w-full accent-[var(--color-primary)] h-11"
                   aria-label="Direction clarity"
                 />
-                <div className="flex w-full justify-between text-xs text-white/40">
+                <div className="flex w-full justify-between text-xs text-white/65">
                   <span>No idea</span>
                   <span>Very clear</span>
                 </div>
@@ -174,7 +174,7 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
               <h2 className="text-lg font-semibold text-white text-center">
                 What do you think you&apos;re naturally good at?
               </h2>
-              <p className="text-xs text-white/40">Pick up to 3</p>
+              <p className="text-xs text-white/65">Pick up to 3</p>
               <div className="grid grid-cols-2 gap-3 w-full">
                 {STRENGTHS_GRID.map((strength) => {
                   const isSelected = strengths.includes(strength.value);
@@ -214,7 +214,7 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
             className={`mt-4 w-full max-w-xs rounded-xl px-8 py-3 font-medium text-white transition-all focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px] ${
               canProceed
                 ? "bg-[var(--color-primary)] shadow-[0_0_20px_var(--color-glow)] hover:scale-105"
-                : "bg-white/10 text-white/30 cursor-not-allowed"
+                : "bg-white/10 text-white/55 cursor-not-allowed"
             }`}
             aria-label={step < 2 ? "Next" : "Show my results"}
             tabIndex={0}

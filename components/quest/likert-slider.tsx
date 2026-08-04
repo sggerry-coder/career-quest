@@ -65,8 +65,8 @@ export default function LikertSlider({ value, onChange }: LikertSliderProps) {
 
       {/* Label text */}
       <div className="flex items-center justify-between mt-2 px-1">
-        <span className="text-xs text-white/40">Strongly Dislike</span>
-        <span className="text-xs text-white/40">Strongly Like</span>
+        <span className="text-xs text-white/65">Strongly Dislike</span>
+        <span className="text-xs text-white/65">Strongly Like</span>
       </div>
     </div>
   );

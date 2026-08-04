@@ -209,7 +209,7 @@ export default function CompletionScreen({
           <p className="text-sm font-semibold text-white truncate">
             {classLabel}
           </p>
-          <p className="text-[11px] text-white/40 mt-0.5">Your Archetype</p>
+          <p className="text-[11px] text-white/65 mt-0.5">Your Archetype</p>
         </div>
 
         {/* Top strength card */}
@@ -218,7 +218,7 @@ export default function CompletionScreen({
             <p className="text-sm font-semibold text-white truncate">
               {topStrength}
             </p>
-            <p className="text-[11px] text-white/40 mt-0.5">Top Strength</p>
+            <p className="text-[11px] text-white/65 mt-0.5">Top Strength</p>
           </div>
         )}
       </motion.div>

@@ -87,13 +87,13 @@ export default function SaveFailedScreen({
           </button>
         </div>
 
-        <p className="text-xs text-white/40">
+        <p className="text-xs text-white/65">
           We&apos;ll offer to pick up where you left off next time you open
           this.
         </p>
 
         {detail && (
-          <p className="text-[10px] font-mono text-white/25 break-words max-w-xs">
+          <p className="text-[10px] font-mono text-white/55 break-words max-w-xs">
             {detail}
           </p>
         )}

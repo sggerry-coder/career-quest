@@ -61,7 +61,7 @@ export default function BlockTransition({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.3 }}
-            className="mt-8 text-xs text-white/30"
+            className="mt-8 text-xs text-white/55"
           >
             Tap to continue
           </motion.span>

@@ -163,7 +163,7 @@ export default function SpectrumSlider({
       </div>
 
       {/* Say what to do. Without this the control read as a drag-handle. */}
-      <p className="text-xs text-white/40 text-center mt-3">
+      <p className="text-xs text-white/65 text-center mt-3">
         Tap the option that fits you best
       </p>
     </div>

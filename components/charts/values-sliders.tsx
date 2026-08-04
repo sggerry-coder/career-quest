@@ -40,7 +40,7 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
       <h3 className="text-sm font-semibold text-white/70 mb-1 uppercase tracking-wider">
         Values Compass
       </h3>
-      <p className="text-xs text-white/30 mb-4">Initial value readings</p>
+      <p className="text-xs text-white/55 mb-4">Initial value readings</p>
 
       <div className="flex flex-col gap-5 mb-4">
         {VALUES_DIMENSIONS.map((dim, index) => {
@@ -55,7 +55,8 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
                 <span className="text-xs text-white/50">{dim.rightLabel}</span>
               </div>
               <div className="relative h-6 rounded-full bg-white/10">
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20" />
+                {/* Centre reference -- see charts/mbti-sliders. */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/45" />
                 <motion.div
                   className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--color-accent)] shadow-[0_0_10px_var(--color-glow)]"
                   initial={{ left: "50%" }}
@@ -73,7 +74,7 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
               <p
                 className={`text-xs mt-1 text-center ${
                   Math.abs(score) < BALANCED_THRESHOLD
-                    ? "text-white/30 italic"
+                    ? "text-white/55 italic"
                     : "text-white/60"
                 }`}
               >
@@ -84,18 +85,21 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
         })}
       </div>
 
-      {/* Remaining grayed out */}
-      <div className="flex flex-col gap-3 opacity-40">
+      {/* Not yet measured. The wrapper used to dim this whole block to 40%, which multiplies
+          into the text alpha -- the dimension names came out at 1.44:1 and a
+          student could not read what was still to come. The empty track says
+          "no reading yet" on its own. */}
+      <div className="flex flex-col gap-3">
         {REMAINING_DIMENSIONS.map((dim) => (
           <div key={dim.key}>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-white/30">{dim.leftLabel}</span>
-              <span className="text-xs text-white/30">{dim.rightLabel}</span>
+              <span className="text-xs text-white/55">{dim.leftLabel}</span>
+              <span className="text-xs text-white/55">{dim.rightLabel}</span>
             </div>
             <div className="h-4 rounded-full bg-white/5" />
           </div>
         ))}
-        <p className="text-xs text-white/20 italic">
+        <p className="text-xs text-white/55 italic">
           More dimensions to come
         </p>
       </div>

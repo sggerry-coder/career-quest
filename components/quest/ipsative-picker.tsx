@@ -137,7 +137,7 @@ export default function IpsativePicker({
         })}
       </div>
       {rankings.size > 0 && rankings.size < options.length && (
-        <p className="text-xs text-white/30 text-center mt-3">
+        <p className="text-xs text-white/55 text-center mt-3">
           Tap a ranked activity to reset
         </p>
       )}

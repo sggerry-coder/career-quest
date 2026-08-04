@@ -192,7 +192,7 @@ export default function RevealSequence({
                     : "You chose the same answer nearly every time, so these scores can't separate your interests yet — worth answering again when you have more time."}
                 </p>
               ) : Object.values(scoreState.riasec).every(v => v === 0) ? (
-                <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
+                <p className="text-xs text-white/55 text-center mt-1">Answer more questions to refine</p>
               ) : null}
             </motion.div>
           )}
@@ -244,7 +244,7 @@ export default function RevealSequence({
             >
               <MbtiSliders scores={scoreState.mbti} />
               {Object.values(scoreState.mbti).every(v => v === 0) && (
-                <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
+                <p className="text-xs text-white/55 text-center mt-1">Answer more questions to refine</p>
               )}
             </motion.div>
           )}
@@ -264,7 +264,7 @@ export default function RevealSequence({
               animate={{ opacity: 1 }}
               className="flex justify-center text-center"
             >
-              <p className="text-xs text-white/30 max-w-xs">
+              <p className="text-xs text-white/55 max-w-xs">
                 {tone === "quest"
                   ? "A full four-letter type needs more questions than this chapter asks — more chapters are planned to go deeper."
                   : "A full personality type needs more questions than this part asks."}
@@ -282,7 +282,7 @@ export default function RevealSequence({
             >
               <ValuesSliders scores={scoreState.values} />
               {Object.values(scoreState.values).every(v => v === 0) && (
-                <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
+                <p className="text-xs text-white/55 text-center mt-1">Answer more questions to refine</p>
               )}
             </motion.div>
           )}

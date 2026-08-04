@@ -34,10 +34,14 @@ export default function EmergingType({
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 + i * 0.1 }}
+              // 30px bold is large text, so the floor is 3:1 -- which four of
+              // the palette primaries missed on the dark background (2.37:1
+              // for a Wanderer). Accent, as everywhere else the palette has
+              // to be read rather than sat on. See charts/class-label.
               className={`text-3xl font-bold tracking-widest ${
                 isUnderscore
-                  ? "text-white/20"
-                  : "text-[var(--color-primary)]"
+                  ? "text-white/55"
+                  : "text-[var(--color-accent)]"
               }`}
             >
               {letter}
@@ -58,7 +62,7 @@ export default function EmergingType({
           <span className="rounded-full bg-white/10 border border-white/20 px-3 py-0.5 text-xs font-medium text-white/60">
             Still Emerging
           </span>
-          <p className="text-xs text-white/30 max-w-[200px] text-center">
+          <p className="text-xs text-white/55 max-w-[200px] text-center">
             Some preferences need more data to pin down
           </p>
         </div>

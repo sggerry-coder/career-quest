@@ -28,9 +28,11 @@ export default function BadgeRow({ allBadges, unlockedIds }: BadgeRowProps) {
           return (
             <div
               key={badge.id}
-              className={`flex flex-col items-center gap-1 flex-shrink-0 ${
-                isUnlocked ? "" : "opacity-40"
-              }`}
+              // Locked used to dim the whole tile to 40%, which multiplies
+              // into the label and left "???" at ~2:1. The tile's own fill and
+              // border already say locked; the label only has to stay
+              // readable.
+              className="flex flex-col items-center gap-1 flex-shrink-0"
               title={isUnlocked ? badge.description : "???"}
             >
               <div
@@ -46,7 +48,7 @@ export default function BadgeRow({ allBadges, unlockedIds }: BadgeRowProps) {
               </div>
               <span
                 className={`text-[10px] max-w-[56px] text-center truncate ${
-                  isUnlocked ? "text-white/60" : "text-white/20"
+                  isUnlocked ? "text-white/85" : "text-white/55"
                 }`}
               >
                 {isUnlocked ? badge.name : "???"}
