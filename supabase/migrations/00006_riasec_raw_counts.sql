@@ -16,13 +16,15 @@
 -- hasRiasecReading fall back to "assume asked" instead of blanking six rows of
 -- a finished profile.
 --
--- UNAPPLIED AND UNWIRED as of this commit. Nothing writes this column and
--- nothing reads it; the reveal fixes itself from the raw answers it still
--- holds in scope and needs no column at all. Apply this SQL against the live
--- database FIRST. Writing an unknown column fails the entire upsert -- for
--- every student, not just skippers -- which is a failure this project has
--- already shipped once. Wiring final-persist and the dashboard lands only
--- after this has been applied.
+-- The wiring has since landed on both sides: final-persist writes the counts
+-- (buildRiasecEvidence) and the dashboard selects them back and passes them to
+-- the bars. The reveal never needed the column -- it fixes itself from the raw
+-- answers it still holds in scope -- so this exists for the screen that has
+-- only the row. That wiring is only safe because this migration is applied
+-- first: writing an unknown column fails the entire upsert, for every student
+-- and not just skippers, which is a failure this project has already shipped
+-- once. It stays a precondition of deploying that code, not a warning that
+-- anything is still unwired.
 
 ALTER TABLE public.assessment_scores
   ADD COLUMN riasec_raw_counts jsonb;
