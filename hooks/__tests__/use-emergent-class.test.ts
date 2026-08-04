@@ -1,7 +1,13 @@
 /** @vitest-environment jsdom */
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { renderHook, cleanup } from "@testing-library/react";
 import { useEmergentClass } from "@/hooks/use-emergent-class";
+import { THEME_CACHE_KEY } from "@/lib/theme";
+
+beforeEach(() => {
+  window.localStorage.clear();
+  document.documentElement.removeAttribute("data-theme");
+});
 
 afterEach(() => cleanup());
 
@@ -15,6 +21,9 @@ const bardGuardian = { R: 10, I: 20, A: 95, S: 70, E: 20, C: 10 };
 // A third signal (Mage) overtaking the second-place slot, to prove the
 // secondary is genuinely free to change once the primary is locked.
 const mageGuardian = { R: 10, I: 90, A: 20, S: 60, E: 20, C: 10 };
+// Reviewer's fixture: scores broaden enough that no single type leads --
+// deriveCharacterClass resolves this to "rogue" (open/no clear lean).
+const broadenedToRogue = { R: 10, I: 20, A: 55, S: 60, E: 50, C: 10 };
 
 describe("useEmergentClass", () => {
   it("starts unnamed", () => {
@@ -107,5 +116,42 @@ describe("useEmergentClass", () => {
     rerender({ riasec: mageGuardian, blockKey: "mbti_values" });
     expect(result.current.derived.primary).toBe("guardian");
     expect(result.current.derived.secondary).toBe("mage");
+  });
+
+  it("never writes a theme while the student is unnamed (Wanderer)", () => {
+    // Simulate a returning, already-named student: the landing page or
+    // dashboard already applied their real theme before the session
+    // mounted. The very first render here has empty/tied scores, which
+    // resolve to unnamed Wanderer -- that must not overwrite the theme
+    // already on the page.
+    document.documentElement.setAttribute("data-theme", "guardian-jade");
+    window.localStorage.setItem(THEME_CACHE_KEY, "guardian-jade");
+
+    renderHook(() => useEmergentClass({ riasec: none, blockKey: "warmup" }));
+
+    expect(document.documentElement.getAttribute("data-theme")).toBe(
+      "guardian-jade"
+    );
+    expect(window.localStorage.getItem(THEME_CACHE_KEY)).toBe(
+      "guardian-jade"
+    );
+  });
+
+  it("does not present a blurred signal (rogue) as a second class", () => {
+    const { result, rerender } = renderHook(
+      ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+      { initialProps: { riasec: none, blockKey: "warmup" } }
+    );
+
+    rerender({ riasec: helper, blockKey: "riasec" });
+    expect(result.current.derived.primary).toBe("guardian");
+    expect(result.current.derived.secondary).toBeNull();
+
+    // Scores broaden into "no clear lean" (rogue) -- the fresh signal got
+    // *less* certain, not more. Must stay plain Guardian, never
+    // "Guardian-Rogue".
+    rerender({ riasec: broadenedToRogue, blockKey: "mbti_values" });
+    expect(result.current.derived.primary).toBe("guardian");
+    expect(result.current.derived.secondary).toBeNull();
   });
 });

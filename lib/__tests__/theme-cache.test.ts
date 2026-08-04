@@ -12,9 +12,11 @@ import {
   readCachedThemeName,
   cacheTone,
   readCachedTone,
+  themes,
   THEME_CACHE_KEY,
   TONE_CACHE_KEY,
 } from "@/lib/theme";
+import { THEME_INIT_SCRIPT_NAMES, buildThemeInitScript } from "@/lib/theme-init-script";
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -67,5 +69,30 @@ describe("instant theme cache", () => {
     // The pre-paint script in app/layout.tsx reads localStorage["cq-theme"]
     // literally; this locks the contract between the two.
     expect(THEME_CACHE_KEY).toBe("cq-theme");
+  });
+
+  it("the layout's pre-paint script whitelists every theme, including all 8 class palettes", () => {
+    // Regression test: the inline script used to hardcode only the 3
+    // original theme names, so 7 of the 8 class palettes never restored
+    // before first paint -- a returning named student saw a flash of the
+    // wrong colour every load. This fails if a theme is ever added to
+    // `themes` without also reaching the pre-paint script's whitelist.
+    const allThemeNames = Object.keys(themes);
+    expect(allThemeNames.length).toBeGreaterThanOrEqual(10);
+    for (const name of allThemeNames) {
+      expect(THEME_INIT_SCRIPT_NAMES).toContain(name);
+    }
+    // And nothing extra that isn't a real theme.
+    for (const name of THEME_INIT_SCRIPT_NAMES) {
+      expect(allThemeNames).toContain(name);
+    }
+
+    // The generated script string itself (what actually ships to the
+    // browser) must literally contain every theme name, not just the
+    // exported constant used to build it.
+    const script = buildThemeInitScript();
+    for (const name of allThemeNames) {
+      expect(script).toContain(`"${name}"`);
+    }
   });
 });

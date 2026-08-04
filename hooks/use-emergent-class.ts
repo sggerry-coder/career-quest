@@ -47,6 +47,14 @@ function resolveNext(prev: DerivedClass, raw: DerivedClass): DerivedClass {
     // time. Nothing new to fold in -- hold what we have.
     return prev;
   }
+  if (raw.primary === "rogue") {
+    // "Rogue" (deriveCharacterClass's EXPLORER/no-clear-lean outcome) means
+    // the fresh signal got *less* certain, not that a confident second
+    // class arrived. Recording it as a secondary would claim more than the
+    // data earned -- a Guardian whose scores broaden must stay Guardian,
+    // not become "Guardian-Rogue". Hold what we have.
+    return prev;
+  }
   if (raw.primary === prev.primary) {
     // Top signal still agrees with the locked primary -- ordinary
     // deepening, e.g. Guardian -> Guardian-Mage.
@@ -91,8 +99,12 @@ export function useEmergentClass({
 
     // Apply the theme whenever the resolved primary actually changes, not
     // only on first naming -- and never reapply when it hasn't changed,
-    // since that would cause a needless visible repaint.
-    if (resolved.primary !== lastAppliedPrimary.current) {
+    // since that would cause a needless visible repaint. Never apply it at
+    // all while unnamed (Wanderer): a Wanderer hasn't earned a colour, and
+    // by the time the session mounts, the landing page/dashboard have
+    // already applied the student's real theme -- overwriting it with the
+    // default slate on every mount/resume would be strictly wrong.
+    if (resolved.isNamed && resolved.primary !== lastAppliedPrimary.current) {
       lastAppliedPrimary.current = resolved.primary;
       applyClassTheme(resolved.primary);
     }
