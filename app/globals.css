@@ -15,12 +15,12 @@
   --cq-text-secondary: #a89ec8;
   --cq-text-muted: #6b5f8a;
   --cq-border: #2d2255;
-  --cq-border-focus: #8b5cf6;
+  --cq-border-focus: #7c3aed;
 
   /* Theme-specific (default = purple-teal) */
-  --cq-primary: #8b5cf6;
+  --cq-primary: #7c3aed;
   --cq-accent: #2dd4bf;
-  --cq-glow: rgba(139, 92, 246, 0.5);
+  --cq-glow: rgba(124, 58, 237, 0.5);
   --cq-glow-accent: rgba(45, 212, 191, 0.4);
   --cq-radius: 6px;
 
@@ -47,34 +47,40 @@
 
 /* --- Theme: purple-teal (Shadow Court) --- */
 [data-theme="purple-teal"] {
-  --cq-primary: #8b5cf6;
+  --cq-primary: #7c3aed;
   --cq-accent: #2dd4bf;
-  --cq-glow: rgba(139, 92, 246, 0.5);
+  --cq-glow: rgba(124, 58, 237, 0.5);
   --cq-glow-accent: rgba(45, 212, 191, 0.4);
   --cq-radius: 6px;
 }
 
 /* --- Theme: magenta-violet (Crimson Order) --- */
 [data-theme="magenta-violet"] {
-  --cq-primary: #ec4899;
+  --cq-primary: #be185d;
   --cq-accent: #f0abfc;
-  --cq-glow: rgba(236, 72, 153, 0.4);
+  --cq-glow: rgba(190, 24, 93, 0.4);
   --cq-glow-accent: rgba(240, 171, 252, 0.3);
   --cq-radius: 16px;
 }
 
 /* --- Theme: blue-indigo (Azure Path) --- */
 [data-theme="blue-indigo"] {
-  --cq-primary: #3b82f6;
+  --cq-primary: #2563eb;
   --cq-accent: #38bdf8;
-  --cq-glow: rgba(59, 130, 246, 0.4);
+  --cq-glow: rgba(37, 99, 235, 0.4);
   --cq-glow-accent: rgba(56, 189, 248, 0.3);
   --cq-radius: 12px;
 }
 
 /* --- Class palettes (2026-08-04). Colour AND corner radius express the
-       class. Primaries are chosen to clear ~4.5:1 against white text; verify
-       in-browser against the real dark background. --- */
+       class.
+
+       Every primary here clears 4.5:1 against white text, measured, not
+       assumed -- lib/__tests__/contrast.test.ts recomputes the ratio for
+       every palette in `themes` and fails below 4.5. Three of these
+       previously sat at 3.68-3.77:1 under a comment claiming otherwise.
+       Accents are for text on the dark background, never a white-text
+       surface, so they are not covered by that rule. --- */
 
 [data-theme="wanderer-slate"] {
   --cq-primary: #475569;
@@ -85,17 +91,17 @@
 }
 
 [data-theme="guardian-jade"] {
-  --cq-primary: #059669;
+  --cq-primary: #047857;
   --cq-accent: #6ee7b7;
-  --cq-glow: rgba(5, 150, 105, 0.45);
+  --cq-glow: rgba(4, 120, 87, 0.45);
   --cq-glow-accent: rgba(110, 231, 183, 0.3);
   --cq-radius: 16px;
 }
 
 [data-theme="paladin-steel"] {
-  --cq-primary: #3b82f6;
+  --cq-primary: #1d4ed8;
   --cq-accent: #38bdf8;
-  --cq-glow: rgba(59, 130, 246, 0.4);
+  --cq-glow: rgba(29, 78, 216, 0.4);
   --cq-glow-accent: rgba(56, 189, 248, 0.3);
   --cq-radius: 4px;
 }
@@ -125,9 +131,9 @@
 }
 
 [data-theme="rogue-teal"] {
-  --cq-primary: #0d9488;
+  --cq-primary: #0f766e;
   --cq-accent: #5eead4;
-  --cq-glow: rgba(13, 148, 136, 0.45);
+  --cq-glow: rgba(15, 118, 110, 0.45);
   --cq-glow-accent: rgba(94, 234, 212, 0.3);
   --cq-radius: 14px;
 }

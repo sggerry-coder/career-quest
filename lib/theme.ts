@@ -47,32 +47,32 @@ export interface ClassDefinition {
 export const themes: Record<ThemeName, ThemeConfig> = {
   "purple-teal": {
     name: "purple-teal",
-    primary: "#8b5cf6",
+    primary: "#7c3aed",
     accent: "#2dd4bf",
-    glow: "rgba(139,92,246,0.5)",
+    glow: "rgba(124,58,237,0.5)",
     borderRadius: "6px",
   },
   "magenta-violet": {
     name: "magenta-violet",
-    primary: "#ec4899",
+    primary: "#be185d",
     accent: "#f0abfc",
-    glow: "rgba(236,72,153,0.4)",
+    glow: "rgba(190,24,93,0.4)",
     borderRadius: "16px",
   },
   "blue-indigo": {
     name: "blue-indigo",
-    primary: "#3b82f6",
+    primary: "#2563eb",
     accent: "#38bdf8",
-    glow: "rgba(59,130,246,0.4)",
+    glow: "rgba(37,99,235,0.4)",
     borderRadius: "12px",
   },
   "wanderer-slate": { name: "wanderer-slate", primary: "#475569", accent: "#94a3b8", glow: "rgba(71,85,105,0.4)", borderRadius: "10px" },
-  "guardian-jade": { name: "guardian-jade", primary: "#059669", accent: "#6ee7b7", glow: "rgba(5,150,105,0.45)", borderRadius: "16px" },
-  "paladin-steel": { name: "paladin-steel", primary: "#3b82f6", accent: "#38bdf8", glow: "rgba(59,130,246,0.4)", borderRadius: "4px" },
+  "guardian-jade": { name: "guardian-jade", primary: "#047857", accent: "#6ee7b7", glow: "rgba(4,120,87,0.45)", borderRadius: "16px" },
+  "paladin-steel": { name: "paladin-steel", primary: "#1d4ed8", accent: "#38bdf8", glow: "rgba(29,78,216,0.4)", borderRadius: "4px" },
   "vanguard-gold": { name: "vanguard-gold", primary: "#b45309", accent: "#fbbf24", glow: "rgba(180,83,9,0.45)", borderRadius: "12px" },
   "bard-magenta": { name: "bard-magenta", primary: "#db2777", accent: "#f0abfc", glow: "rgba(219,39,119,0.45)", borderRadius: "20px" },
   "warsmith-copper": { name: "warsmith-copper", primary: "#c2410c", accent: "#fb923c", glow: "rgba(194,65,12,0.45)", borderRadius: "8px" },
-  "rogue-teal": { name: "rogue-teal", primary: "#0d9488", accent: "#5eead4", glow: "rgba(13,148,136,0.45)", borderRadius: "14px" },
+  "rogue-teal": { name: "rogue-teal", primary: "#0f766e", accent: "#5eead4", glow: "rgba(15,118,110,0.45)", borderRadius: "14px" },
 };
 
 /**
