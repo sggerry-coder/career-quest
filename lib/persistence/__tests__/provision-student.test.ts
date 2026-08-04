@@ -13,6 +13,7 @@ import {
   type StudentProfile,
 } from "@/lib/persistence/provision-student";
 import { snapshotKey } from "@/lib/persistence/session-snapshot";
+import { THEME_CACHE_KEY } from "@/lib/theme";
 
 // ---------------------------------------------------------------------------
 // Hoisted mock Supabase client
@@ -102,6 +103,7 @@ beforeEach(() => {
   h.state.studentUpsertFails = false;
   h.signInAnonymously.mockClear();
   window.localStorage.clear();
+  document.documentElement.removeAttribute("data-theme");
 });
 
 // ---------------------------------------------------------------------------
@@ -189,6 +191,32 @@ describe("provisionStudent", () => {
     );
     expect(badgeUpsert).toHaveLength(1);
     expect(badgeUpsert[0].payload).toMatchObject({ badge_id: "quest_started" });
+  });
+
+  it("does not leave a new student wearing the previous student's colours", async () => {
+    // A shared classroom device: the last student finished as a Guardian and
+    // the pre-paint script restores whatever is cached. Character creation no
+    // longer applies a theme, so without this reset the new Wanderer wore
+    // jade for the whole warm-up and interest block.
+    window.localStorage.setItem(THEME_CACHE_KEY, "guardian-jade");
+    document.documentElement.setAttribute("data-theme", "guardian-jade");
+
+    await provisionStudent(PROFILE);
+
+    expect(window.localStorage.getItem(THEME_CACHE_KEY)).toBe("wanderer-slate");
+    expect(document.documentElement.getAttribute("data-theme")).toBe(
+      "wanderer-slate"
+    );
+  });
+
+  it("leaves the theme alone when the profile write failed", async () => {
+    // Nothing was provisioned, so nothing should have been reset.
+    window.localStorage.setItem(THEME_CACHE_KEY, "guardian-jade");
+    h.state.studentUpsertFails = true;
+
+    await provisionStudent(PROFILE);
+
+    expect(window.localStorage.getItem(THEME_CACHE_KEY)).toBe("guardian-jade");
   });
 
   it("fails cleanly when anonymous sign-in fails", async () => {

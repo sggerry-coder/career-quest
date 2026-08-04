@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { clearSessionSnapshot } from "@/lib/persistence/session-snapshot";
+import { applyClassTheme } from "@/lib/theme";
 
 /**
  * Student provisioning for character creation (P2.3).
@@ -101,6 +102,15 @@ export async function provisionStudent(
     if (studentError) {
       return { success: false };
     }
+
+    // Reset the cached theme to the Wanderer's.
+    //
+    // Character creation no longer applies a theme, and the pre-paint script
+    // restores whatever is in the cache. On a shared classroom device that
+    // meant a brand-new student wore the previous student's class colour for
+    // the whole warm-up and interest block. A student who has not been named
+    // has not earned a colour.
+    applyClassTheme(profile.avatarClass);
 
     // 3. When replacing, clear the previous run's data (best-effort).
     if (replacedExisting) {
