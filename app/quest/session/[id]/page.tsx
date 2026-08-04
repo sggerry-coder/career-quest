@@ -839,6 +839,12 @@ export default function Session({
                   strengths: scoreState.strengths,
                 }}
                 riasecSnapshot={scoreState.riasec_snapshot}
+                // What the summary above is standing on. A skip records no
+                // response, so the difference between these two is exactly
+                // the number of times the student said "I'm not sure" -- the
+                // one thing the archetype card cannot show on its own.
+                answeredCount={questState.responses.length}
+                askedCount={sessionQuestions.length + adaptiveQuestions.length}
                 onViewDashboard={() => router.push("/quest/dashboard")}
                 onSaveExit={handleSaveExit}
               />

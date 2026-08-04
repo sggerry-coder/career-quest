@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { chapterLabel } from "@/lib/copy/chapter";
+import { sparseProfileNote } from "@/lib/copy/profile-depth";
 import { useScreenChange } from "@/hooks/use-screen-change";
 import { useBeatDelay } from "@/hooks/use-beat-delay";
 
@@ -30,6 +31,16 @@ interface CompletionScreenProps {
   };
   /** RIASEC scores snapshotted at confirmatory start (P1.3), if taken. */
   riasecSnapshot?: Record<string, number> | null;
+  /**
+   * Responses recorded and questions offered, confirmatory round included.
+   * This is the only screen that makes a whole-profile claim — one archetype,
+   * one strength, no chart to qualify itself — so it is the one that needs to
+   * know how much is behind it. Omitted, both read 0 — nothing asked and
+   * nothing skipped — so a caller that does not pass them gets the usual
+   * subheading rather than a qualification it has no numbers for.
+   */
+  answeredCount?: number;
+  askedCount?: number;
   onViewDashboard: () => void;
   onSaveExit: () => void;
 }
@@ -79,6 +90,8 @@ export default function CompletionScreen({
   previousClassLabel,
   scoreState,
   riasecSnapshot = null,
+  answeredCount = 0,
+  askedCount = 0,
   onViewDashboard,
   onSaveExit,
 }: CompletionScreenProps): React.JSX.Element {
@@ -115,10 +128,15 @@ export default function CompletionScreen({
 
   const heading = `${tone === "quest" ? "Quest " : ""}${chapterLabel(1, tone)} Complete`;
   const headingRef = useScreenChange<HTMLHeadingElement>(heading);
+  // A profile built on a handful of answers is still worth showing -- it is
+  // honest, because nothing downstream fills the gaps in any more -- but
+  // "Your profile has been forged!" over it is not. Replace the line rather
+  // than add a warning beside it: the confident sentence *is* the claim.
   const subheading =
-    tone === "quest"
+    sparseProfileNote(tone, answeredCount, askedCount) ??
+    (tone === "quest"
       ? "Your profile has been forged!"
-      : "Here\u2019s what we discovered.";
+      : "Here\u2019s what we discovered.");
 
   const topStrength =
     scoreState.strengths.length > 0 ? scoreState.strengths[0] : null;
@@ -199,7 +217,7 @@ export default function CompletionScreen({
         initial={from({ opacity: 0, y: 20 })}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut", delay: delay(1.0) }}
-        className="text-sm text-white/60 text-center"
+        className="text-sm text-white/60 text-center max-w-sm"
       >
         {subheading}
       </motion.p>
