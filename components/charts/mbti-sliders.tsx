@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface MbtiSlidersProps {
   scores: Record<string, number>;
@@ -16,6 +16,8 @@ const MBTI_DICHOTOMIES = [
 const STILL_EMERGING_THRESHOLD = 35;
 
 export default function MbtiSliders({ scores }: MbtiSlidersProps) {
+  const prefersReduced = useReducedMotion();
+
   return (
     <div className="w-full">
       <h3 className="text-sm font-semibold text-white/70 mb-4 uppercase tracking-wider">
@@ -52,13 +54,15 @@ export default function MbtiSliders({ scores }: MbtiSlidersProps) {
                       ? "bg-white/45"
                       : "bg-[var(--color-primary)] shadow-[0_0_12px_var(--color-glow)]"
                   }`}
-                  initial={{ left: "50%" }}
+                  // See charts/riasec-bars: the dot is at the reading, it
+                  // does not travel there.
+                  initial={prefersReduced ? false : { left: "50%" }}
                   animate={{ left: `${position}%` }}
                   transition={{
                     type: "spring",
                     stiffness: 120,
                     damping: 20,
-                    delay: index * 0.15,
+                    delay: prefersReduced ? 0 : index * 0.15,
                   }}
                 />
               </div>

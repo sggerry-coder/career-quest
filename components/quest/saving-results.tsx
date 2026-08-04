@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface SavingResultsProps {
@@ -23,13 +23,23 @@ export default function SavingResults({
   const heading =
     tone === "quest" ? "Sealing your results…" : "Saving your results…";
   const headingRef = useScreenChange<HTMLHeadingElement>(heading);
+  const prefersReduced = useReducedMotion();
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-5 px-4">
       <motion.div
         className="h-10 w-10 rounded-full border-2 border-white/20 border-t-[var(--cq-primary,#8b5cf6)]"
-        animate={{ rotate: 360 }}
-        transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+        /* Reduced, not removed. MotionConfig would freeze the rotation and
+           leave a ring that looks like a crashed page; a slow fade still says
+           "working" without anything spinning. */
+        animate={
+          prefersReduced ? { opacity: [0.4, 1, 0.4] } : { rotate: 360 }
+        }
+        transition={
+          prefersReduced
+            ? { duration: 2, repeat: Infinity, ease: "easeInOut" }
+            : { duration: 0.9, repeat: Infinity, ease: "linear" }
+        }
         aria-hidden="true"
       />
       <h1

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface MiPreviewBarsProps {
   scores: Record<string, number>;
@@ -18,6 +18,7 @@ const MI_DIMENSIONS = [
 ];
 
 export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
+  const prefersReduced = useReducedMotion();
   // A dimension reads 0 until it has enough signals to earn a score (see
   // MIN_MI_SIGNALS in lib/scoring/mi.ts), and Session 1's ~10 MI picks are
   // spread over 8 dimensions -- two of which (musical, naturalistic) appear
@@ -72,13 +73,14 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
                   <div className="flex-1 h-4 rounded-full bg-white/10 overflow-hidden">
                     <motion.div
                       className="h-full rounded-full bg-[var(--color-accent)]"
-                      initial={{ width: 0 }}
+                      // See charts/riasec-bars for why initial is false here.
+                      initial={prefersReduced ? false : { width: 0 }}
                       animate={{ width: `${score}%` }}
                       transition={{
                         type: "spring",
                         stiffness: 100,
                         damping: 20,
-                        delay: index * 0.1,
+                        delay: prefersReduced ? 0 : index * 0.1,
                       }}
                     />
                   </div>

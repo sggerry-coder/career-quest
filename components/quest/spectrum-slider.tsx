@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface SpectrumSliderProps {
   value: number | null;
@@ -53,6 +53,7 @@ export default function SpectrumSlider({
   // Roving tabindex over POSITIONS by index. Index-based, not arithmetic on
   // the value: with the midpoint gone, `pos - 1` from 1 would land on 0, which
   // is no longer a position.
+  const prefersReduced = useReducedMotion();
   const initialIndex = Math.max(0, POSITIONS.indexOf(value ?? NaN));
   const [focusedIndex, setFocusedIndex] = useState<number>(initialIndex);
   const focusedPos = POSITIONS[focusedIndex];
@@ -123,7 +124,11 @@ export default function SpectrumSlider({
             aria-hidden="true"
             className="pointer-events-none absolute top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--color-primary)] shadow-[0_0_20px_var(--color-glow)]"
             animate={{ left: `${thumbPct}%` }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            transition={
+              prefersReduced
+                ? { duration: 0 }
+                : { type: "spring", stiffness: 400, damping: 30 }
+            }
           />
         )}
 

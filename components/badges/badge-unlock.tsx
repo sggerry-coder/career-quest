@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useScreenChange } from "@/hooks/use-screen-change";
+import { useBeatDelay } from "@/hooks/use-beat-delay";
 
 interface BadgeUnlockProps {
   badgeName: string;
@@ -28,6 +29,8 @@ export default function BadgeUnlock({
   // The overlay is the whole screen while it is up, and it replaces the last
   // question. Without this the student is left focused on a removed button.
   const overlayRef = useScreenChange<HTMLDivElement>(badgeName);
+  const prefersReduced = useReducedMotion();
+  const { delay, from } = useBeatDelay();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -69,21 +72,25 @@ export default function BadgeUnlock({
           {/* Glow pulse background */}
           <motion.div
             className="absolute w-40 h-40 rounded-full bg-[var(--color-primary)]/30 blur-3xl"
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
+            /* MotionConfig stops the scale but not the opacity loop, and a glow
+               pulsing forever is exactly what the setting is asking us not to
+               do. Under reduced motion the glow is simply there. */
+            animate={
+              prefersReduced
+                ? { scale: 1, opacity: 0.45 }
+                : { scale: [1, 1.5, 1], opacity: [0.3, 0.6, 0.3] }
+            }
+            transition={
+              prefersReduced
+                ? { duration: 0 }
+                : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+            }
           />
 
           {/* Badge icon */}
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: [0, 1.2, 1.0] }}
+            initial={from({ scale: 0 })}
+            animate={prefersReduced ? { scale: 1 } : { scale: [0, 1.2, 1.0] }}
             transition={{
               times: [0, 0.6, 1],
               duration: 0.6,
@@ -96,9 +103,9 @@ export default function BadgeUnlock({
 
           {/* Badge name */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={from({ opacity: 0, y: 10 })}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            transition={{ delay: delay(0.5) }}
             className="mt-6 text-center"
           >
             <p className="text-xs text-white/50 uppercase tracking-widest mb-1">

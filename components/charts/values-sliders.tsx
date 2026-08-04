@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface ValuesSlidersProps {
   scores: Record<string, number>;
@@ -35,6 +35,8 @@ export function describeLean(
 }
 
 export default function ValuesSliders({ scores }: ValuesSlidersProps) {
+  const prefersReduced = useReducedMotion();
+
   return (
     <div className="w-full">
       <h3 className="text-sm font-semibold text-white/70 mb-1 uppercase tracking-wider">
@@ -59,13 +61,14 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
                 <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/45" />
                 <motion.div
                   className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--color-accent)] shadow-[0_0_10px_var(--color-glow)]"
-                  initial={{ left: "50%" }}
+                  // See charts/riasec-bars.
+                  initial={prefersReduced ? false : { left: "50%" }}
                   animate={{ left: `${position}%` }}
                   transition={{
                     type: "spring",
                     stiffness: 120,
                     damping: 20,
-                    delay: index * 0.15,
+                    delay: prefersReduced ? 0 : index * 0.15,
                   }}
                 />
               </div>

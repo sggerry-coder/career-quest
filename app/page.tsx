@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { applyClassTheme } from "@/lib/theme";
 import { chapterLabel } from "@/lib/copy/chapter";
@@ -47,6 +47,7 @@ const CARD_DURATION_MS = 2500;
 export default function Home() {
   const router = useRouter();
   const [state, setState] = useState<LandingState>({ status: "loading" });
+  const prefersReduced = useReducedMotion();
   const [introSkipped, setIntroSkipped] = useState(false);
 
   // Check for existing session on mount
@@ -138,8 +139,10 @@ export default function Home() {
         }}
       >
         <motion.div
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
+          animate={prefersReduced ? { opacity: 1 } : { opacity: [0.4, 1, 0.4] }}
+          transition={
+            prefersReduced ? { duration: 0 } : { duration: 1.5, repeat: Infinity }
+          }
           style={{
             fontSize: "1.125rem",
             color: "var(--cq-text-muted)",

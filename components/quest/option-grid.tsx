@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useBeatDelay } from "@/hooks/use-beat-delay";
 
 interface OptionGridOption {
   label: string;
@@ -20,6 +21,8 @@ export default function OptionGrid({
   value,
   onChange,
 }: OptionGridProps) {
+  const { delay, from } = useBeatDelay();
+
   return (
     <div
       className="grid grid-cols-2 gap-3 w-full"
@@ -33,9 +36,9 @@ export default function OptionGrid({
             key={option.value}
             onClick={() => onChange(option.value)}
             whileTap={{ scale: 0.97 }}
-            initial={{ opacity: 0, y: 10 }}
+            initial={from({ opacity: 0, y: 10 })}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
+            transition={{ delay: delay(index * 0.05) }}
             role="radio"
             aria-checked={isSelected}
             tabIndex={0}

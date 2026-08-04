@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/ui/theme-provider";
+import { MotionProvider } from "@/components/ui/motion-provider";
 import { buildThemeInitScript } from "@/lib/theme-init-script";
 import "./globals.css";
 
@@ -35,9 +36,14 @@ export default function RootLayout({
         }}
       >
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <ThemeProvider initialTheme="purple-teal">
-          {children}
-        </ThemeProvider>
+        {/* Framer runs in JavaScript, so the prefers-reduced-motion block in
+            globals.css never reached a single thing that actually moves in this
+            app. See components/ui/motion-provider. */}
+        <MotionProvider>
+          <ThemeProvider initialTheme="purple-teal">
+            {children}
+          </ThemeProvider>
+        </MotionProvider>
       </body>
     </html>
   );

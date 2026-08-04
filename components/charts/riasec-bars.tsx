@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface RiasecBarsProps {
   scores: Record<string, number>;
@@ -23,6 +23,8 @@ const RIASEC_TYPES = [
 ];
 
 export default function RiasecBars({ scores, classLabel }: RiasecBarsProps) {
+  const prefersReduced = useReducedMotion();
+
   return (
     <div className="w-full">
       <h3 className="text-sm font-semibold text-white/70 mb-4 uppercase tracking-wider">
@@ -55,13 +57,16 @@ export default function RiasecBars({ scores, classLabel }: RiasecBarsProps) {
                       ? "bg-[var(--color-accent)]"
                       : "bg-white/45"
                   }`}
-                  initial={{ width: 0 }}
+                  /* Reduced motion: the bar is its value, it does not grow
+                     into it. initial={false} is Framer's "render the target
+                     state" -- the score is still shown, nothing moves. */
+                  initial={prefersReduced ? false : { width: 0 }}
                   animate={{ width: `${score}%` }}
                   transition={{
                     type: "spring",
                     stiffness: 100,
                     damping: 20,
-                    delay: index * 0.1,
+                    delay: prefersReduced ? 0 : index * 0.1,
                   }}
                 />
               </div>

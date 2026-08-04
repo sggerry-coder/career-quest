@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useScreenChange } from "@/hooks/use-screen-change";
+import { useBeatDelay } from "@/hooks/use-beat-delay";
 
 interface BlockTransitionProps {
   narrationText: string;
@@ -16,6 +17,7 @@ export default function BlockTransition({
   const [visible, setVisible] = useState(true);
   // The interstitial covers the whole viewport, so it is the screen now.
   const skipRef = useScreenChange<HTMLDivElement>(narrationText);
+  const { delay, from } = useBeatDelay();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,17 +61,17 @@ export default function BlockTransition({
           className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-[#0f0a1e] to-[#1a1035] px-8 cursor-pointer focus:outline-none"
         >
           <motion.p
-            initial={{ y: 30, opacity: 0 }}
+            initial={from({ y: 30, opacity: 0 })}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
+            transition={{ delay: delay(0.15), duration: 0.4 }}
             className="max-w-md text-center text-xl font-medium leading-relaxed text-white/90 italic"
           >
             {narrationText}
           </motion.p>
           <motion.span
-            initial={{ opacity: 0 }}
+            initial={from({ opacity: 0 })}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8, duration: 0.3 }}
+            transition={{ delay: delay(0.8), duration: 0.3 }}
             className="mt-8 text-xs text-white/55"
           >
             Tap to continue

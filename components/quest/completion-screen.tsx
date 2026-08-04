@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { chapterLabel } from "@/lib/copy/chapter";
 import { useScreenChange } from "@/hooks/use-screen-change";
+import { useBeatDelay } from "@/hooks/use-beat-delay";
 
 /**
  * The celebration. Mounting this screen *means the results are saved* — the
@@ -82,16 +83,19 @@ export default function CompletionScreen({
   onSaveExit,
 }: CompletionScreenProps): React.JSX.Element {
   const hasFired = useRef(false);
+  // This screen's hand-rolled matchMedia check was the only place in the app
+  // that honoured the setting. It is the same signal MotionConfig and
+  // useBeatDelay read, now taken from the same hook rather than a fifth copy.
+  const prefersReduced = useReducedMotion();
+  const { delay, from } = useBeatDelay();
 
   // Fire confetti on mount (once)
   useEffect(() => {
     if (hasFired.current) return;
     hasFired.current = true;
-
-    // Respect reduced motion preference
-    const prefersReduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
+    // Confetti is the one thing here that is removed rather than reduced:
+    // there is no gentle version of a hundred particles, and it carries no
+    // information the heading below does not.
     if (prefersReduced) return;
 
     (async () => {
@@ -107,7 +111,7 @@ export default function CompletionScreen({
         // Silent catch -- confetti is cosmetic only
       }
     })();
-  }, []);
+  }, [prefersReduced]);
 
   const heading = `${tone === "quest" ? "Quest " : ""}${chapterLabel(1, tone)} Complete`;
   const headingRef = useScreenChange<HTMLHeadingElement>(heading);
@@ -143,7 +147,7 @@ export default function CompletionScreen({
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-4">
       {/* Animated checkmark */}
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={from({ scale: 0.8, opacity: 0 })}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
       >
@@ -174,16 +178,16 @@ export default function CompletionScreen({
             fill="none"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+            transition={{ duration: 0.8, ease: "easeOut", delay: delay(0.2) }}
           />
         </svg>
       </motion.div>
 
       {/* Heading */}
       <motion.h1
-        initial={{ opacity: 0, y: 20 }}
+        initial={from({ opacity: 0, y: 20 })}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut", delay: 0.8 }}
+        transition={{ duration: 0.4, ease: "easeOut", delay: delay(0.8) }}
         ref={headingRef}
         className="text-2xl font-semibold text-white text-center focus:outline-none"
       >
@@ -192,9 +196,9 @@ export default function CompletionScreen({
 
       {/* Subheading */}
       <motion.p
-        initial={{ opacity: 0, y: 20 }}
+        initial={from({ opacity: 0, y: 20 })}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut", delay: 1.0 }}
+        transition={{ duration: 0.4, ease: "easeOut", delay: delay(1.0) }}
         className="text-sm text-white/60 text-center"
       >
         {subheading}
@@ -202,9 +206,9 @@ export default function CompletionScreen({
 
       {/* Static summary cards */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={from({ opacity: 0 })}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut", delay: 1.4 }}
+        transition={{ duration: 0.3, ease: "easeOut", delay: delay(1.4) }}
         className="flex flex-row gap-3 max-w-sm w-full justify-center"
       >
         {/* Class card */}
@@ -229,9 +233,9 @@ export default function CompletionScreen({
       {/* Confirmatory before/after delta card (P1.3) */}
       {(riasecSnapshot || classChanged) && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={from({ opacity: 0, y: 10 })}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: "easeOut", delay: 1.6 }}
+          transition={{ duration: 0.3, ease: "easeOut", delay: delay(1.6) }}
           className="rounded-xl bg-white/5 border border-white/10 px-4 py-3 max-w-sm w-full"
         >
           <p className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
@@ -266,9 +270,9 @@ export default function CompletionScreen({
 
       {/* CTA buttons */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={from({ opacity: 0 })}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.3, ease: "easeOut", delay: 1.8 }}
+        transition={{ duration: 0.3, ease: "easeOut", delay: delay(1.8) }}
         className="flex flex-col gap-3 w-full max-w-xs"
       >
         <button
