@@ -85,7 +85,6 @@ export function DestinationPicker({ value, onChange }: DestinationPickerProps) {
               whileTap={{ scale: 0.97 }}
               role="checkbox"
               aria-checked={isSelected}
-              aria-label={`${dest.flag} ${dest.name}`}
               style={{
                 display: "flex",
                 alignItems: "center",

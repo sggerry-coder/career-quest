@@ -243,11 +243,17 @@ export default function Home() {
             onClick={() => handleContinueQuest(student)}
             className="cq-button cq-button-primary"
             style={{ width: "100%", maxWidth: "280px" }}
-            aria-label="Continue Quest"
           >
-            {displayTone === "quest"
-              ? "Continue Quest ⚔️"
-              : "Continue"}
+            {/* No aria-label. It said "Continue Quest" over a button that, in
+                explorer tone, reads "Continue" -- two different names for the
+                same control depending on whether you can see it. */}
+            {displayTone === "quest" ? (
+              <>
+                Continue Quest <span aria-hidden="true">⚔️</span>
+              </>
+            ) : (
+              "Continue"
+            )}
           </button>
 
           {/*
@@ -266,7 +272,6 @@ export default function Home() {
             onClick={handleStartQuest}
             className="cq-button cq-button-ghost"
             style={{ fontSize: "0.875rem" }}
-            aria-label="Start a new quest"
           >
             Start a new quest instead
           </button>
@@ -357,31 +362,39 @@ export default function Home() {
         </AnimatePresence>
       </div>
 
-      {/* CTA */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: showCTA ? 1 : 0 }}
-        transition={{ duration: 0.4 }}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "1rem",
-        }}
-      >
-        <button
-          onClick={handleStartQuest}
-          className="cq-button cq-button-primary cq-glow"
+      {/*
+        CTA. Rendered only once it is meant to exist, not faded from
+        opacity: 0 -- an element at zero opacity is still in the tab order and
+        still hit-testable, so for the first two intro cards this was a button
+        nobody could see that a keyboard student would land on and a screen
+        reader would offer, and a mis-tap in the bottom third of the screen
+        started the quest. The fade is unchanged; only the mount is gated.
+      */}
+      {showCTA && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
           style={{
-            fontSize: "1.125rem",
-            padding: "1rem 2.5rem",
-            minWidth: "220px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "1rem",
           }}
-          aria-label="Start Your Quest"
         >
-          Start Your Quest ⚔️
-        </button>
-      </motion.div>
+          <button
+            onClick={handleStartQuest}
+            className="cq-button cq-button-primary cq-glow"
+            style={{
+              fontSize: "1.125rem",
+              padding: "1rem 2.5rem",
+              minWidth: "220px",
+            }}
+          >
+            Start Your Quest <span aria-hidden="true">⚔️</span>
+          </button>
+        </motion.div>
+      )}
 
       {/* Skip button — visible from card 1 */}
       {!introSkipped && state.introCard < introCards.length - 1 && (

@@ -243,7 +243,7 @@ describe("session complete wiring", () => {
     expect(screen.getByText("Your Archetype")).toBeDefined();
     expect(screen.getByText("Creative Thinking")).toBeDefined();
     expect(screen.getByRole("button", { name: "View Dashboard" })).toBeDefined();
-    expect(screen.getByRole("button", { name: "Save and Exit" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Save & Exit" })).toBeDefined();
   });
 
   it("shows the confirmatory before/after delta card (P1.3)", async () => {

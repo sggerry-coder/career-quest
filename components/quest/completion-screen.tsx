@@ -274,14 +274,12 @@ export default function CompletionScreen({
         <button
           onClick={onViewDashboard}
           className="rounded-xl bg-[var(--cq-primary,#8b5cf6)] px-8 py-3 font-semibold text-white shadow-[0_0_20px_var(--cq-glow,rgba(139,92,246,0.3))] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-          aria-label="View Dashboard"
         >
           View Dashboard
         </button>
         <button
           onClick={onSaveExit}
           className="rounded-xl bg-transparent border border-white/20 px-8 py-3 font-semibold text-white/70 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-          aria-label="Save and Exit"
         >
           Save &amp; Exit
         </button>

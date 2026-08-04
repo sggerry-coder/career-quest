@@ -71,7 +71,6 @@ export default function SaveFailedScreen({
             <button
               onClick={onSignIn}
               className="rounded-xl bg-[var(--cq-primary,#8b5cf6)] px-8 py-3 font-semibold text-white shadow-[0_0_20px_var(--cq-glow,rgba(139,92,246,0.3))] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-              aria-label="Sign in again"
             >
               Sign in again
             </button>
@@ -79,7 +78,6 @@ export default function SaveFailedScreen({
             <button
               onClick={onRetry}
               className="rounded-xl bg-[var(--cq-primary,#8b5cf6)] px-8 py-3 font-semibold text-white shadow-[0_0_20px_var(--cq-glow,rgba(139,92,246,0.3))] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-              aria-label="Try saving again"
             >
               Try saving again
             </button>
@@ -88,7 +86,6 @@ export default function SaveFailedScreen({
           <button
             onClick={onLeave}
             className="rounded-xl border border-white/20 bg-transparent px-8 py-3 font-semibold text-white/70 transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-            aria-label="Leave for now"
           >
             Leave for now
           </button>

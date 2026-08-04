@@ -56,15 +56,19 @@ export default function ResumePrompt({
           <button
             onClick={onResume}
             className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-            aria-label={tone === "quest" ? "Resume Quest" : "Resume"}
             tabIndex={0}
           >
-            {tone === "quest" ? "Resume Quest ⚔️" : "Resume"}
+            {tone === "quest" ? (
+              <>
+                Resume Quest <span aria-hidden="true">⚔️</span>
+              </>
+            ) : (
+              "Resume"
+            )}
           </button>
           <button
             onClick={onStartOver}
             className="rounded-xl bg-transparent border border-white/20 px-8 py-3 font-medium text-white/70 transition-colors hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-            aria-label="Start over"
             tabIndex={0}
           >
             Start over

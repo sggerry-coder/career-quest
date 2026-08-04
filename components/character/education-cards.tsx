@@ -64,7 +64,6 @@ export function EducationCards({ value, onChange }: EducationCardsProps) {
               whileTap={{ scale: 0.97 }}
               role="radio"
               aria-checked={isSelected}
-              aria-label={`${system.flag} ${system.label}`}
               style={{
                 display: "flex",
                 alignItems: "center",

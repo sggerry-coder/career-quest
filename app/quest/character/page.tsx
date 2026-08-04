@@ -617,18 +617,26 @@ export default function CharacterCreation() {
             onClick={handleBeginQuest}
             disabled={!canProceedStep2 || isSubmitting}
             className="cq-button cq-button-primary"
-            aria-label={tone === "quest" ? "Begin Quest" : "Get Started"}
             style={{
               minWidth: "160px",
             }}
           >
-            {isSubmitting
-              ? tone === "quest"
-                ? "Opening portal..."
-                : "Setting up..."
-              : tone === "quest"
-                ? "Begin Quest ⚔️"
-                : "Get Started"}
+            {/* No aria-label: it stayed "Begin Quest" while the button itself
+                changed to "Opening portal...", so the two disagreed at exactly
+                the moment the student needed to know what was happening. */}
+            {isSubmitting ? (
+              tone === "quest" ? (
+                "Opening portal..."
+              ) : (
+                "Setting up..."
+              )
+            ) : tone === "quest" ? (
+              <>
+                Begin Quest <span aria-hidden="true">⚔️</span>
+              </>
+            ) : (
+              "Get Started"
+            )}
           </button>
         )}
       </div>

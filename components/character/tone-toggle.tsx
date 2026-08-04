@@ -50,7 +50,6 @@ export function ToneToggle({ value, onChange }: ToneToggleProps) {
         <button
           role="radio"
           aria-checked={value === "quest"}
-          aria-label="Quest Mode"
           onClick={() => onChange("quest")}
           style={{
             position: "relative",
@@ -78,7 +77,6 @@ export function ToneToggle({ value, onChange }: ToneToggleProps) {
         <button
           role="radio"
           aria-checked={value === "explorer"}
-          aria-label="Explorer Mode"
           onClick={() => onChange("explorer")}
           style={{
             position: "relative",

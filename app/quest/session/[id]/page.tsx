@@ -654,11 +654,11 @@ export default function Session({
                   key={String(option.value)}
                   onClick={() => onSubmit(option.value, option.label)}
                   className="w-full rounded-xl border-2 border-white/10 bg-white/5 p-4 text-left text-white/80 font-medium transition-colors hover:bg-white/10 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-                  aria-label={option.label}
-                  tabIndex={0}
                 >
                   {option.emoji && (
-                    <span className="mr-2">{option.emoji}</span>
+                    <span className="mr-2" aria-hidden="true">
+                      {option.emoji}
+                    </span>
                   )}
                   {option.label}
                 </button>

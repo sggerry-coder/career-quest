@@ -71,7 +71,7 @@ describe("landing page: start a new quest", () => {
     render(<Home />);
 
     const startNew = await screen.findByRole("button", {
-      name: "Start a new quest",
+      name: "Start a new quest instead",
     });
     fireEvent.click(startNew);
 

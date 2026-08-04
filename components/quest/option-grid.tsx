@@ -38,7 +38,6 @@ export default function OptionGrid({
             transition={{ delay: index * 0.05 }}
             role="radio"
             aria-checked={isSelected}
-            aria-label={option.label}
             tabIndex={0}
             className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 text-center transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[88px] ${
               isSelected
@@ -46,7 +45,11 @@ export default function OptionGrid({
                 : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20"
             }`}
           >
-            {option.emoji && <span className="text-2xl">{option.emoji}</span>}
+            {option.emoji && (
+              <span className="text-2xl" aria-hidden="true">
+                {option.emoji}
+              </span>
+            )}
             <span
               className={`text-sm font-medium ${
                 isSelected ? "text-white" : "text-white/80"

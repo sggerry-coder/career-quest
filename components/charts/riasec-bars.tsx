@@ -34,7 +34,10 @@ export default function RiasecBars({ scores, classLabel }: RiasecBarsProps) {
           const isHighlighted = score > 50;
           return (
             <div key={type.key} className="flex items-center gap-3">
-              <span className="text-lg w-7 text-center flex-shrink-0">
+              <span
+                className="text-lg w-7 text-center flex-shrink-0"
+                aria-hidden="true"
+              >
                 {type.emoji}
               </span>
               <span className="text-xs text-white/50 w-20 flex-shrink-0">

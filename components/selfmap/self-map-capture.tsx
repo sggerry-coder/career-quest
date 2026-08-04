@@ -167,7 +167,6 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
                           ? "bg-[var(--color-primary)] text-white"
                           : "bg-white/10 text-white/70 hover:bg-white/15"
                       }`}
-                      aria-label={source.label}
                       aria-pressed={isSelected}
                       tabIndex={0}
                     >
@@ -205,11 +204,12 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
                             ? "border-white/5 bg-white/3 opacity-40 cursor-not-allowed"
                             : "border-white/10 bg-white/5 hover:bg-white/10"
                       }`}
-                      aria-label={strength.label}
                       aria-pressed={isSelected}
                       tabIndex={isDisabled ? -1 : 0}
                     >
-                      <span className="text-xl">{strength.emoji}</span>
+                      <span className="text-xl" aria-hidden="true">
+                        {strength.emoji}
+                      </span>
                       <span className="text-xs font-medium text-white/80">
                         {strength.label}
                       </span>
@@ -229,7 +229,6 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
                 ? "bg-[var(--color-primary)] shadow-[0_0_20px_var(--color-glow)] hover:scale-105"
                 : "bg-white/10 text-white/55 cursor-not-allowed"
             }`}
-            aria-label={step < 2 ? "Next" : "Show my results"}
             tabIndex={0}
           >
             {step < 2 ? "Next" : "Show my results!"}

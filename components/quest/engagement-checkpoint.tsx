@@ -64,7 +64,6 @@ export default function EngagementCheckpoint({
         <button
           onClick={onContinue}
           className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-          aria-label="Continue quest"
           tabIndex={0}
         >
           {tone === "quest" ? "Keep going!" : "Keep going"}

@@ -167,7 +167,9 @@ export default function RevealSequence({
           animate={{ opacity: 1, y: 0 }}
           className="max-w-sm flex flex-col items-center gap-6"
         >
-          <span className="text-5xl">{"\u{1F3AF}"}</span>
+          <span className="text-5xl" aria-hidden="true">
+            {"\u{1F3AF}"}
+          </span>
           <h2
             {...beat("confirmatory_intro")}
             className="text-xl font-semibold text-white focus:outline-none"
@@ -181,7 +183,6 @@ export default function RevealSequence({
           <button
             onClick={handleNext}
             className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-            aria-label="Start confirmatory questions"
             tabIndex={0}
           >
             Let&apos;s go!
@@ -360,7 +361,6 @@ export default function RevealSequence({
         <button
           onClick={handleNext}
           className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"
-          aria-label="Continue"
           tabIndex={0}
         >
           {phase === "explanation" ? "Sharpen results" : "Continue"}

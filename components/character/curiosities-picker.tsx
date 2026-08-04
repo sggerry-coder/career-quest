@@ -97,7 +97,6 @@ export function CuriositiesPicker({
               role="checkbox"
               aria-checked={isSelected}
               aria-disabled={isDisabled}
-              aria-label={option.label}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -139,7 +138,6 @@ export function CuriositiesPicker({
           whileTap={{ scale: 0.95 }}
           role="checkbox"
           aria-checked={isDontKnow}
-          aria-label="Don't know yet"
           style={{
             display: "inline-flex",
             alignItems: "center",
