@@ -671,6 +671,7 @@ export default function Session({
         <RevealSequence
           scoreState={scoreState}
           className={avatarClassName}
+          resolvedClass={emergentClass}
           tone={studentTone}
           onRevealComplete={handleRevealComplete}
         />

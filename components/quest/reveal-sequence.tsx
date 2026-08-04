@@ -9,7 +9,7 @@ import ValuesSliders from "@/components/charts/values-sliders";
 import ClassLabel from "@/components/charts/class-label";
 import EmergingType from "@/components/charts/emerging-type";
 import { deriveEmergingType } from "@/lib/scoring/mbti";
-import { deriveCharacterClass, characterClassDisplayName } from "@/lib/character/classes";
+import { characterClassDisplayName, type DerivedClass } from "@/lib/character/classes";
 import { describeCharacter } from "@/lib/character/description";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
@@ -26,6 +26,15 @@ interface ScoreState {
 interface RevealSequenceProps {
   scoreState: ScoreState;
   className: string;
+  /**
+   * The class already locked in by useEmergentClass, passed down rather than
+   * re-derived here. A fresh deriveCharacterClass(scoreState.riasec) call
+   * would ignore the "may deepen, must never flip" lock, so a student whose
+   * lead shifted after naming could see one class in the reveal and a
+   * different one on the dashboard once persisted. This component must stay
+   * presentational: display what was resolved, don't resolve it again.
+   */
+  resolvedClass: DerivedClass;
   tone: "quest" | "explorer";
   onRevealComplete: () => void;
 }
@@ -44,15 +53,15 @@ type RevealPhase =
 export default function RevealSequence({
   scoreState,
   className,
+  resolvedClass,
   tone,
   onRevealComplete,
 }: RevealSequenceProps) {
   const [phase, setPhase] = useState<RevealPhase>("transition");
 
-  const derived = deriveCharacterClass(scoreState.riasec);
-  const emergentClassName = characterClassDisplayName(derived, tone);
+  const emergentClassName = characterClassDisplayName(resolvedClass, tone);
   const emergentDescription = describeCharacter({
-    derived,
+    derived: resolvedClass,
     tone,
     mbti: scoreState.mbti,
     values: scoreState.values,
