@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 
 interface MiPreviewBarsProps {
   scores: Record<string, number>;
-  tone: "quest" | "explorer";
 }
 
 const MI_DIMENSIONS = [

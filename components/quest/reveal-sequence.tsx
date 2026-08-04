@@ -204,7 +204,7 @@ export default function RevealSequence({
               animate={{ opacity: 1, y: 0 }}
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
-              <MiPreviewBars scores={scoreState.mi} tone={tone} />
+              <MiPreviewBars scores={scoreState.mi} />
             </motion.div>
           )}
 
@@ -257,7 +257,7 @@ export default function RevealSequence({
               animate={{ opacity: 1, y: 0 }}
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
-              <ValuesSliders scores={scoreState.values} tone={tone} />
+              <ValuesSliders scores={scoreState.values} />
               {Object.values(scoreState.values).every(v => v === 0) && (
                 <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
               )}

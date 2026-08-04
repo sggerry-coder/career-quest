@@ -7,6 +7,14 @@
  * surface that touched that promise and fails if the certainty language
  * comes back.
  *
+ * Fix round 1 added app/quest/session/[id]/page.tsx: its locked-session
+ * fallback ("Your quest continues in Chapter 1 for now -- more chapters
+ * are coming soon.") predates Task 8 and was missed in the first pass. It
+ * only renders when sessionQuestions is empty -- reachable today only by
+ * manually editing the URL to /quest/session/2+, since nothing in the app
+ * links there -- but low reachability isn't a reason to leave a promise
+ * standing, so it's covered here too.
+ *
  * Uses process.cwd() rather than a relative URL from this file's own
  * location: the brief's suggested `../../../${file}` under-counts by one
  * level (it resolves to app/app/quest/... , not the repo root) since this
@@ -22,6 +30,7 @@ const FILES = [
   "components/charts/mi-preview-bars.tsx",
   "components/charts/values-sliders.tsx",
   "components/quest/reveal-sequence.tsx",
+  "app/quest/session/[id]/page.tsx",
 ];
 
 // Every phrasing that previously stated Chapter 2 (or its "more content"
@@ -56,5 +65,18 @@ describe("chapter promises", () => {
       "utf8"
     );
     expect(source).toMatch(/Begin \{chapterLabel\(2, tone\)\} — Coming soon/);
+  });
+
+  it("does not promise imminent delivery on the locked-session fallback", () => {
+    // "Coming soon" is fine on the dashboard's disabled button (checked
+    // above) -- it's visibly disabled, not a claim. It is not fine on this
+    // fallback screen's body text, which states plainly that more chapters
+    // are coming, so this pattern is checked only against this one file
+    // rather than folded into the shared sweep above.
+    const source = readFileSync(
+      join(process.cwd(), "app/quest/session/[id]/page.tsx"),
+      "utf8"
+    );
+    expect(source).not.toMatch(/coming soon/i);
   });
 });

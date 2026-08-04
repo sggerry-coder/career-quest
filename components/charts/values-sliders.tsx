@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 
 interface ValuesSlidersProps {
   scores: Record<string, number>;
-  tone: "quest" | "explorer";
 }
 
 const VALUES_DIMENSIONS = [

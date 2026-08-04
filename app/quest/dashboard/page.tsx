@@ -282,12 +282,12 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Left: MI preview */}
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <MiPreviewBars scores={scores.mi_scores} tone={tone} />
+              <MiPreviewBars scores={scores.mi_scores} />
             </div>
 
             {/* Right: Values preview */}
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <ValuesSliders scores={scores.values_compass} tone={tone} />
+              <ValuesSliders scores={scores.values_compass} />
             </div>
           </div>
 

@@ -44,7 +44,6 @@ describe("ValuesSliders", () => {
     render(
       <ValuesSliders
         scores={{ security_adventure: -66, income_impact: 100, solo_team: 0 }}
-        tone="quest"
       />
     );
 
@@ -53,21 +52,16 @@ describe("ValuesSliders", () => {
     expect(screen.getByText("Balanced for now")).toBeDefined();
   });
 
-  it("does not invent readings for the dimensions not measured yet", () => {
-    render(<ValuesSliders scores={{}} tone="quest" />);
+  it("does not invent readings for the dimensions not measured yet, and names no chapter for what's still to come", () => {
+    // Chapter 2 is not built, so this line does not name it -- and, since
+    // Task 8 fix round 1, the component no longer takes a tone prop at all:
+    // there was nothing left for it to vary once the Chapter/Part word was
+    // removed (see Task 8 report).
+    render(<ValuesSliders scores={{}} />);
 
     // Prestige/Fulfilment and Structure/Flexibility have no Session 1
     // questions, so they stay greyed with no reading of their own.
     expect(screen.getAllByText("Balanced for now")).toHaveLength(3);
-    expect(screen.getByText("More dimensions to come")).toBeDefined();
-  });
-
-  it("shows the same honest wording regardless of tone", () => {
-    // Chapter 2 is not built, so this line no longer names it -- there is
-    // nothing left to vary by tone (see Task 8: stop promising a Chapter 2
-    // that does not exist).
-    render(<ValuesSliders scores={{}} tone="explorer" />);
-
     expect(screen.getByText("More dimensions to come")).toBeDefined();
   });
 });

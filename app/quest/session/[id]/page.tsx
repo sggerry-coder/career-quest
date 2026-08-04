@@ -824,7 +824,7 @@ export default function Session({
         </h1>
         <p className="text-sm text-white/50 mb-6">
           Your quest continues in {chapterLabel(1, studentTone)} for now &mdash; more chapters are
-          coming soon.
+          planned.
         </p>
         <Link
           href="/"
