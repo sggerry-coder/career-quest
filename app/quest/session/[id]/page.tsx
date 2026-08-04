@@ -29,6 +29,7 @@ import {
   serializeCharacterClass,
 } from "@/lib/character/classes";
 import { resolveFinalClass } from "@/lib/character/final-class";
+import { buildRiasecEvidence } from "@/lib/scoring/riasec";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
@@ -94,11 +95,25 @@ export default function Session({
   // it. Null on a fresh start or after "Start over".
   const [restoredClass, setRestoredClass] = useState<string | null>(null);
 
+  // How many interest answers each type actually has behind it. Rebuilt here
+  // rather than carried on ScoreState because a 0 in `riasec` cannot say
+  // whether it means "rated at the bottom" or "never asked", and both raw
+  // arrays are already in the checkpoint -- so this stays derivable without
+  // adding, and versioning, a snapshot field. Every naming decision below is a
+  // comparison between types, so without it a type the student skipped every
+  // question for is ranked as the strongest possible dislike.
+  const riasecEvidence = useMemo(
+    () =>
+      buildRiasecEvidence(scoreState.riasec_raw, scoreState.riasec_ipsative_raw),
+    [scoreState.riasec_raw, scoreState.riasec_ipsative_raw]
+  );
+
   // The class crystallises from the student's answers at block boundaries
   // (never per answer, so it cannot flip like a slot machine). Replaces the
   // Supabase-fetched avatar_class as the source of truth for narration/theme.
   const { derived: emergentClass, namingEventId } = useEmergentClass({
     riasec: scoreState.riasec,
+    riasecEvidence,
     blockKey: questState.current_block,
     restoredClass,
   });
@@ -112,9 +127,9 @@ export default function Session({
   const finalClass = useMemo(
     () =>
       flowPhase === "complete"
-        ? resolveFinalClass(emergentClass, scoreState.riasec)
+        ? resolveFinalClass(emergentClass, scoreState.riasec, riasecEvidence)
         : emergentClass,
-    [flowPhase, emergentClass, scoreState.riasec]
+    [flowPhase, emergentClass, scoreState.riasec, riasecEvidence]
   );
 
   // The palette follows the name the student is reading. useEmergentClass
