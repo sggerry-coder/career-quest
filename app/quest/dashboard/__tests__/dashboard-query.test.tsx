@@ -7,11 +7,13 @@
  *   minimum-response emerging rule works for returning students (A3)
  * - persisted values_raw_counts feed the Values Compass so a dimension nobody
  *   answered is not reported as balanced
+ * - persisted riasec_raw_counts feed the Ability Scores bars so an interest
+ *   type nobody was asked about is not scored 0 under the class badge
  * - a populated dashboard renders instead of the empty state
  */
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { render, screen, cleanup, within } from "@testing-library/react";
 
 const h = vi.hoisted(() => {
   const eqCalls: Array<{ table: string; column: string; value: unknown }> = [];
@@ -28,6 +30,9 @@ const h = vi.hoisted(() => {
 
   const scoresRow: Record<string, unknown> = {
     riasec_scores: { R: 80, I: 60, A: 40, S: 20, E: 10, C: 5 },
+    // C was never asked; every other type has answers behind it. C scores 5
+    // like any other low type, so only this record separates the two.
+    riasec_raw_counts: { R: 3, I: 3, A: 2, S: 2, E: 2, C: 0 },
     mi_scores: {
       linguistic: 10,
       logical: 20,
@@ -168,6 +173,42 @@ describe("dashboard data wiring", () => {
         structure_flexibility: 0,
         solo_team: 1,
       };
+    }
+  });
+
+  it("passes persisted riasec_raw_counts to the Ability Scores bars", async () => {
+    render(<Dashboard />);
+    await screen.findByText("Aria");
+
+    // Organizer is the only type with no answers behind it. It keeps its row
+    // -- the six are a fixed roster and the class badge is read off them --
+    // but loses the digit that claimed it had been rated.
+    const card = screen.getByText("Ability Scores").parentElement!;
+    const organizer = within(card).getByText("Organizer").parentElement!;
+    expect(within(organizer).getByText("Not asked")).toBeDefined();
+    expect(within(organizer).queryByText("5")).toBeNull();
+    // Every other type still prints its score.
+    expect(within(card).getAllByText("Not asked")).toHaveLength(1);
+    expect(within(card).getByText("80")).toBeDefined();
+  });
+
+  it("leaves a legacy row with no riasec_raw_counts reading exactly as it did", async () => {
+    // Every student who finished before migration 00006 has NULL here. Six
+    // blanked rows and a class badge derived from nothing would be a far
+    // worse lie than the 0 this guards against, so no counts means assume
+    // asked -- byte-identical to what this page rendered before the column.
+    h.scoresRow.riasec_raw_counts = null;
+    try {
+      render(<Dashboard />);
+      await screen.findByText("Aria");
+
+      const card = screen.getByText("Ability Scores").parentElement!;
+      expect(within(card).queryByText("Not asked")).toBeNull();
+      // Organizer reads 5 again, exactly as it always has.
+      const organizer = within(card).getByText("Organizer").parentElement!;
+      expect(within(organizer).getByText("5")).toBeDefined();
+    } finally {
+      h.scoresRow.riasec_raw_counts = { R: 3, I: 3, A: 2, S: 2, E: 2, C: 0 };
     }
   });
 

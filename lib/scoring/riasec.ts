@@ -110,10 +110,10 @@ export function buildRiasecEvidence(
  *
  * No evidence at all reads as "assume answered", exactly as hasValuesReading
  * does, and for the same reason: a caller that cannot tell must not blank a
- * finished profile. The dashboard is that caller until the counts are
- * persisted (migration 00006). A missing key *within* an evidence record is
- * an absence that buildRiasecEvidence recorded — it always emits all six —
- * so that reads as no answer.
+ * finished profile. The dashboard is that caller for a row written before
+ * migration 00006 added the counts column. A missing key *within* an evidence
+ * record is an absence that buildRiasecEvidence recorded — it always emits all
+ * six — so that reads as no answer.
  */
 export function hasRiasecReading(
   type: string,

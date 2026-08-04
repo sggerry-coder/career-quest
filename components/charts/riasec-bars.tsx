@@ -22,9 +22,9 @@ interface RiasecBarsProps {
    * one result a student is most likely to take personally.
    *
    * Optional, and omitting it means "assume answered", which is what a caller
-   * that cannot tell must do: the dashboard reads back persisted scores and
-   * has no counts to read until migration 00006 is applied and wired. See
-   * hasRiasecReading.
+   * that cannot tell must do. The dashboard passes the counts persisted
+   * alongside the scores (migration 00006), and passes nothing for a legacy
+   * row written before that column existed. See hasRiasecReading.
    */
   evidence?: Record<string, number>;
 }

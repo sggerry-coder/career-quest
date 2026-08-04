@@ -45,6 +45,10 @@ interface StudentData {
 
 interface ScoresData {
   riasec_scores: Record<string, number>;
+  // Null for rows persisted before migration 00006 added the column;
+  // hasRiasecReading then falls back to "assume asked", which is exactly what
+  // this page did before the column existed.
+  riasec_raw_counts: Record<string, number> | null;
   mi_scores: Record<string, number>;
   mbti_indicators: Record<string, number>;
   // Null for rows persisted before migration 00004 added the column;
@@ -110,7 +114,7 @@ export default function Dashboard() {
           supabase
             .from("assessment_scores")
             .select(
-              "riasec_scores, mi_scores, mbti_indicators, mbti_raw_counts, values_compass, values_raw_counts, strengths"
+              "riasec_scores, riasec_raw_counts, mi_scores, mbti_indicators, mbti_raw_counts, values_compass, values_raw_counts, strengths"
             )
             .eq("student_id", user.id)
             .single(),
@@ -263,9 +267,16 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Left: RIASEC + CLASS */}
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
+              {/* The counts persisted with the scores, so a type nobody was
+                  asked about reads "Not asked" here exactly as it does in the
+                  reveal. Without them the two screens disagreed about the same
+                  student, and this is the chart the CLASS badge below is
+                  derived from -- a hard 0 on an unasked type made the badge
+                  look read off a row the student never answered. */}
               <RiasecBars
                 scores={scores.riasec_scores}
                 classLabel={className}
+                evidence={scores.riasec_raw_counts ?? undefined}
               />
             </div>
 

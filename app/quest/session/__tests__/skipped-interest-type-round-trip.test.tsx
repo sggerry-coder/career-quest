@@ -153,7 +153,10 @@ const NO_RANKINGS = { R: [], I: [], A: [], S: [], E: [], C: [] };
 /** What the bars should say, in the order the chart prints its types. */
 const EXPECTED_READINGS = ["100", "67", "50", "33", "0", "Not asked"];
 
-/** What the dashboard still says, not yet reading the counts it is sent. */
+/**
+ * What a row written before migration 00006 still says. Those students have
+ * no counts, so the chart cannot tell the two zeros apart and must not try.
+ */
 const LEGACY_READINGS = ["100", "67", "50", "33", "0", "0"];
 
 const PARTIAL_CAVEAT = {
@@ -359,13 +362,15 @@ describe("a student who skipped one whole interest type", () => {
 });
 
 /**
- * The row now carries the counts, but the dashboard does not read them yet --
- * it selects the columns it always has. Until that select changes this screen
- * must behave exactly as it does today; a half-wired chart would be a
- * regression, not a partial fix.
+ * The dashboard reads back a persisted row rather than the raw answers, so it
+ * needed migration 00006 to say the same thing the reveal says. Until that
+ * column was applied and wired, these two screens contradicted each other
+ * about the same student: the reveal said "Not asked", the dashboard printed
+ * a 0 and put the class badge directly under it.
  */
-describe("the dashboard, until it reads the counts back", () => {
-  it("is sent the counts in the row, and still renders zeros without them", async () => {
+describe("the same student, seen again on the dashboard", () => {
+  /** Finish the quest through the real page and return the row it wrote. */
+  async function finishAndPersist(): Promise<Record<string, unknown>> {
     saveSessionSnapshot("student-1", makeQuestState("complete"), makeScoreState(), null);
 
     await act(async () => {
@@ -380,6 +385,18 @@ describe("the dashboard, until it reads the counts back", () => {
     });
     const written = await persistedScoresRow();
     cleanup();
+    return written;
+  }
+
+  it("is told the same thing by the reveal and by the dashboard", async () => {
+    // --- The reveal, driven to the bars through the real page -------------
+    await revealTheBars();
+    const revealReadings = interestReadings();
+    expect(revealReadings).toEqual(EXPECTED_READINGS);
+    cleanup();
+
+    // --- The same quest, finished and saved -------------------------------
+    const written = await finishAndPersist();
 
     // The counts carry what the merged scores cannot: E was asked and
     // disliked, C was never asked, and both land on 0 in riasec_scores.
@@ -388,14 +405,31 @@ describe("the dashboard, until it reads the counts back", () => {
       riasec_scores: expect.objectContaining({ E: 0, C: 0 }),
     });
 
+    // --- The dashboard, reading back exactly what was written -------------
     h.state.scoresRow = written;
     h.state.studentRow.has_completed_session1 = true;
 
     render(<Dashboard />);
     await screen.findByText("Rae");
 
-    // Organizer still reads 0 here. That is the known, deliberate gap, not an
-    // accident: the column is written, the select that reads it is next.
+    // Organizer no longer scores 0 under a class badge derived from the five
+    // rows above it.
+    expect(interestReadings()).toEqual(revealReadings);
+  }, 20000);
+
+  it("keeps a legacy row reading exactly as it did, zeros and all", async () => {
+    // Every student who finished before migration 00006 has NULL here. No
+    // counts must mean "assume asked": blanking six rows of a finished
+    // profile because the app has nothing to go on would be a worse lie than
+    // the 0 this whole change exists to remove.
+    const written = await finishAndPersist();
+
+    h.state.scoresRow = { ...written, riasec_raw_counts: null };
+    h.state.studentRow.has_completed_session1 = true;
+
+    render(<Dashboard />);
+    await screen.findByText("Rae");
+
     expect(interestReadings()).toEqual(LEGACY_READINGS);
     expect(screen.queryByText("Not asked")).toBeNull();
   }, 20000);
