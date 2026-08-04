@@ -23,6 +23,7 @@ const h = vi.hoisted(() => {
   const state = {
     existingUserId: null as string | null,
     existingStudentRow: false,
+    existingStudentName: "Priya",
     signInFails: false,
     studentUpsertFails: false,
   };
@@ -41,7 +42,7 @@ const h = vi.hoisted(() => {
           single: async () => ({
             data:
               table === "students" && state.existingStudentRow
-                ? { id: state.existingUserId }
+                ? { id: state.existingUserId, name: state.existingStudentName }
                 : null,
             error: null,
           }),
@@ -99,6 +100,7 @@ beforeEach(() => {
   h.calls.length = 0;
   h.state.existingUserId = null;
   h.state.existingStudentRow = false;
+  h.state.existingStudentName = "Priya";
   h.state.signInFails = false;
   h.state.studentUpsertFails = false;
   h.signInAnonymously.mockClear();
@@ -234,16 +236,24 @@ describe("provisionStudent", () => {
     expect(h.calls.filter((c) => c.method === "delete")).toHaveLength(0);
   });
 
-  it("refuses to touch an existing student row without confirmedReplace", async () => {
+  it("refuses to touch an existing student row without confirmedReplace, and says why", async () => {
     // Shared classroom device: the browser is still signed in as a previous
     // student. Without explicit consent this must be a strict no-op -- no
-    // delete, no upsert, nothing written or cleared.
+    // delete, no upsert, nothing written or cleared. The failure must also
+    // be distinguishable from a real write failure so the caller can route
+    // the student to the consent screen instead of a generic error (Task 7
+    // review, Finding 1).
     h.state.existingUserId = "student-1";
     h.state.existingStudentRow = true;
+    h.state.existingStudentName = "Priya";
 
     const result = await provisionStudent(PROFILE);
 
-    expect(result).toEqual({ success: false });
+    expect(result).toEqual({
+      success: false,
+      reason: "needs_confirmation",
+      existingName: "Priya",
+    });
     expect(h.calls).toHaveLength(0);
     expect(h.signInAnonymously).not.toHaveBeenCalled();
   });

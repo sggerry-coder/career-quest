@@ -20,6 +20,12 @@ import { applyClassTheme } from "@/lib/theme";
  * responsible for surfacing that choice to the student first (see
  * `<ReplaceProfileConfirm>` in `components/quest/replace-profile-confirm.tsx`,
  * wired in `app/quest/character/page.tsx`).
+ *
+ * The refusal is reported as `{ success: false, reason: "needs_confirmation",
+ * existingName }`, not a bare `{ success: false }`, so a caller whose own
+ * pre-check missed this (a stale read, a failed select, a direct call) can
+ * recover into the consent screen instead of showing the student a generic,
+ * unrecoverable "try again" error.
  */
 
 export interface StudentProfile {
@@ -38,7 +44,7 @@ export interface StudentProfile {
 
 export type ProvisionResult =
   | { success: true; studentId: string; replacedExisting: boolean }
-  | { success: false };
+  | { success: false; reason?: "needs_confirmation"; existingName?: string };
 
 const ZERO_SCORES = {
   riasec_scores: { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 },
@@ -80,9 +86,13 @@ export async function provisionStudent(
 
     if (user) {
       userId = user.id;
+      // Same existence predicate the caller's own pre-check uses (row
+      // exists for this id) -- not "does it have a name" or anything else
+      // that could drift out of sync with the caller and reopen the gap
+      // this function exists to close.
       const { data: existing } = await supabase
         .from("students")
-        .select("id")
+        .select("id, name")
         .eq("id", userId)
         .single();
       replacedExisting = Boolean(existing);
@@ -92,8 +102,20 @@ export async function provisionStudent(
       // achievements -- silently and unrecoverably. Refuse to touch
       // anything until the caller has shown the student whose data this is
       // and gotten an explicit "yes, replace it". No delete, no upsert.
+      //
+      // This is the authoritative backstop, not just a UX nicety: the
+      // caller's own pre-check can be stale or can fail to read (network
+      // hiccup) and let a student reach this call without ever seeing the
+      // consent screen. Reporting `reason: "needs_confirmation"` instead of
+      // a bare failure lets the caller recover into that screen right here,
+      // instead of the student hitting an indistinguishable "try again"
+      // error with no route forward.
       if (replacedExisting && !profile.confirmedReplace) {
-        return { success: false };
+        return {
+          success: false,
+          reason: "needs_confirmation",
+          existingName: existing?.name ?? undefined,
+        };
       }
     } else {
       const { data: authData, error: authError } =

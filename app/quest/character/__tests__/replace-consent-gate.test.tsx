@@ -10,18 +10,25 @@
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup, fireEvent, waitFor, within } from "@testing-library/react";
+import type { ProvisionResult } from "@/lib/persistence/provision-student";
 
 const h = vi.hoisted(() => ({
   pushMock: vi.fn(),
-  provisionStudentMock: vi.fn(async (profile: Record<string, unknown>) => {
-    void profile;
-    return {
-      success: true as const,
-      studentId: "whoever",
-      replacedExisting: false,
-    };
-  }),
-  existingStudent: null as { id: string; name: string } | null,
+  provisionStudentMock: vi.fn(
+    async (profile: Record<string, unknown>): Promise<ProvisionResult> => {
+      void profile;
+      return {
+        success: true as const,
+        studentId: "whoever",
+        replacedExisting: false,
+      };
+    }
+  ),
+  existingStudent: null as { id: string; name: string; tone?: "quest" | "explorer" } | null,
+  // Simulates the mount-time gate read failing (network hiccup, RLS hiccup)
+  // even though an auth session -- and an existing row -- do exist. Finding
+  // 1: this must not be a permanent dead end.
+  gateReadFails: false,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -39,11 +46,21 @@ vi.mock("@/lib/supabase/client", () => ({
     from: () => ({
       select: () => ({
         eq: () => ({
-          single: () =>
-            Promise.resolve({
-              data: h.existingStudent ? { name: h.existingStudent.name } : null,
+          single: () => {
+            if (h.gateReadFails) {
+              return Promise.resolve({ data: null, error: { message: "boom" } });
+            }
+            return Promise.resolve({
+              data: h.existingStudent
+                ? {
+                    id: h.existingStudent.id,
+                    name: h.existingStudent.name,
+                    tone: h.existingStudent.tone ?? "quest",
+                  }
+                : null,
               error: null,
-            }),
+            });
+          },
         }),
       }),
     }),
@@ -81,7 +98,17 @@ async function fillOutWizard() {
 beforeEach(() => {
   h.pushMock.mockClear();
   h.provisionStudentMock.mockClear();
+  h.provisionStudentMock.mockReset();
+  h.provisionStudentMock.mockImplementation(async (profile: Record<string, unknown>) => {
+    void profile;
+    return {
+      success: true as const,
+      studentId: "whoever",
+      replacedExisting: false,
+    };
+  });
   h.existingStudent = null;
+  h.gateReadFails = false;
 });
 
 afterEach(() => cleanup());
@@ -147,5 +174,61 @@ describe("character creation: replace-profile consent gate", () => {
       name: "Jordan",
       confirmedReplace: false,
     });
+  });
+
+  // Review Finding 1: the mount-time pre-check and provisionStudent's own
+  // backstop must agree, but the pre-check can still fail to read (network
+  // hiccup). When that happens the student reaches the wizard, fills it
+  // out, and provisionStudent's own check catches it at submit time --
+  // this locks in that the resulting `needs_confirmation` refusal routes
+  // to the consent screen, not the generic "try again" error card, and
+  // that retrying from there actually succeeds.
+  it("a failed gate read at mount does not dead-end the student in the error card", async () => {
+    h.existingStudent = { id: "student-1", name: "Priya", tone: "quest" };
+    h.gateReadFails = true;
+    h.provisionStudentMock.mockResolvedValueOnce({
+      success: false,
+      reason: "needs_confirmation",
+      existingName: "Priya",
+    });
+
+    render(<CharacterPage />);
+    // The failed read let the wizard through -- this is the bug scenario.
+    await screen.findByRole("radiogroup", { name: /choose your figure/i });
+
+    await fillOutWizard();
+
+    // Must land on the consent screen, named, not the sealed-portal error.
+    await waitFor(async () =>
+      expect((await screen.findAllByText(/Priya/)).length).toBeGreaterThan(0)
+    );
+    expect(screen.queryByText(/temporarily sealed/i)).toBeNull();
+    expect(screen.queryByRole("button", { name: /try again/i })).toBeNull();
+
+    // The escape hatch actually works: confirming now re-submits with
+    // consent and succeeds.
+    const replaceButton = screen.getByRole("button", {
+      name: /delete|start over|replace/i,
+    });
+    fireEvent.click(replaceButton);
+    fireEvent.click(await screen.findByRole("button", { name: /begin quest/i }));
+
+    await waitFor(() => expect(h.provisionStudentMock).toHaveBeenCalledTimes(2));
+    expect(h.provisionStudentMock.mock.calls[1][0]).toMatchObject({
+      name: "Jordan",
+      confirmedReplace: true,
+    });
+  });
+
+  // Review Finding 2: the consent screen must speak in the existing
+  // student's actual tone, not the wizard's not-yet-rendered default.
+  it("renders the consent screen in the existing student's own tone", async () => {
+    h.existingStudent = { id: "student-1", name: "Priya", tone: "explorer" };
+    render(<CharacterPage />);
+
+    // The explorer-tone destructive button wording, not the quest-tone
+    // default ("Delete it and start over").
+    expect(await screen.findByText(/Delete and start again/i)).toBeDefined();
+    expect(screen.queryByText(/Delete it and start over/i)).toBeNull();
   });
 });

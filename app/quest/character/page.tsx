@@ -25,6 +25,17 @@ type WizardStep = 0 | 1 | 2;
 
 const ageOptions = [13, 14, 15, 16, 17, 18];
 
+// A student row is always created with a name (character creation requires
+// one), so a row that exists but has no name should never happen in
+// practice. If it somehow does, fall back to a phrase that still reads
+// grammatically wherever the component interpolates it ("Keep ... quest",
+// "Not ...?") rather than leaving a blank.
+const FALLBACK_EXISTING_NAME = "the previous student";
+
+function isTone(value: unknown): value is Tone {
+  return value === "quest" || value === "explorer";
+}
+
 const slideVariants = {
   enter: (direction: number) => ({
     x: direction > 0 ? 300 : -300,
@@ -91,21 +102,32 @@ export default function CharacterCreation() {
           return;
         }
 
-        const { data: student } = await supabase
+        // Same existence predicate provisionStudent's own backstop uses --
+        // "does a row exist for this id" -- not "does it have a name",
+        // which could disagree with the backstop on an edge case and let a
+        // student reach the wizard when they shouldn't. A read failure here
+        // (network hiccup, RLS hiccup) falls through to "none" and lets the
+        // wizard render; provisionStudent's own check at submit time is the
+        // real backstop and reports `needs_confirmation` if this was wrong,
+        // routing the student back to this same screen instead of a dead
+        // end (see handleBeginQuest below).
+        const { data: student, error } = await supabase
           .from("students")
-          .select("name")
+          .select("id, name, tone")
           .eq("id", user.id)
           .single();
 
         if (cancelled) return;
-        if (student?.name) {
-          setExistingStudentCheck({ status: "found", name: student.name as string });
+        if (!error && student) {
+          setTone(isTone(student.tone) ? student.tone : "quest");
+          setExistingStudentCheck({
+            status: "found",
+            name: (student.name as string) || FALLBACK_EXISTING_NAME,
+          });
         } else {
           setExistingStudentCheck({ status: "none" });
         }
       } catch {
-        // On any error, don't block a genuinely new student -- provisionStudent
-        // still performs its own authoritative check before touching anything.
         if (!cancelled) setExistingStudentCheck({ status: "none" });
       }
     }
@@ -164,6 +186,23 @@ export default function CharacterCreation() {
       });
 
       if (!result.success) {
+        if (result.reason === "needs_confirmation") {
+          // provisionStudent's own check found an existing row that this
+          // page's pre-check missed or never confirmed (stale read, failed
+          // select, or a direct call). This is not a failure to show a
+          // "try again" error for -- it is the consent gate doing its job.
+          // Route the student to the same confirmation screen instead of a
+          // dead end they could only escape by reloading.
+          setExistingStudentCheck({
+            status: "found",
+            name: result.existingName ?? FALLBACK_EXISTING_NAME,
+          });
+          setReplaceConfirmed(false);
+          setError(null);
+          setIsSubmitting(false);
+          return;
+        }
+
         setError(
           tone === "quest"
             ? "The quest portal is temporarily sealed... Try again"

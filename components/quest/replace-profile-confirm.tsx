@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 interface ReplaceProfileConfirmProps {
   existingName: string;
   tone: "quest" | "explorer";
@@ -21,8 +23,24 @@ export default function ReplaceProfileConfirm({
   onConfirm,
   onCancel,
 }: ReplaceProfileConfirmProps): React.JSX.Element {
+  // The page swaps straight from a loading state into this screen with no
+  // navigation the student initiated -- there is nothing for a keyboard or
+  // screen-reader user to land on unless focus is moved here explicitly.
+  // Land it on Cancel (the safe, primary action) rather than the
+  // destructive one.
+  const cancelButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    cancelButtonRef.current?.focus();
+  }, []);
+
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-5 px-6 text-center">
+    <div
+      className="flex min-h-dvh flex-col items-center justify-center gap-5 px-6 text-center"
+      role="alertdialog"
+      aria-modal="true"
+      aria-label={`Replace ${existingName}'s quest?`}
+    >
       <span className="text-4xl" aria-hidden="true">{"\u{26A0}\u{FE0F}"}</span>
 
       <h1 className="text-xl font-semibold text-white">
@@ -36,6 +54,7 @@ export default function ReplaceProfileConfirm({
 
       <div className="flex w-full max-w-xs flex-col gap-3">
         <button
+          ref={cancelButtonRef}
           onClick={onCancel}
           className="rounded-xl bg-[var(--cq-primary,#8b5cf6)] px-8 py-3 font-semibold text-white shadow-[0_0_20px_var(--cq-glow,rgba(139,92,246,0.3))] min-h-[44px]"
         >
@@ -49,7 +68,14 @@ export default function ReplaceProfileConfirm({
         </button>
       </div>
 
-      <p className="text-xs text-white/40 max-w-xs">
+      {/*
+        text-white/70, not the /40 this line first shipped with: on a dark
+        background /40 measures ~3.8:1, short of the 4.5:1 body-text
+        minimum. This is the line that tells the *wrong* student (the one
+        this whole screen exists to protect) what to do instead, so it
+        cannot be the faintest text on the screen.
+      */}
+      <p className="text-xs text-white/70 max-w-xs">
         Not {existingName}? This device is still signed in as them. Ask your teacher to sign
         you in on your own device.
       </p>
