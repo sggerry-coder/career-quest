@@ -48,6 +48,13 @@ const LABEL_TO_CLASS: Record<string, CharacterClassId> = {
   SEEKER: "wanderer",
 };
 
+/** True when `value` is one of the eight class ids. */
+export function isCharacterClassId(
+  value: string | null | undefined
+): value is CharacterClassId {
+  return typeof value === "string" && Object.hasOwn(CHARACTER_CLASSES, value);
+}
+
 export interface DerivedClass {
   primary: CharacterClassId;
   secondary: CharacterClassId | null;

@@ -137,6 +137,101 @@ describe("useEmergentClass", () => {
     );
   });
 
+  /**
+   * A quit-and-resume is a fresh mount, so before the seed existed the hook
+   * restarted as an unnamed Wanderer and resolveNext's "anything is allowed"
+   * branch was free to rename the student. Guardian-Bard came back as
+   * Bard-Guardian, theme and all.
+   */
+  describe("across a mid-quest resume", () => {
+    it("holds the primary a resumed student was already named", () => {
+      // --- Session one: the student is named Guardian-Bard, then quits.
+      const first = renderHook(
+        ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+        { initialProps: { riasec: none, blockKey: "warmup" } }
+      );
+      first.rerender({ riasec: guardianBard, blockKey: "riasec" });
+      expect(first.result.current.derived.primary).toBe("guardian");
+      expect(first.result.current.derived.secondary).toBe("bard");
+      // What the checkpoint carries: questState.avatarClass.
+      const checkpointedClass = first.result.current.derived.primary;
+      first.unmount();
+
+      // --- Session two. The hook mounts before the restore lands: the page
+      // is still deciding whether to offer Resume, so quest state is the
+      // reducer's initial "warmup" with empty scores. The checkpoint then
+      // arrives and the block advances, which is the first boundary the
+      // resumed hook sees.
+      const second = renderHook(
+        ({ riasec, blockKey, restoredClass }) =>
+          useEmergentClass({ riasec, blockKey, restoredClass }),
+        {
+          initialProps: {
+            riasec: none,
+            blockKey: "warmup",
+            restoredClass: checkpointedClass as string,
+          },
+        }
+      );
+      second.rerender({
+        riasec: bardGuardian,
+        blockKey: "riasec_mi",
+        restoredClass: checkpointedClass as string,
+      });
+
+      expect(second.result.current.derived.primary).toBe("guardian");
+      expect(second.result.current.derived.secondary).toBe("bard");
+    });
+
+    it("flips without the seed -- the defect this guards against", () => {
+      // The identical resume sequence with no restoredClass: the hook starts
+      // as a Wanderer, the boundary after the restore is a free first
+      // naming, and the student comes back a Bard. If this ever stops
+      // flipping, the test above has stopped proving anything.
+      const { result, rerender } = renderHook(
+        ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+        { initialProps: { riasec: none, blockKey: "warmup" } }
+      );
+      rerender({ riasec: bardGuardian, blockKey: "riasec_mi" });
+      expect(result.current.derived.primary).toBe("bard");
+    });
+
+    it("adopts a class restored after mount, as the Resume prompt does", () => {
+      // The student sees the Resume prompt first, so the checkpoint lands a
+      // render or more after the hook mounted.
+      const { result, rerender } = renderHook(
+        ({ riasec, blockKey, restoredClass }) =>
+          useEmergentClass({ riasec, blockKey, restoredClass }),
+        {
+          initialProps: {
+            riasec: none,
+            blockKey: "warmup",
+            restoredClass: null as string | null,
+          },
+        }
+      );
+      expect(result.current.derived.isNamed).toBe(false);
+
+      rerender({ riasec: guardianBard, blockKey: "riasec", restoredClass: "guardian" });
+      expect(result.current.derived.primary).toBe("guardian");
+
+      rerender({ riasec: bardGuardian, blockKey: "mbti_values", restoredClass: "guardian" });
+      expect(result.current.derived.primary).toBe("guardian");
+    });
+
+    it("ignores a wanderer or unrecognised restored class", () => {
+      const wanderer = renderHook(() =>
+        useEmergentClass({ riasec: none, blockKey: "warmup", restoredClass: "wanderer" })
+      );
+      expect(wanderer.result.current.derived.isNamed).toBe(false);
+
+      const nonsense = renderHook(() =>
+        useEmergentClass({ riasec: none, blockKey: "warmup", restoredClass: "sorceress" })
+      );
+      expect(nonsense.result.current.derived.isNamed).toBe(false);
+    });
+  });
+
   it("does not present a blurred signal (rogue) as a second class", () => {
     const { result, rerender } = renderHook(
       ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),

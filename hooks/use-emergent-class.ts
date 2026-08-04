@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   deriveCharacterClass,
+  isCharacterClassId,
   type DerivedClass,
 } from "@/lib/character/classes";
 import { applyClassTheme } from "@/lib/theme";
@@ -25,6 +26,16 @@ interface UseEmergentClassInput {
   riasec: Record<string, number>;
   /** Current question block. Deriving is gated on this changing. */
   blockKey: string;
+  /**
+   * The primary class id restored from a mid-quest checkpoint, when the
+   * student resumed. Without it the hook starts every mount as an unnamed
+   * Wanderer, resolveNext takes its "anything is allowed" branch, and the
+   * locked primary is lost: a Guardian-Bard who quit came back as a
+   * Bard-Guardian, with the theme following. May deepen, must not flip --
+   * across a resume too. Ignored when absent or "wanderer", because a
+   * Wanderer was never named and so has nothing to hold.
+   */
+  restoredClass?: string | null;
 }
 
 const UNNAMED: DerivedClass = {
@@ -32,6 +43,16 @@ const UNNAMED: DerivedClass = {
   secondary: null,
   isNamed: false,
 };
+
+/**
+ * Turn a restored class id into an already-named primary. The secondary is
+ * deliberately dropped and re-derived from the restored scores: only the
+ * primary is locked, so only the primary needs carrying across the resume.
+ */
+function seedFromRestored(restored?: string | null): DerivedClass {
+  if (!isCharacterClassId(restored) || restored === "wanderer") return UNNAMED;
+  return { primary: restored, secondary: null, isNamed: true };
+}
 
 /**
  * Combine a fresh derivation with what the student was last resolved to,
@@ -70,14 +91,31 @@ function resolveNext(prev: DerivedClass, raw: DerivedClass): DerivedClass {
 export function useEmergentClass({
   riasec,
   blockKey,
+  restoredClass,
 }: UseEmergentClassInput): { derived: DerivedClass } {
-  const [derived, setDerived] = useState<DerivedClass>(UNNAMED);
+  const [derived, setDerived] = useState<DerivedClass>(() =>
+    seedFromRestored(restoredClass)
+  );
+
+  // Folding in a restored class is a pure function of props and state -- it
+  // only ever upgrades an unnamed student -- so it happens during render
+  // rather than in an effect. The first paint after a resume then already
+  // shows the class the student was named, with no Wanderer flicker.
+  const seeded = seedFromRestored(restoredClass);
+  const effective: DerivedClass =
+    derived.isNamed || !seeded.isNamed ? derived : seeded;
+
   const lastBlock = useRef<string | null>(null);
-  // Mirrors `derived`, but only ever read/written inside effects (never
-  // during render) so the resolved-vs-raw comparison in resolveNext always
-  // sees the latest committed value without an extra render dependency.
-  const currentDerived = useRef<DerivedClass>(UNNAMED);
-  const lastAppliedPrimary = useRef<string | null>(null);
+  // Mirrors the resolved class, but only ever read/written inside effects
+  // (never during render) so the resolved-vs-raw comparison in resolveNext
+  // always sees the latest committed value without an extra render
+  // dependency.
+  const currentDerived = useRef<DerivedClass>(effective);
+  // Seeded from the restored class so a resume does not repaint a theme the
+  // pre-paint script has already applied.
+  const lastAppliedPrimary = useRef<string | null>(
+    effective.isNamed ? effective.primary : null
+  );
 
   // Latest scores without making them an effect dependency -- synced in its
   // own effect (never during render) so re-deriving stays gated on blockKey
@@ -86,6 +124,23 @@ export function useEmergentClass({
   useEffect(() => {
     latestRiasec.current = riasec;
   });
+
+  // Commit a restored class that arrives after mount -- the resume decision
+  // is made by the student tapping "Resume", so the checkpoint lands a render
+  // or more after the hook first ran. Declared BEFORE the derivation effect
+  // so that when the restore and the block change land in the same commit,
+  // the lock is in place before the first re-derivation reads it.
+  useEffect(() => {
+    if (currentDerived.current.isNamed) return;
+    const restored = seedFromRestored(restoredClass);
+    if (!restored.isNamed) return;
+
+    currentDerived.current = restored;
+    if (restored.primary !== lastAppliedPrimary.current) {
+      lastAppliedPrimary.current = restored.primary;
+      applyClassTheme(restored.primary);
+    }
+  }, [restoredClass]);
 
   useEffect(() => {
     if (lastBlock.current === blockKey) return;
@@ -110,5 +165,5 @@ export function useEmergentClass({
     }
   }, [blockKey]);
 
-  return { derived };
+  return { derived: effective };
 }

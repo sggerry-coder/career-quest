@@ -83,12 +83,19 @@ export default function Session({
 
   const { scoreState, processResponse, processResponseWithSignals, processIpsativeResponse, takeSnapshot, removeLastResponse, restoreScores } = useScores();
 
+  // The primary class recovered from a mid-quest checkpoint, set when the
+  // student chooses Resume. Held separately from questState.avatarClass --
+  // which the hook itself drives -- so seeding the hook cannot feed back into
+  // it. Null on a fresh start or after "Start over".
+  const [restoredClass, setRestoredClass] = useState<string | null>(null);
+
   // The class crystallises from the student's answers at block boundaries
   // (never per answer, so it cannot flip like a slot machine). Replaces the
   // Supabase-fetched avatar_class as the source of truth for narration/theme.
   const { derived: emergentClass } = useEmergentClass({
     riasec: scoreState.riasec,
     blockKey: questState.current_block,
+    restoredClass,
   });
 
   useEffect(() => {
@@ -292,6 +299,10 @@ export default function Session({
     if (pendingSnapshot) {
       restoreScores(pendingSnapshot.scoreState);
       dispatch({ type: "RESTORE_STATE", state: pendingSnapshot.questState });
+      // Hand the already-named class back to useEmergentClass. Without it the
+      // hook restarts as a Wanderer and the next block boundary is free to
+      // rename the student -- a Guardian-Bard came back as a Bard-Guardian.
+      setRestoredClass(pendingSnapshot.questState.avatarClass ?? null);
       if (pendingSnapshot.selfMap) {
         selfMapData.current = pendingSnapshot.selfMap;
       }
