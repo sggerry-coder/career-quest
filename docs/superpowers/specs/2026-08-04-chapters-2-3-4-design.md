@@ -57,7 +57,11 @@ The owner's requirement: careers may be drawn widely, but **every result must be
 
 Free generation and zero fabrication are in tension. They resolve by moving the facts out of the model.
 
-**O\*NET** (US Department of Labor, public domain, ~900 occupations) supplies, per occupation: tasks, skills, knowledge, work activities, typical education level, and — critically — **Holland/RIASEC interest codes**, the same six-dimension system Chapter 1 already measures.
+**O\*NET** (US Department of Labor, free, ~900 occupations) supplies, per occupation: tasks, skills, knowledge, work activities, typical education level, and — critically — **Holland/RIASEC interest codes**, the same six-dimension system Chapter 1 already measures. Confirmed 2026-08-04: the O\*NET database ships files carrying RIASEC high-point codes and numeric interest profiles per O\*NET-SOC occupation, and its Interests section has been built on Holland's RIASEC model since inception.
+
+**Licence — checked, and not what was first assumed.** O\*NET is **not public domain**. Website content and documentation are **CC BY 4.0**, which permits commercial reuse *with attribution*: credit O\*NET Web Services and the U.S. Department of Labor, link the licence, and state any modifications. Crucially, **CC BY 4.0 does not cover data returned through the Web Services API** — that falls under separate data licensing terms. The Interest Profiler specifically is offered free under the O\*NET Career Exploration Tools Content License.
+
+**Before any build:** read the Data License terms at the O\*NET Resource Center and decide between bulk database download and the Web Services API on licence grounds, not convenience. Attribution must be designed into the UI from the start, not retrofitted.
 
 Consequences:
 
@@ -72,7 +76,7 @@ Consequences:
 
 **Education routes stay generic** — "a degree in this area", "a vocational route" — since no education system was chosen. The data structure must let a country-specific route layer be added later without touching the matching logic.
 
-**Verification required before building:** confirm O\*NET's current licence terms, attribution requirements, and bulk-download/API terms. If they do not permit this use, the spine changes but the architecture does not — any occupational dataset carrying RIASEC codes substitutes directly.
+**If the Data License does not permit this use, the spine changes but the architecture does not** — any occupational dataset carrying RIASEC codes substitutes directly, because the matching is arithmetic against those codes and nothing else.
 
 ## Chapter 3 — the map
 
