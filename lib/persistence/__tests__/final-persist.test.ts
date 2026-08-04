@@ -83,6 +83,10 @@ function makeInput(overrides?: Partial<FinalPersistInput>): FinalPersistInput {
     responses: makeResponses(12),
     scores: {
       riasec: { R: 80, I: 60, A: 40, S: 20, E: 10, C: 5 },
+      // C was never asked on either instrument; E was asked on both. The
+      // scores cannot tell them apart, which is what the counts are for.
+      riasec_raw: { R: [4, 4], I: [3, 3], A: [3], S: [2], E: [1], C: [] },
+      riasec_ipsative_raw: { R: [4], I: [], A: [], S: [], E: [2], C: [] },
       mi: {
         linguistic: 10,
         logical: 20,
@@ -195,6 +199,10 @@ describe("runFinalPersist", () => {
     const scoresCall = h.calls.find((c) => c.table === "assessment_scores");
     expect(scoresCall?.payload).toMatchObject({
       student_id: "student-1",
+      // Both instruments summed per type: R has two ratings and a ranking,
+      // E one of each, C nothing at all. Only the 0 says C was never asked --
+      // riasec_scores gives it a 5 like any other low type.
+      riasec_raw_counts: { R: 3, I: 2, A: 1, S: 1, E: 2, C: 0 },
       mbti_raw_counts: { EI: 3, SN: 3, TF: 1, JP: 2 },
       // A count for every dimension, including the ones with no answers --
       // income_impact scores 0 either way, and only this says which 0 it is.

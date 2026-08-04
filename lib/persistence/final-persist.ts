@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { validateScoresBeforePersist } from "@/lib/validation/score-validation";
 import { buildMbtiRawCounts } from "@/lib/scoring/mbti";
+import { buildRiasecEvidence } from "@/lib/scoring/riasec";
 import { buildValuesRawCounts } from "@/lib/scoring/values";
 import {
   classifySupabaseError,
@@ -22,6 +23,10 @@ export const DEFAULT_RETRY_DELAYS_MS = [1000, 2000, 4000];
 
 export interface FinalPersistScores {
   riasec: Record<string, number>;
+  /** Rating items per type, the first of the two interest instruments. */
+  riasec_raw: Record<string, number[]>;
+  /** Forced rankings per type, the second. Both count as being asked. */
+  riasec_ipsative_raw: Record<string, number[]>;
   mi: Record<string, number>;
   mbti: Record<string, number>;
   mbti_raw: Record<string, number[]>;
@@ -151,6 +156,19 @@ export async function runFinalPersist(
           {
             student_id: studentId,
             riasec_scores: scores.riasec,
+            // The same absence problem as the two below, and the one with the
+            // most riding on it: an interest type nobody was asked about
+            // merges to 0, exactly like a type rated at the bottom twice, and
+            // the class badge on the dashboard is derived from these six rows.
+            // Both instruments count -- a rating item and a place in a forced
+            // ranking each say something about one type -- so this is
+            // buildRiasecEvidence rather than a length count over one side.
+            // NULL in legacy rows, which hasRiasecReading reads as "assume
+            // asked".
+            riasec_raw_counts: buildRiasecEvidence(
+              scores.riasec_raw,
+              scores.riasec_ipsative_raw
+            ),
             mi_scores: scores.mi,
             mbti_indicators: scores.mbti,
             mbti_raw_counts: buildMbtiRawCounts(scores.mbti_raw),

@@ -153,7 +153,7 @@ const NO_RANKINGS = { R: [], I: [], A: [], S: [], E: [], C: [] };
 /** What the bars should say, in the order the chart prints its types. */
 const EXPECTED_READINGS = ["100", "67", "50", "33", "0", "Not asked"];
 
-/** What the dashboard still says, having no counts to read. */
+/** What the dashboard still says, not yet reading the counts it is sent. */
 const LEGACY_READINGS = ["100", "67", "50", "33", "0", "0"];
 
 const PARTIAL_CAVEAT = {
@@ -359,13 +359,13 @@ describe("a student who skipped one whole interest type", () => {
 });
 
 /**
- * The dashboard reads back persisted scores and has no counts to read: the
- * column for them is migration 00006, which is written but neither applied
- * nor wired. Until it is, this screen must behave exactly as it does today --
- * a half-wired chart would be a regression, not a partial fix.
+ * The row now carries the counts, but the dashboard does not read them yet --
+ * it selects the columns it always has. Until that select changes this screen
+ * must behave exactly as it does today; a half-wired chart would be a
+ * regression, not a partial fix.
  */
-describe("the dashboard, until migration 00006 is applied and wired", () => {
-  it("renders the same profile it renders today, zeros and all", async () => {
+describe("the dashboard, until it reads the counts back", () => {
+  it("is sent the counts in the row, and still renders zeros without them", async () => {
     saveSessionSnapshot("student-1", makeQuestState("complete"), makeScoreState(), null);
 
     await act(async () => {
@@ -381,9 +381,12 @@ describe("the dashboard, until migration 00006 is applied and wired", () => {
     const written = await persistedScoresRow();
     cleanup();
 
-    // Nothing new is written. Writing an unknown column fails the whole
-    // upsert, for every student, so the write must not run ahead of the SQL.
-    expect(written).not.toHaveProperty("riasec_raw_counts");
+    // The counts carry what the merged scores cannot: E was asked and
+    // disliked, C was never asked, and both land on 0 in riasec_scores.
+    expect(written).toMatchObject({
+      riasec_raw_counts: { R: 2, I: 2, A: 2, S: 2, E: 2, C: 0 },
+      riasec_scores: expect.objectContaining({ E: 0, C: 0 }),
+    });
 
     h.state.scoresRow = written;
     h.state.studentRow.has_completed_session1 = true;
@@ -392,7 +395,7 @@ describe("the dashboard, until migration 00006 is applied and wired", () => {
     await screen.findByText("Rae");
 
     // Organizer still reads 0 here. That is the known, deliberate gap, not an
-    // accident: the fix for it needs the column first.
+    // accident: the column is written, the select that reads it is next.
     expect(interestReadings()).toEqual(LEGACY_READINGS);
     expect(screen.queryByText("Not asked")).toBeNull();
   }, 20000);

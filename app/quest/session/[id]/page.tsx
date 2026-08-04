@@ -296,6 +296,12 @@ export default function Session({
       responses: questState.responses,
       scores: {
         riasec: scoreState.riasec,
+        // Both interest instruments, so the row can record which types were
+        // asked at all. The reveal builds the same evidence from these two
+        // arrays while they are still in scope; the dashboard has only the
+        // row.
+        riasec_raw: scoreState.riasec_raw,
+        riasec_ipsative_raw: scoreState.riasec_ipsative_raw,
         mi: scoreState.mi,
         mbti: scoreState.mbti,
         mbti_raw: scoreState.mbti_raw,
