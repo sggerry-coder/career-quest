@@ -3,7 +3,8 @@
 import { useCallback, useState } from "react";
 import type { ClientResponse } from "@/lib/types/quest";
 import {
-  calculateAllRiasec,
+  calculateAllRiasecOrNull,
+  buildRiasecEvidence,
   mergeIpsativeScores,
   detectAcquiescenceBias,
   detectStraightLining,
@@ -216,22 +217,40 @@ function detectUndiscriminatingAnswers(state: ScoreState): boolean {
 }
 
 /**
+ * Recompute everything the interest instrument derives from its raw arrays.
+ *
+ * One place, because the four call sites that each rebuilt this had already
+ * drifted: three of them gated the merge behind "is there any ipsative data
+ * at all", which is a whole-instrument question standing in for a per-type
+ * one. Once any ranking had been answered, every type went through the merge
+ * — including the three types the *other* ranking covers, which arrived as a
+ * 0 and took a 30% cut. Types are merged, or not, one at a time now; see
+ * mergeIpsativeScores.
+ */
+function recalculateRiasecDerived(state: ScoreState): void {
+  state.riasec = mergeIpsativeScores(
+    calculateAllRiasecOrNull(state.riasec_raw),
+    calculateAllRiasecOrNull(state.riasec_ipsative_raw)
+  );
+  // Not stored: `riasec` cannot carry it (a 0 there is either "rated at the
+  // bottom" or "never asked", and those lead to opposite readings), but both
+  // raw arrays are already on ScoreState, so any consumer that needs the
+  // distinction can rebuild it the same way rather than us growing — and
+  // versioning — a derived field in the checkpoint.
+  const evidence = buildRiasecEvidence(
+    state.riasec_raw,
+    state.riasec_ipsative_raw
+  );
+  state.acquiescence_flag = detectUndiscriminatingAnswers(state);
+  state.class_label = deriveClassLabel(state.riasec, evidence);
+}
+
+/**
  * Recalculate all derived scores from raw arrays.
  * Used after undo to ensure consistency.
  */
 function recalculateAllDerived(state: ScoreState): void {
-  const likertNorm = calculateAllRiasec(state.riasec_raw);
-  const hasIpsative = Object.values(state.riasec_ipsative_raw).some(
-    (arr) => arr.length > 0
-  );
-  if (hasIpsative) {
-    const ipsativeNorm = calculateAllRiasec(state.riasec_ipsative_raw);
-    state.riasec = mergeIpsativeScores(likertNorm, ipsativeNorm);
-  } else {
-    state.riasec = likertNorm;
-  }
-  state.acquiescence_flag = detectUndiscriminatingAnswers(state);
-  state.class_label = deriveClassLabel(state.riasec);
+  recalculateRiasecDerived(state);
   state.mi = calculateAllMi(state.mi_raw);
   state.mbti = calculateAllMbti(state.mbti_raw);
   state.values = calculateAllValues(state.values_raw);
@@ -369,19 +388,7 @@ export function useScores() {
             response.response_value,
           ];
         }
-        // Recalculate RIASEC
-        const likertNorm = calculateAllRiasec(next.riasec_raw);
-        const hasIpsative = Object.values(next.riasec_ipsative_raw).some(
-          (arr) => arr.length > 0
-        );
-        if (hasIpsative) {
-          const ipsativeNorm = calculateAllRiasec(next.riasec_ipsative_raw);
-          next.riasec = mergeIpsativeScores(likertNorm, ipsativeNorm);
-        } else {
-          next.riasec = likertNorm;
-        }
-        next.acquiescence_flag = detectUndiscriminatingAnswers(next);
-        next.class_label = deriveClassLabel(next.riasec);
+        recalculateRiasecDerived(next);
       } else if (response.framework === "mi") {
         // MI signals come via framework_signals on the option, not framework_target
         // The response_value is the option value; actual MI signals are processed
@@ -460,18 +467,7 @@ export function useScores() {
         }
 
         // Recalculate all affected scores
-        const likertNorm = calculateAllRiasec(next.riasec_raw);
-        const hasIpsative = Object.values(next.riasec_ipsative_raw).some(
-          (arr) => arr.length > 0
-        );
-        if (hasIpsative) {
-          const ipsativeNorm = calculateAllRiasec(next.riasec_ipsative_raw);
-          next.riasec = mergeIpsativeScores(likertNorm, ipsativeNorm);
-        } else {
-          next.riasec = likertNorm;
-        }
-        next.acquiescence_flag = detectUndiscriminatingAnswers(next);
-        next.class_label = deriveClassLabel(next.riasec);
+        recalculateRiasecDerived(next);
         next.mi = calculateAllMi(next.mi_raw);
 
         next.signal_history = [...next.signal_history, footprint];
@@ -505,11 +501,7 @@ export function useScores() {
         }
 
         // Recalculate RIASEC with ipsative merge
-        const likertNorm = calculateAllRiasec(next.riasec_raw);
-        const ipsativeNorm = calculateAllRiasec(next.riasec_ipsative_raw);
-        next.riasec = mergeIpsativeScores(likertNorm, ipsativeNorm);
-        next.acquiescence_flag = detectUndiscriminatingAnswers(next);
-        next.class_label = deriveClassLabel(next.riasec);
+        recalculateRiasecDerived(next);
 
         next.signal_history = [...next.signal_history, footprint];
         return next;

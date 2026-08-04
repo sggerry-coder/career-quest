@@ -29,36 +29,105 @@ export function calculateRiasecType(rawScores: number[]): number {
 }
 
 /**
- * Calculate normalized scores for all 6 RIASEC types from raw Likert data.
- * Guards against NaN: any non-finite result is replaced with 0.
+ * Normalized scores for all 6 types, keeping "nobody answered for this type"
+ * apart from "answered, and it came out 0".
+ *
+ * calculateAllRiasec collapses the two into the same 0, and downstream that
+ * difference is the whole question: a type with no answers must not be
+ * merged, ranked or compared as though the student had put it at the bottom
+ * of the scale. A type with even one answer always gets a number, including
+ * 0 -- "strongly dislike, twice" is a reading, and an honest one.
+ *
+ * Guards against NaN: a non-finite result from a non-empty array is still 0,
+ * because that is a broken input rather than a missing one.
  */
-export function calculateAllRiasec(
+export function calculateAllRiasecOrNull(
   raw: Record<string, number[]>
-): Record<string, number> {
-  const result: Record<string, number> = {};
+): Record<string, number | null> {
+  const result: Record<string, number | null> = {};
   for (const type of RIASEC_TYPES) {
-    const score = calculateRiasecType(raw[type] || []);
+    const answers = raw[type] || [];
+    if (answers.length === 0) {
+      result[type] = null;
+      continue;
+    }
+    const score = calculateRiasecType(answers);
     result[type] = Number.isFinite(score) ? score : 0;
   }
   return result;
 }
 
 /**
- * Merge Likert (70%) and ipsative (30%) normalized scores.
- * If ipsative score is null/undefined for a type, use Likert alone.
+ * Calculate normalized scores for all 6 RIASEC types from raw Likert data.
+ * Guards against NaN: any non-finite result is replaced with 0.
+ *
+ * A type nobody answered for also reads 0 here. That is deliberate — every
+ * consumer of a score record wants a number — but it means this function
+ * cannot be used to decide anything that depends on whether the answer
+ * exists. Use calculateAllRiasecOrNull for that.
+ */
+export function calculateAllRiasec(
+  raw: Record<string, number[]>
+): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const [type, score] of Object.entries(calculateAllRiasecOrNull(raw))) {
+    result[type] = score ?? 0;
+  }
+  return result;
+}
+
+/**
+ * How many interest answers stand behind each type.
+ *
+ * Both instruments count: a rating item and a place in a ranking each say
+ * something about one type. 0 means the student was never asked, or skipped
+ * everything that would have said anything — which is not the same as a low
+ * score and must not be ranked as one. See deriveClassLabel.
+ */
+export function buildRiasecEvidence(
+  likertRaw: Record<string, number[]>,
+  ipsativeRaw: Record<string, number[]>
+): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const type of RIASEC_TYPES) {
+    counts[type] =
+      (likertRaw[type]?.length ?? 0) + (ipsativeRaw[type]?.length ?? 0);
+  }
+  return counts;
+}
+
+/**
+ * Merge the two interest instruments into one score per type:
+ * 70% rating items, 30% forced ranking.
+ *
+ * The weights only mean anything where both instruments actually got an
+ * answer about that type. `null` on either side means "not answered", and a
+ * missing side is dropped rather than folded in as a 0 — whichever side
+ * exists carries the whole score.
+ *
+ * Reading a missing side as 0 is the defect this exists to prevent. The two
+ * rankings cover three types each (R/A/E and I/S/C), so skipping one of them
+ * left three types on likert * 0.7 + 0 * 0.3: a flat 30% cut applied to the
+ * types the student was never asked about rather than to anything they said.
+ * Enough, on its own, to move the lead from one class to another. The same
+ * held in reverse for a type whose rating items were skipped but which the
+ * student did rank — "the most enjoyable thing here" scored 30 out of 100.
  */
 export function mergeIpsativeScores(
-  likert: Record<string, number>,
+  likert: Record<string, number | null>,
   ipsative: Record<string, number | null>
 ): Record<string, number> {
   const result: Record<string, number> = {};
   for (const type of RIASEC_TYPES) {
-    const likertScore = likert[type] ?? 0;
+    const likertScore = likert[type];
     const ipsativeScore = ipsative[type];
-    if (ipsativeScore != null) {
+    if (likertScore != null && ipsativeScore != null) {
       result[type] = likertScore * 0.7 + ipsativeScore * 0.3;
     } else {
-      result[type] = likertScore;
+      // One side or neither. 0 for neither keeps the function total (see
+      // nan-guard.test.ts); buildRiasecEvidence is what tells that 0 apart
+      // from a scored one.
+      result[type] = likertScore ?? ipsativeScore ?? 0;
     }
   }
   return result;
@@ -126,21 +195,45 @@ export function detectStraightLining(
 /**
  * Derive a CLASS label from RIASEC scores.
  *
- * Rules:
+ * Rules, applied to the types the student actually answered for:
  * 1. Top 2 both > 50 and gap from 2nd to 3rd > 10 → "TYPE1-TYPE2"
  * 2. Top 1 > 50 and leads 2nd by > 15 → single "TYPE1"
  * 3. All < 40 → "SEEKER"
  * 4. Otherwise → "EXPLORER"
+ *
+ * @param evidence - Optional answer count per type, from buildRiasecEvidence.
+ *   Every rule above is a comparison, and an unanswered type scores 0 — so
+ *   without this a hole in the data reads as the strongest possible evidence
+ *   of dislike and manufactures exactly the gaps rules 1 and 2 look for. A
+ *   student who answered the two Helper items and skipped the rest was named
+ *   HELPER outright, leading five types by 100 points on questions nobody had
+ *   asked them. Types with no evidence are dropped from the ranking instead,
+ *   and fewer than two types left means there is no comparison left to make:
+ *   SEEKER, "still forming", which is the honest answer to a mostly blank
+ *   instrument. Omit the argument and every type counts, as before.
  */
-export function deriveClassLabel(scores: Record<string, number>): string {
+export function deriveClassLabel(
+  scores: Record<string, number>,
+  evidence?: Record<string, number>
+): string {
   const sorted = RIASEC_TYPES.map((type) => ({
     type,
     score: scores[type] ?? 0,
-  })).sort((a, b) => b.score - a.score);
+  }))
+    .filter((entry) => (evidence?.[entry.type] ?? 1) > 0)
+    .sort((a, b) => b.score - a.score);
+
+  // One type answered, or none: nothing leads anything.
+  if (sorted.length < 2) {
+    return "SEEKER";
+  }
 
   const [first, second, third] = sorted;
 
+  // Rule 1 needs a real third type to stand apart from. With only two
+  // answered types there is no rest-of-the-profile for the top two to lead.
   if (
+    third &&
     first.score > 50 &&
     second.score > 50 &&
     second.score - third.score > 10
