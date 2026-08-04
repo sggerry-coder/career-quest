@@ -107,8 +107,19 @@ export default function Session({
   });
 
   useEffect(() => {
+    // A provisional class (a Rogue lead shown before the interest block
+    // finishes -- see useEmergentClass) must never reach quest state.
+    // questState.avatarClass is checkpointed on every change and read back
+    // by seedFromRestored on resume, which treats any non-wanderer id as
+    // already named. Dispatching a provisional "rogue" here would let one
+    // quit-and-resume permanently lock a lead that was never meant to be
+    // final, defeating the whole point of leaving it unlocked. Wait for
+    // isNamed before writing it anywhere -- until then avatarClass simply
+    // keeps its previous value ("wanderer" on a fresh start), which is the
+    // right fallback for narration and theme.
+    if (!emergentClass.isNamed) return;
     dispatch({ type: "SET_AVATAR_CLASS", avatarClass: emergentClass.primary });
-  }, [emergentClass.primary, dispatch]);
+  }, [emergentClass.primary, emergentClass.isNamed, dispatch]);
 
   // Initialize from the tone cache (P2.5) so returning students never see a
   // flash of the wrong narration voice; the profile fetch corrects drift.

@@ -49,15 +49,18 @@ interface UseEmergentClassInput {
    */
   interestResponses: number;
   /**
-   * Whether the interest block (riasec + riasec_mi) has finished. Governs
-   * whether a fresh Rogue (deriveCharacterClass's EXPLORER / no-clear-lean
-   * outcome) counts as a first naming. Mid-quest a marginal lead is not
-   * final -- more interest answers are still coming that could resolve it
-   * into a real class -- so Rogue is shown but left unlocked so a later
-   * boundary can still claim the student. Once the interest block is done,
-   * an unresolved lead is a genuine answer and Rogue locks like any other
-   * class. Defaults to false, the safe assumption for callers that have not
-   * said otherwise.
+   * Whether the 14 RIASEC interest questions -- all of them in the "riasec"
+   * block -- have been answered. True from entry into "riasec_mi" onward:
+   * despite its name, "riasec_mi" carries no further RIASEC items (it's
+   * Multiple Intelligences questions), so once a student has left "riasec"
+   * there are no more interest answers left to arrive. Governs whether a
+   * fresh Rogue (deriveCharacterClass's EXPLORER / no-clear-lean outcome)
+   * counts as a first naming. Mid-"riasec" a marginal lead is not final --
+   * more interest answers are still coming that could resolve it into a real
+   * class -- so Rogue is shown but left unlocked so a later boundary can
+   * still claim the student. Once true, an unresolved lead is a genuine
+   * answer and Rogue locks like any other class. Defaults to false, the safe
+   * assumption for callers that have not said otherwise.
    */
   interestBlockComplete?: boolean;
 }

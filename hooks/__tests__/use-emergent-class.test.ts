@@ -35,8 +35,10 @@ const broadenedToRogue = { R: 10, I: 20, A: 55, S: 60, E: 50, C: 10 };
 
 describe("useEmergentClass", () => {
   it("starts unnamed", () => {
+    // Enough evidence to clear the gate -- this test is about deriving
+    // wanderer from flat scores, not about the gate withholding a naming.
     const { result } = renderHook(() =>
-      useEmergentClass({ riasec: none, blockKey: "warmup", interestResponses: 0 })
+      useEmergentClass({ riasec: none, blockKey: "warmup", interestResponses: enoughEvidence })
     );
     expect(result.current.derived.primary).toBe("wanderer");
     expect(result.current.derived.isNamed).toBe(false);
@@ -238,12 +240,16 @@ describe("useEmergentClass", () => {
     });
 
     it("ignores a wanderer or unrecognised restored class", () => {
+      // Enough evidence to clear the gate -- this test is about
+      // seedFromRestored rejecting these two restoredClass values, not
+      // about the gate withholding a naming (flat scores stay wanderer
+      // either way).
       const wanderer = renderHook(() =>
         useEmergentClass({
           riasec: none,
           blockKey: "warmup",
           restoredClass: "wanderer",
-          interestResponses: 0,
+          interestResponses: enoughEvidence,
         })
       );
       expect(wanderer.result.current.derived.isNamed).toBe(false);
@@ -253,7 +259,7 @@ describe("useEmergentClass", () => {
           riasec: none,
           blockKey: "warmup",
           restoredClass: "sorceress",
-          interestResponses: 0,
+          interestResponses: enoughEvidence,
         })
       );
       expect(nonsense.result.current.derived.isNamed).toBe(false);
@@ -368,6 +374,102 @@ describe("useEmergentClass", () => {
       const topType = Object.entries(riasec).sort((a, b) => b[1] - a[1])[0][0];
       const expectedByChart = { R: "warsmith", I: "mage", A: "bard", S: "guardian", E: "vanguard", C: "paladin" }[topType];
       expect(result.current.derived.primary).toBe(expectedByChart);
+    });
+
+    /**
+     * A provisional Rogue (isNamed false -- see the two tests above) must
+     * never be treated as a genuine naming by the checkpoint. The session
+     * page writes questState.avatarClass from emergentClass.primary, that
+     * value is what gets persisted in the mid-quest checkpoint, and a resume
+     * restores it via seedFromRestored -- which honours ANY non-wanderer id
+     * as already named, by design, because a restored *genuine* naming must
+     * hold. If the page ever persisted a provisional class's primary
+     * unconditionally, a quit-and-resume would silently promote "shown, not
+     * locked" into permanently locked, with no further evidence able to
+     * change it. The fix lives in app/quest/session/[id]/page.tsx (the
+     * SET_AVATAR_CLASS dispatch is gated on emergentClass.isNamed); these
+     * two tests simulate the checkpoint round-trip on both sides of that
+     * gate to prove why it has to be there.
+     */
+    describe("a provisional Rogue across a checkpoint round-trip", () => {
+      const flat = { R: 52, I: 55, A: 53, S: 50, E: 51, C: 49 };
+      const decisiveGuardian = { R: 20, I: 30, A: 25, S: 88, E: 15, C: 10 };
+
+      it("the defect an ungated checkpoint would reintroduce", () => {
+        // What questState.avatarClass would hold if SET_AVATAR_CLASS
+        // dispatched emergentClass.primary unconditionally, ignoring
+        // isNamed -- the pre-fix behaviour.
+        const first = renderHook(
+          ({ riasec, blockKey, interestBlockComplete }) =>
+            useEmergentClass({ riasec, blockKey, interestResponses: 12, interestBlockComplete }),
+          { initialProps: { riasec: flat, blockKey: "riasec", interestBlockComplete: false } }
+        );
+        expect(first.result.current.derived.primary).toBe("rogue");
+        expect(first.result.current.derived.isNamed).toBe(false);
+        const ungatedCheckpoint = first.result.current.derived.primary; // "rogue"
+        first.unmount();
+
+        // Resume, then a decisive Guardian signal arrives.
+        const second = renderHook(
+          ({ riasec, blockKey, interestBlockComplete }) =>
+            useEmergentClass({
+              riasec,
+              blockKey,
+              interestResponses: 14,
+              interestBlockComplete,
+              restoredClass: ungatedCheckpoint,
+            }),
+          { initialProps: { riasec: flat, blockKey: "riasec", interestBlockComplete: false } }
+        );
+        second.rerender({
+          riasec: decisiveGuardian,
+          blockKey: "riasec_mi",
+          interestBlockComplete: true,
+        });
+
+        // This is the bug, documented: an ungated checkpoint locks the
+        // provisional Rogue in on restore, and the later decisive Guardian
+        // evidence can no longer reach the student.
+        expect(second.result.current.derived.primary).toBe("rogue");
+        expect(second.result.current.derived.isNamed).toBe(true);
+      });
+
+      it("the fix: a checkpoint gated on isNamed lets the Guardian signal through", () => {
+        // What questState.avatarClass actually holds under the fixed page:
+        // SET_AVATAR_CLASS only dispatches when isNamed, so a provisional
+        // class leaves it at its previous value -- "wanderer" here, since
+        // nothing had been named yet.
+        const first = renderHook(
+          ({ riasec, blockKey, interestBlockComplete }) =>
+            useEmergentClass({ riasec, blockKey, interestResponses: 12, interestBlockComplete }),
+          { initialProps: { riasec: flat, blockKey: "riasec", interestBlockComplete: false } }
+        );
+        expect(first.result.current.derived.isNamed).toBe(false);
+        const gatedCheckpoint = first.result.current.derived.isNamed
+          ? first.result.current.derived.primary
+          : "wanderer";
+        first.unmount();
+
+        const second = renderHook(
+          ({ riasec, blockKey, interestBlockComplete }) =>
+            useEmergentClass({
+              riasec,
+              blockKey,
+              interestResponses: 14,
+              interestBlockComplete,
+              restoredClass: gatedCheckpoint,
+            }),
+          { initialProps: { riasec: flat, blockKey: "riasec", interestBlockComplete: false } }
+        );
+        second.rerender({
+          riasec: decisiveGuardian,
+          blockKey: "riasec_mi",
+          interestBlockComplete: true,
+        });
+
+        expect(second.result.current.derived.primary).toBe("guardian");
+        expect(second.result.current.derived.isNamed).toBe(true);
+      });
     });
   });
 });
