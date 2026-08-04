@@ -1,9 +1,19 @@
 /**
  * @vitest-environment jsdom
  *
- * Locks in the "Start a new quest instead" guard (P2.3): a returning
- * student must explicitly confirm before navigating to character creation,
- * because starting over replaces their adventurer and results.
+ * "Start a new quest instead" (P2.3, revised by Task 7): starting over
+ * replaces the device's current student, which deletes their answers and
+ * badges. The landing page used to ask an inline "are you sure" here, but
+ * that confirmation never actually gated the destructive call -- it only
+ * delayed the navigation -- and any other route into character creation
+ * (direct link, back/forward, a retried session check) skipped it entirely.
+ *
+ * The single, authoritative consent gate now lives on
+ * /quest/character itself, immediately before provisionStudent runs
+ * (see app/quest/character/page.tsx and
+ * lib/persistence/__tests__/provision-student.test.ts). So this page
+ * navigates straight through -- asking here too would ask the same
+ * student twice.
  */
 import React from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -56,8 +66,8 @@ afterEach(() => {
   cleanup();
 });
 
-describe("landing page: start a new quest guard", () => {
-  it("asks for confirmation instead of navigating immediately", async () => {
+describe("landing page: start a new quest", () => {
+  it("navigates straight to character creation -- consent happens there instead", async () => {
     render(<Home />);
 
     const startNew = await screen.findByRole("button", {
@@ -65,38 +75,8 @@ describe("landing page: start a new quest guard", () => {
     });
     fireEvent.click(startNew);
 
-    expect(
-      screen.getByText(/This replaces your current adventurer/)
-    ).toBeDefined();
-    expect(screen.getByText(/Chapter 1 results will be lost/)).toBeDefined();
-    expect(h.pushMock).not.toHaveBeenCalled();
-  });
-
-  it("navigates to character creation only after confirming", async () => {
-    render(<Home />);
-
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Start a new quest" })
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Yes, start fresh" }));
-
     expect(h.pushMock).toHaveBeenCalledWith("/quest/character");
-  });
-
-  it("cancelling keeps the adventurer and restores the original button", async () => {
-    render(<Home />);
-
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Start a new quest" })
-    );
-    fireEvent.click(
-      screen.getByRole("button", { name: "Keep my adventurer" })
-    );
-
-    expect(h.pushMock).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole("button", { name: "Start a new quest" })
-    ).toBeDefined();
+    // No inline "are you sure" dialog on this page anymore.
     expect(
       screen.queryByText(/This replaces your current adventurer/)
     ).toBeNull();

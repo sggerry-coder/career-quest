@@ -19,6 +19,9 @@ afterEach(() => cleanup());
 describe("character creation", () => {
   it("no longer asks the student to pick a class", async () => {
     render(<CharacterPage />);
+    // Task 7: the wizard is gated behind an async "does this device already
+    // belong to another student" check, so wait for it to settle first.
+    await screen.findByRole("radiogroup", { name: /choose your figure/i });
     // The old picker offered class names as selectable controls.
     for (const name of ["Warsmith", "Mage", "Bard", "Guardian", "Vanguard", "Paladin", "Rogue"]) {
       expect(
@@ -32,13 +35,16 @@ describe("character creation", () => {
     render(<CharacterPage />);
     // Name lives on the wizard's next step (unchanged by this task); advance
     // past the tone/figure step to reach it.
-    fireEvent.click(screen.getByRole("button", { name: /continue to next step/i }));
+    const nextButton = await screen.findByRole("button", { name: /continue to next step/i });
+    fireEvent.click(nextButton);
     await waitFor(() => expect(screen.getByLabelText(/name/i)).toBeDefined());
   });
 
   it("offers a character figure instead of asking for gender", async () => {
     render(<CharacterPage />);
-    expect(screen.getAllByRole("radio", { name: /figure/i }).length).toBeGreaterThan(1);
+    await waitFor(() =>
+      expect(screen.getAllByRole("radio", { name: /figure/i }).length).toBeGreaterThan(1)
+    );
     // Gender is deliberately not asked.
     expect(screen.queryByLabelText(/gender/i)).toBeNull();
   });

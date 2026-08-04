@@ -10,6 +10,16 @@ import { applyClassTheme } from "@/lib/theme";
  * the profile is overwritten in place, scores reset, and prior responses
  * cleared -- instead of minting a new anonymous user and permanently
  * orphaning the previous student row, scores, and responses.
+ *
+ * On a shared classroom device that auth session usually belongs to
+ * whichever student last used the browser, not the one sitting at it now.
+ * Reusing the account is still correct (it avoids orphaning a minor's
+ * data), but overwriting it must never happen silently: when an existing
+ * student row is found, this function refuses to touch it -- no delete, no
+ * upsert -- unless `profile.confirmedReplace` is true. The caller is
+ * responsible for surfacing that choice to the student first (see
+ * `<ReplaceProfileConfirm>` in `components/quest/replace-profile-confirm.tsx`,
+ * wired in `app/quest/character/page.tsx`).
  */
 
 export interface StudentProfile {
@@ -21,6 +31,9 @@ export interface StudentProfile {
   destinations: string[];
   curiosities: string[];
   figure: string;
+  // Explicit informed consent to overwrite an existing student row on this
+  // device. Required whenever a prior row is found -- see the guard below.
+  confirmedReplace?: boolean;
 }
 
 export type ProvisionResult =
@@ -73,6 +86,15 @@ export async function provisionStudent(
         .eq("id", userId)
         .single();
       replacedExisting = Boolean(existing);
+
+      // A shared classroom device keeps the previous student's auth session.
+      // Overwriting that row deletes their session_responses and
+      // achievements -- silently and unrecoverably. Refuse to touch
+      // anything until the caller has shown the student whose data this is
+      // and gotten an explicit "yes, replace it". No delete, no upsert.
+      if (replacedExisting && !profile.confirmedReplace) {
+        return { success: false };
+      }
     } else {
       const { data: authData, error: authError } =
         await supabase.auth.signInAnonymously();

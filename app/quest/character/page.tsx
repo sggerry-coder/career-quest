@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ToneToggle, type Tone } from "@/components/character/tone-toggle";
@@ -8,7 +8,9 @@ import { EducationCards } from "@/components/character/education-cards";
 import { DestinationPicker } from "@/components/character/destination-picker";
 import { CuriositiesPicker } from "@/components/character/curiosities-picker";
 import { provisionStudent } from "@/lib/persistence/provision-student";
+import { createClient } from "@/lib/supabase/client";
 import { cacheTone } from "@/lib/theme";
+import ReplaceProfileConfirm from "@/components/quest/replace-profile-confirm";
 
 // Neutral figures, not gendered -- personalisation without asking a
 // 13-year-old to declare their gender to a school app.
@@ -61,6 +63,59 @@ export default function CharacterCreation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Consent gate (Task 7): on a shared classroom device the browser can
+  // still be signed in as the previous student. provisionStudent refuses to
+  // overwrite that row without explicit consent, so this page must find out
+  // *before* the student fills out the wizard whether there is someone
+  // else's profile on this device, and block on an explicit confirmation if
+  // so. This is the sole point of consent for the whole flow -- the landing
+  // page's "Start a new quest instead" no longer asks separately, so the
+  // student is never asked twice.
+  const [existingStudentCheck, setExistingStudentCheck] = useState<
+    { status: "checking" } | { status: "none" } | { status: "found"; name: string }
+  >({ status: "checking" });
+  const [replaceConfirmed, setReplaceConfirmed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function checkExistingStudent() {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          if (!cancelled) setExistingStudentCheck({ status: "none" });
+          return;
+        }
+
+        const { data: student } = await supabase
+          .from("students")
+          .select("name")
+          .eq("id", user.id)
+          .single();
+
+        if (cancelled) return;
+        if (student?.name) {
+          setExistingStudentCheck({ status: "found", name: student.name as string });
+        } else {
+          setExistingStudentCheck({ status: "none" });
+        }
+      } catch {
+        // On any error, don't block a genuinely new student -- provisionStudent
+        // still performs its own authoritative check before touching anything.
+        if (!cancelled) setExistingStudentCheck({ status: "none" });
+      }
+    }
+
+    checkExistingStudent();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Step 0 only offers tone + a cosmetic figure, both of which already have
   // defaults, so there is nothing to block progress on.
   const canProceedStep0 = true;
@@ -94,6 +149,8 @@ export default function CharacterCreation() {
       // session already exists this reuses the same user and clears the
       // previous run's data instead of orphaning it (P2.3). Every student
       // starts as "wanderer" -- the class crystallises from their answers.
+      // confirmedReplace is only meaningful when provisionStudent's own
+      // check finds an existing row -- see the consent gate above.
       const result = await provisionStudent({
         name: name.trim(),
         age,
@@ -103,6 +160,7 @@ export default function CharacterCreation() {
         destinations,
         curiosities,
         figure,
+        confirmedReplace: replaceConfirmed,
       });
 
       if (!result.success) {
@@ -129,6 +187,42 @@ export default function CharacterCreation() {
       setIsSubmitting(false);
     }
   };
+
+  // Block the wizard entirely until we know whether this device already
+  // belongs to another student. Showing the wizard first and asking at
+  // submit time would let a student fill in three steps before finding out
+  // their work is about to erase someone else's.
+  if (existingStudentCheck.status === "checking") {
+    return (
+      <main
+        style={{
+          display: "flex",
+          minHeight: "100vh",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <motion.div
+          animate={{ opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          style={{ fontSize: "1.125rem", color: "var(--cq-text-muted)" }}
+        >
+          Loading...
+        </motion.div>
+      </main>
+    );
+  }
+
+  if (existingStudentCheck.status === "found" && !replaceConfirmed) {
+    return (
+      <ReplaceProfileConfirm
+        existingName={existingStudentCheck.name}
+        tone={tone}
+        onConfirm={() => setReplaceConfirmed(true)}
+        onCancel={() => router.push("/")}
+      />
+    );
+  }
 
   return (
     <div

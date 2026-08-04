@@ -138,7 +138,7 @@ describe("provisionStudent", () => {
     h.state.existingUserId = "student-1";
     h.state.existingStudentRow = true;
 
-    const result = await provisionStudent(PROFILE);
+    const result = await provisionStudent({ ...PROFILE, confirmedReplace: true });
 
     expect(result).toEqual({
       success: true,
@@ -160,7 +160,7 @@ describe("provisionStudent", () => {
     h.state.existingStudentRow = true;
     window.localStorage.setItem(snapshotKey("student-1"), "{}");
 
-    await provisionStudent(PROFILE);
+    await provisionStudent({ ...PROFILE, confirmedReplace: true });
 
     expect(
       h.calls.filter((c) => c.table === "session_responses" && c.method === "delete")
@@ -184,7 +184,7 @@ describe("provisionStudent", () => {
     h.state.existingUserId = "student-1";
     h.state.existingStudentRow = true;
 
-    await provisionStudent(PROFILE);
+    await provisionStudent({ ...PROFILE, confirmedReplace: true });
 
     const badgeUpsert = h.calls.filter(
       (c) => c.table === "achievements" && c.method === "upsert"
@@ -232,5 +232,49 @@ describe("provisionStudent", () => {
     expect(result).toEqual({ success: false });
     // No destructive operations after a failed profile write
     expect(h.calls.filter((c) => c.method === "delete")).toHaveLength(0);
+  });
+
+  it("refuses to touch an existing student row without confirmedReplace", async () => {
+    // Shared classroom device: the browser is still signed in as a previous
+    // student. Without explicit consent this must be a strict no-op -- no
+    // delete, no upsert, nothing written or cleared.
+    h.state.existingUserId = "student-1";
+    h.state.existingStudentRow = true;
+
+    const result = await provisionStudent(PROFILE);
+
+    expect(result).toEqual({ success: false });
+    expect(h.calls).toHaveLength(0);
+    expect(h.signInAnonymously).not.toHaveBeenCalled();
+  });
+
+  it("proceeds with the replacement once confirmedReplace is explicit", async () => {
+    h.state.existingUserId = "student-1";
+    h.state.existingStudentRow = true;
+
+    const result = await provisionStudent({ ...PROFILE, confirmedReplace: true });
+
+    expect(result).toEqual({
+      success: true,
+      studentId: "student-1",
+      replacedExisting: true,
+    });
+    expect(
+      h.calls.filter((c) => c.table === "session_responses" && c.method === "delete")
+    ).toHaveLength(1);
+    expect(
+      h.calls.filter((c) => c.table === "achievements" && c.method === "delete")
+    ).toHaveLength(1);
+  });
+
+  it("does not require confirmedReplace for a brand-new visitor", async () => {
+    // No existing row -- confirmedReplace is irrelevant and must not be
+    // required to provision a genuinely new student.
+    const result = await provisionStudent(PROFILE);
+    expect(result).toEqual({
+      success: true,
+      studentId: "anon-new",
+      replacedExisting: false,
+    });
   });
 });
