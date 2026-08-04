@@ -6,7 +6,7 @@ import {
   isCharacterClassId,
   type DerivedClass,
 } from "@/lib/character/classes";
-import { MIN_INTEREST_RESPONSES } from "@/lib/character/evidence";
+import { isInterestBlockComplete } from "@/lib/character/evidence";
 import { applyClassTheme } from "@/lib/theme";
 
 /**
@@ -37,47 +37,6 @@ interface UseEmergentClassInput {
    * Wanderer was never named and so has nothing to hold.
    */
   restoredClass?: string | null;
-  /**
-   * Total interest (RIASEC) answers recorded so far, across all six types.
-   * The evidence gate for a *first* naming while interest questions are
-   * still to come: below MIN_INTEREST_RESPONSES the hook will not name an
-   * unnamed student at a block boundary, however decisive the raw
-   * derivation looks -- five warm-up answers used to be enough to name (and
-   * lock) a student before the questions that actually measure interests
-   * had run. An already-named or restored student is never affected: the
-   * gate governs earning a class that has not been earned yet, it never
-   * revokes one that already has. Once interestBlockComplete is true, this
-   * threshold stops applying -- see there for why.
-   */
-  interestResponses: number;
-  /**
-   * Whether the 14 RIASEC interest questions -- all of them in the "riasec"
-   * block -- have been answered. True from entry into "riasec_mi" onward:
-   * despite its name, "riasec_mi" carries no further RIASEC items (it's
-   * Multiple Intelligences questions), so once a student has left "riasec"
-   * there are no more interest answers left to arrive.
-   *
-   * Governs two things:
-   * 1. Whether MIN_INTEREST_RESPONSES still applies. The threshold exists to
-   *    stop a *premature* naming while more evidence is en route; once
-   *    interestBlockComplete is true, no more is coming before the reveal,
-   *    so continuing to withhold a naming (e.g. a student who skipped 5+ of
-   *    the 14 interest questions, leaving 9 genuine answers with a clear
-   *    lead) would leave a nameable student a permanent Wanderer for no
-   *    reason. deriveCharacterClass already returns an honest Wanderer when
-   *    there truly is no lead, so it's safe to just let it run.
-   * 2. Whether a fresh Rogue (deriveCharacterClass's EXPLORER / no-clear-lean
-   *    outcome) counts as a first naming. Mid-"riasec" a marginal lead is
-   *    not final -- more interest answers are still coming that could
-   *    resolve it into a real class -- so Rogue is shown but left unlocked
-   *    so a later boundary can still claim the student. Once true, an
-   *    unresolved lead is a genuine answer and Rogue locks like any other
-   *    class.
-   *
-   * Defaults to false, the safe assumption for callers that have not said
-   * otherwise.
-   */
-  interestBlockComplete?: boolean;
 }
 
 const UNNAMED: DerivedClass = {
@@ -100,23 +59,13 @@ function seedFromRestored(restored?: string | null): DerivedClass {
  * Combine a fresh derivation with what the student was last resolved to,
  * honouring the "may deepen, must not flip" rule.
  */
-function resolveNext(
-  prev: DerivedClass,
-  raw: DerivedClass,
-  interestBlockComplete: boolean
-): DerivedClass {
+function resolveNext(prev: DerivedClass, raw: DerivedClass): DerivedClass {
   if (!prev.isNamed) {
-    if (raw.primary === "rogue" && !interestBlockComplete) {
-      // A fresh, still-unnamed derivation landed on Rogue while the
-      // interest block isn't finished. Rogue counts as named -- "open to
-      // anything" is a real answer -- but only once there is nothing left
-      // to change its mind: mid-block, a marginal lead is not final, and
-      // locking it here would close the door on a later boundary resolving
-      // it into a real class. Show it, don't lock it.
-      return { primary: "rogue", secondary: null, isNamed: false };
-    }
-    // Not yet named -- any other result, including a first naming, is
-    // allowed.
+    // Not yet named -- any result, including a first naming, is allowed.
+    // Callers only reach here once the interest block is finished (see the
+    // gate in the derivation effect), so a Rogue landing here is a genuine
+    // "no clear lean" answer over the whole instrument, not a marginal
+    // mid-block lead, and locks like any other class.
     return raw;
   }
   if (!raw.isNamed) {
@@ -148,8 +97,6 @@ export function useEmergentClass({
   riasec,
   blockKey,
   restoredClass,
-  interestResponses,
-  interestBlockComplete = false,
 }: UseEmergentClassInput): { derived: DerivedClass; namingEventId: number } {
   const [derived, setDerived] = useState<DerivedClass>(() =>
     seedFromRestored(restoredClass)
@@ -182,17 +129,12 @@ export function useEmergentClass({
     effective.isNamed ? effective.primary : null
   );
 
-  // Latest scores, evidence count, and interest-block completion without
-  // making any of them an effect dependency -- synced in their own effect
-  // (never during render) so re-deriving stays gated on blockKey alone and
-  // mid-block answers never rename the student.
+  // Latest scores without making them an effect dependency -- synced in their
+  // own effect (never during render) so re-deriving stays gated on blockKey
+  // alone and mid-block answers never rename the student.
   const latestRiasec = useRef(riasec);
-  const latestInterestResponses = useRef(interestResponses);
-  const latestInterestBlockComplete = useRef(interestBlockComplete);
   useEffect(() => {
     latestRiasec.current = riasec;
-    latestInterestResponses.current = interestResponses;
-    latestInterestBlockComplete.current = interestBlockComplete;
   });
 
   // Commit a restored class that arrives after mount -- the resume decision
@@ -216,26 +158,22 @@ export function useEmergentClass({
     if (lastBlock.current === blockKey) return;
     lastBlock.current = blockKey;
 
-    if (
-      !latestInterestBlockComplete.current &&
-      latestInterestResponses.current < MIN_INTEREST_RESPONSES &&
-      !currentDerived.current.isNamed
-    ) {
-      // Not enough interest evidence yet to earn a first naming, and more
-      // is still coming (the interest block isn't finished) -- so waiting
-      // is worth it. A restored or already-named student is untouched by
-      // this branch -- currentDerived.current.isNamed is true for them --
-      // so the gate only ever withholds a naming that has not happened yet;
-      // it never revokes one that has. Try again at the next block
-      // boundary.
+    if (!currentDerived.current.isNamed && !isInterestBlockComplete(blockKey)) {
+      // Interest answers are still to come, so any naming made here would be
+      // made on part of the evidence and then locked against the rest. That
+      // is exactly what a quit-and-resume used to do: resuming at question 15
+      // moved the block, fired this effect, and named the student from the
+      // rating items alone -- before the two ipsative rankings, 30% of the
+      // merged interest score, had been asked. Wait for the next boundary.
       //
-      // Once the interest block IS finished, this branch is skipped even
-      // below the threshold: a student who skipped most of the 14 interest
-      // questions has nothing more coming before the reveal, so refusing to
-      // name them on 9 good answers achieves nothing but leaving them a
-      // permanent Wanderer. deriveCharacterClass already returns an honest
-      // Wanderer when there truly is no lead (every type under its floor),
-      // so letting it run with whatever evidence exists is safe either way.
+      // Only a *first* naming is withheld. A restored or already-named
+      // student takes the derivation path below every time, so the gate can
+      // never revoke a name that was earned.
+      //
+      // Once the interest block is finished this branch is skipped however
+      // little was answered: a student who skipped most of it has nothing
+      // more coming before the reveal, and deriveCharacterClass already
+      // returns an honest Wanderer when there is no lead at all.
       return;
     }
 
@@ -248,11 +186,7 @@ export function useEmergentClass({
     // false only for a student genuinely unnamed going into this boundary,
     // never for one merely resuming a naming they already had.
     const wasNamed = currentDerived.current.isNamed;
-    const resolved = resolveNext(
-      currentDerived.current,
-      raw,
-      latestInterestBlockComplete.current
-    );
+    const resolved = resolveNext(currentDerived.current, raw);
 
     currentDerived.current = resolved;
     setDerived(resolved);

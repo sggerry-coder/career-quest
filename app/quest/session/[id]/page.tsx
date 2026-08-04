@@ -28,7 +28,6 @@ import {
   characterClassDisplayName,
   serializeCharacterClass,
 } from "@/lib/character/classes";
-import { countInterestResponses } from "@/lib/character/evidence";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
@@ -101,9 +100,6 @@ export default function Session({
     riasec: scoreState.riasec,
     blockKey: questState.current_block,
     restoredClass,
-    interestResponses: countInterestResponses(scoreState.riasec_raw),
-    interestBlockComplete:
-      questState.current_block !== "warmup" && questState.current_block !== "riasec",
   });
 
   // Show the naming moment once, when useEmergentClass raises a fresh naming
@@ -120,16 +116,12 @@ export default function Session({
   }, [namingEventId, dispatch]);
 
   useEffect(() => {
-    // A provisional class (a Rogue lead shown before the interest block
-    // finishes -- see useEmergentClass) must never reach quest state.
+    // Only a class the student has actually been named reaches quest state.
     // questState.avatarClass is checkpointed on every change and read back
     // by seedFromRestored on resume, which treats any non-wanderer id as
-    // already named. Dispatching a provisional "rogue" here would let one
-    // quit-and-resume permanently lock a lead that was never meant to be
-    // final, defeating the whole point of leaving it unlocked. Wait for
-    // isNamed before writing it anywhere -- until then avatarClass simply
-    // keeps its previous value ("wanderer" on a fresh start), which is the
-    // right fallback for narration and theme.
+    // already named -- so anything written here is, in effect, locked. While
+    // unnamed, avatarClass simply keeps its previous value ("wanderer" on a
+    // fresh start), which is the right fallback for narration and theme.
     if (!emergentClass.isNamed) return;
     dispatch({ type: "SET_AVATAR_CLASS", avatarClass: emergentClass.primary });
   }, [emergentClass.primary, emergentClass.isNamed, dispatch]);

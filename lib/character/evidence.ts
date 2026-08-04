@@ -1,3 +1,5 @@
+import type { QuestionBlock } from "@/lib/types/quest";
+
 /**
  * How much evidence the app needs before it will name a student.
  *
@@ -10,33 +12,38 @@
  */
 
 /**
- * Interest answers required before a class may be named. Derivation only
- * happens at block boundaries, and the interest block's 14 Likert items are
- * all inside a single block, so in the normal flow this threshold is cleared
- * all at once: first naming happens at the riasec -> riasec_mi boundary with
- * all 14 answers already in hand, not "partway through" anything. Where 10
- * (rather than 14, or 1) actually matters is a quit-and-resume: the hook
- * re-mounts and re-derives at whatever block the student resumes into, which
- * can land mid-interest-block with only some of the 14 answered. Set below
- * 14, a resume with most-but-not-all interest answers can still be named;
- * set above 5, the five (now interest-free) warm-up answers alone can't.
- *
- * This threshold only withholds a naming while more interest answers are
- * still on their way -- see useEmergentClass's `interestBlockComplete`. Once
- * the interest block itself is finished (whether by answering all 14 or by
- * skipping some), nothing more is coming before the reveal, so the gate
- * stops applying: a student who skipped several interest questions but left
- * a clear lead in the rest is named on what they answered, not held at
- * Wanderer for an evidence count they can no longer increase.
+ * The blocks that still have interest evidence to come. Everything the
+ * interest instrument measures -- 12 Likert items and 2 ipsative rankings --
+ * lives in the "riasec" block, so once the student has left it no further
+ * interest answer can arrive before the reveal. ("riasec_mi" carries no
+ * RIASEC items despite the name; it is Multiple Intelligences questions.)
  */
-export const MIN_INTEREST_RESPONSES = 10;
+const BLOCKS_BEFORE_INTEREST_EVIDENCE_IS_IN: readonly QuestionBlock[] = [
+  "warmup",
+  "riasec",
+];
 
-/** Total interest answers recorded so far, across all six types. */
-export function countInterestResponses(
-  riasecRaw: Record<string, number[]>
-): number {
-  return Object.values(riasecRaw).reduce(
-    (total, answers) => total + (Array.isArray(answers) ? answers.length : 0),
-    0
+/**
+ * True once every interest answer that is going to arrive has arrived.
+ *
+ * This, and nothing else, gates a *first* naming. It replaced a count of
+ * interest responses (>= 10 of them), which looked equivalent in the normal
+ * flow -- all 12 Likert items are in one block, so the count cleared in the
+ * same commit as the block change -- but was not equivalent on a
+ * quit-and-resume. The count only ever saw `riasec_raw`, which the two
+ * ipsative rankings never touch, so a student who left having answered 10, 11
+ * or 12 of the 12 rating items was named the moment they resumed, from 70% of
+ * the interest evidence, and the lock then refused to let the missing 30%
+ * change the answer. They finished on a dashboard whose class badge sat on top
+ * of a chart that produced a different class.
+ *
+ * A count cannot express "nothing more is coming"; the block can, because the
+ * block *is* the instrument. An already-named or restored student is not
+ * affected either way: this gate only ever withholds a naming that has not
+ * happened yet, it never revokes one that has.
+ */
+export function isInterestBlockComplete(block: string): boolean {
+  return !BLOCKS_BEFORE_INTEREST_EVIDENCE_IS_IN.includes(
+    block as QuestionBlock
   );
 }
