@@ -39,6 +39,7 @@ function makeQuestState(overrides?: Partial<QuestState>): QuestState {
     last_response_undoable: true,
     engagementShown: true,
     avatarClass: "mage",
+    classNamedPending: false,
     ...overrides,
   };
 }

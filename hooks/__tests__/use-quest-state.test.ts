@@ -45,6 +45,7 @@ function makeInitialState(overrides?: Partial<QuestState>): QuestState {
     last_response_undoable: false,
     engagementShown: false,
     avatarClass: "wanderer",
+    classNamedPending: false,
     ...overrides,
   };
 }
@@ -459,6 +460,130 @@ describe("other actions", () => {
     expect(next.flowPhase).toBe("confirmatory");
     expect(next.adaptiveQuestions).toHaveLength(1);
     expect(next.confirmIndex).toBe(0);
+  });
+});
+
+/**
+ * Review finding: the page dispatches SHOW_CLASS_NAMED unconditionally
+ * whenever useEmergentClass's namingEventId counter advances, which happens
+ * as soon as the block-boundary derivation effect runs -- often while a
+ * block_transition interstitial (or, in principle, engagement/discovery) is
+ * still on screen. A first naming lands overwhelmingly at the
+ * riasec -> riasec_mi boundary, which is exactly the boundary that also
+ * carries a narrated block transition. Firing straight into "class_named"
+ * there cut the transition's narration, its 1500ms visible timer, and its
+ * exit animation off mid-flight -- DISMISS_BLOCK_TRANSITION was never even
+ * dispatched. These tests cover the reducer-level fix: SHOW_CLASS_NAMED
+ * queues behind whatever interstitial is showing instead of preempting it,
+ * and every DISMISS_* that would otherwise return to "questions" drains the
+ * queue instead.
+ */
+describe("naming event queuing behind an interstitial", () => {
+  it("shows the naming screen immediately when nothing else is on screen", () => {
+    const state = makeInitialState({ flowPhase: "questions" });
+
+    const next = questReducer(state, { type: "SHOW_CLASS_NAMED" });
+
+    expect(next.flowPhase).toBe("class_named");
+    expect(next.classNamedPending).toBe(false);
+  });
+
+  it("queues rather than preempts a block transition already on screen", () => {
+    const state = makeInitialState({
+      flowPhase: "block_transition",
+      transitionNarration: "riasec_to_riasec_mi",
+    });
+
+    const next = questReducer(state, { type: "SHOW_CLASS_NAMED" });
+
+    // The interstitial is still what's showing -- not overwritten.
+    expect(next.flowPhase).toBe("block_transition");
+    expect(next.transitionNarration).toBe("riasec_to_riasec_mi");
+    expect(next.classNamedPending).toBe(true);
+  });
+
+  it("shows the naming screen once the block transition dismisses, and only once", () => {
+    const queued = questReducer(
+      makeInitialState({ flowPhase: "block_transition" }),
+      { type: "SHOW_CLASS_NAMED" }
+    );
+    expect(queued.flowPhase).toBe("block_transition");
+
+    const dismissed = questReducer(queued, {
+      type: "DISMISS_BLOCK_TRANSITION",
+    });
+    expect(dismissed.flowPhase).toBe("class_named");
+    expect(dismissed.classNamedPending).toBe(false);
+
+    // Draining the queue must not leave anything behind to fire again:
+    // dismissing the naming screen itself lands on plain "questions", not
+    // another "class_named".
+    const afterNaming = questReducer(dismissed, {
+      type: "DISMISS_CLASS_NAMED",
+    });
+    expect(afterNaming.flowPhase).toBe("questions");
+  });
+
+  it("queues behind an engagement checkpoint the same way", () => {
+    const queued = questReducer(
+      makeInitialState({ flowPhase: "engagement", engagementShown: true }),
+      { type: "SHOW_CLASS_NAMED" }
+    );
+    expect(queued.flowPhase).toBe("engagement");
+    expect(queued.classNamedPending).toBe(true);
+
+    const dismissed = questReducer(queued, { type: "DISMISS_ENGAGEMENT" });
+    expect(dismissed.flowPhase).toBe("class_named");
+  });
+
+  it("queues behind a discovery prompt the same way", () => {
+    const queued = questReducer(
+      makeInitialState({ flowPhase: "discovery_prompt" }),
+      { type: "SHOW_CLASS_NAMED" }
+    );
+    expect(queued.flowPhase).toBe("discovery_prompt");
+    expect(queued.classNamedPending).toBe(true);
+
+    const dismissed = questReducer(queued, { type: "DISMISS_DISCOVERY" });
+    expect(dismissed.flowPhase).toBe("class_named");
+    // The discovery dismissal's own side effect still applies.
+    expect(dismissed.discovery_mode_active).toBe(true);
+  });
+
+  it("an ordinary dismissal with nothing queued still just returns to questions", () => {
+    const state = makeInitialState({
+      flowPhase: "block_transition",
+      classNamedPending: false,
+    });
+
+    const next = questReducer(state, { type: "DISMISS_BLOCK_TRANSITION" });
+
+    expect(next.flowPhase).toBe("questions");
+    expect(next.classNamedPending).toBe(false);
+  });
+
+  it("survives a checkpoint round-trip: a queued naming is still queued after RESTORE_STATE", () => {
+    const queued = questReducer(
+      makeInitialState({ flowPhase: "block_transition" }),
+      { type: "SHOW_CLASS_NAMED" }
+    );
+    expect(queued.classNamedPending).toBe(true);
+
+    // What a checkpoint taken at this exact moment would restore.
+    const restored = questReducer(makeInitialState(), {
+      type: "RESTORE_STATE",
+      state: queued,
+    });
+    expect(restored.flowPhase).toBe("block_transition");
+    expect(restored.classNamedPending).toBe(true);
+
+    // The student then dismisses the transition they resumed into, and
+    // gets the moment they earned before quitting -- not a lost one, and
+    // (per the test above) not a duplicate either.
+    const dismissed = questReducer(restored, {
+      type: "DISMISS_BLOCK_TRANSITION",
+    });
+    expect(dismissed.flowPhase).toBe("class_named");
   });
 });
 

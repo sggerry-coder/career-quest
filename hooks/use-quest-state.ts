@@ -59,6 +59,20 @@ export interface QuestState {
   last_response_undoable: boolean;
   engagementShown: boolean;
   avatarClass: string;
+  /**
+   * True when useEmergentClass raised a naming event while an interstitial
+   * (block transition, engagement checkpoint, discovery prompt) other than
+   * "questions" was on screen. Showing the naming screen right then would
+   * cut the interstitial off mid-flight -- its narration, its 1500ms visible
+   * timer, its exit animation -- so the flag defers it instead: every
+   * DISMISS_* action that would otherwise return flowPhase to "questions"
+   * consults it first (see resolveDismissal) and routes to "class_named"
+   * instead, clearing the flag in the same dispatch. A student who
+   * checkpoints while this is true still gets their moment after resuming
+   * and dismissing whatever they were looking at -- the flag round-trips
+   * through the snapshot along with the rest of QuestState.
+   */
+  classNamedPending: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -85,6 +99,7 @@ const INITIAL_STATE: QuestState = {
   last_response_undoable: false,
   engagementShown: false,
   avatarClass: "wanderer",
+  classNamedPending: false,
 };
 
 // ---------------------------------------------------------------------------
@@ -127,6 +142,23 @@ function shouldTriggerDiscoveryMode(responses: ClientResponse[]): boolean {
  */
 function getTransitionNarration(fromBlock: string, toBlock: string): string {
   return `${fromBlock}_to_${toBlock}`;
+}
+
+/**
+ * Where a DISMISS_* action should send flow control: the naming screen if a
+ * naming event queued up behind the interstitial that is dismissing, plain
+ * "questions" otherwise. Consulted by every DISMISS_* action that would
+ * otherwise unconditionally return to "questions", so a naming event raised
+ * while an interstitial had the screen is never lost, and -- because the
+ * flag is cleared here, in the same dispatch that consumes it -- never
+ * doubles up once shown either.
+ */
+function resolveDismissal(
+  state: QuestState
+): Pick<QuestState, "flowPhase" | "classNamedPending"> {
+  return state.classNamedPending
+    ? { flowPhase: "class_named", classNamedPending: false }
+    : { flowPhase: "questions", classNamedPending: false };
 }
 
 // ---------------------------------------------------------------------------
@@ -303,16 +335,28 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
     case "DISMISS_ENGAGEMENT":
       return {
         ...state,
-        flowPhase: "questions",
+        ...resolveDismissal(state),
       };
 
     case "DISMISS_BLOCK_TRANSITION":
       return {
         ...state,
-        flowPhase: "questions",
+        ...resolveDismissal(state),
       };
 
     case "SHOW_CLASS_NAMED":
+      if (state.flowPhase !== "questions") {
+        // Another interstitial already has the screen -- preempting it here
+        // would cut its narration/timer off mid-flight (the defect this
+        // guards against: the block-transition beat right before a first
+        // naming was routinely skipped this way). Remember the naming
+        // instead; resolveDismissal picks it up once that interstitial
+        // dismisses on its own.
+        return {
+          ...state,
+          classNamedPending: true,
+        };
+      }
       return {
         ...state,
         flowPhase: "class_named",
@@ -333,7 +377,7 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
     case "DISMISS_DISCOVERY":
       return {
         ...state,
-        flowPhase: "questions",
+        ...resolveDismissal(state),
         discovery_mode_active: true,
       };
 

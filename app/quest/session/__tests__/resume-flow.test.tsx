@@ -85,6 +85,7 @@ const INITIAL_QUEST_STATE: QuestState = {
   last_response_undoable: false,
   engagementShown: false,
   avatarClass: "wanderer",
+  classNamedPending: false,
 };
 
 /** Drive the real reducer to build a snapshot answered up to `index`. */
