@@ -8,6 +8,7 @@ import MbtiSliders from "@/components/charts/mbti-sliders";
 import ValuesSliders from "@/components/charts/values-sliders";
 import ClassLabel from "@/components/charts/class-label";
 import { characterClassDisplayName, type DerivedClass } from "@/lib/character/classes";
+import { buildValuesRawCounts } from "@/lib/scoring/values";
 import { describeCharacter } from "@/lib/character/description";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 import { useScreenChange } from "@/hooks/use-screen-change";
@@ -18,6 +19,13 @@ interface ScoreState {
   mbti: Record<string, number>;
   mbti_raw?: Record<string, number[]>;
   values: Record<string, number>;
+  /**
+   * The raw values answers, one array per dimension. The reveal is the one
+   * screen that still has them, and it needs them: a values score of 0 is
+   * either "dead centre" or "never answered", and only a count can say which.
+   * Optional, and absent means "assume answered" -- see hasValuesReading.
+   */
+  values_raw?: Record<string, number[]>;
   strengths: string[];
   class_label: string;
   /**
@@ -328,7 +336,20 @@ export default function RevealSequence({
               animate={{ opacity: 1, y: 0 }}
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5 focus:outline-none"
             >
-              <ValuesSliders scores={scoreState.values} />
+              {/* Counts, not just scores: this screen is the only one that
+                  can tell an unanswered dimension from a balanced one, since
+                  the dashboard reads back persisted scores and no counts
+                  column exists yet (migration 00005 is written but unapplied).
+                  Built here rather than lifted into ScoreState so the reveal
+                  stays presentational about it. */}
+              <ValuesSliders
+                scores={scoreState.values}
+                rawCounts={
+                  scoreState.values_raw
+                    ? buildValuesRawCounts(scoreState.values_raw)
+                    : undefined
+                }
+              />
               {Object.values(scoreState.values).every(v => v === 0) && (
                 <p className="text-xs text-white/55 text-center mt-1">Answer more questions to refine</p>
               )}

@@ -109,13 +109,26 @@ const scoreState = {
   class_label: "",
 };
 
-const PHASES = ["transition", "riasec", "class_label", "mi_preview", "mbti", "emerging_type"];
+const PHASES = [
+  "transition",
+  "riasec",
+  "class_label",
+  "mi_preview",
+  "mbti",
+  "emerging_type",
+  "values",
+];
 
-async function advanceToPhase(target: string): Promise<void> {
+type RevealScoreState = React.ComponentProps<typeof RevealSequence>["scoreState"];
+
+async function advanceToPhase(
+  target: string,
+  state: RevealScoreState = scoreState
+): Promise<void> {
   vi.useFakeTimers();
   render(
     <RevealSequence
-      scoreState={scoreState}
+      scoreState={state}
       tone="quest"
       resolvedClass={{ primary: "guardian", secondary: null, isNamed: true }}
       onRevealComplete={() => {}}
@@ -175,5 +188,46 @@ describe("RevealSequence emerging_type beat", () => {
   it("shows a personality reading it can actually evidence", async () => {
     await advanceToPhase("emerging_type");
     expect(screen.getByText(/thinks things through alone before speaking/)).toBeDefined();
+  });
+});
+
+/**
+ * The compass and the answers behind it.
+ *
+ * Every values dimension in the fixture above scores 0, and 0 on a spectrum
+ * is dead centre -- so the card said "Balanced for now" three times over
+ * whether or not anyone had answered. The reveal is the only screen holding
+ * the raw answers, so it is the only one that can tell the two apart; these
+ * fail if it stops handing them over.
+ */
+describe("RevealSequence values beat", () => {
+  const ANSWERED_ONE = {
+    ...scoreState,
+    // One question per dimension in Chapter 1: solo_team answered dead
+    // centre, the other two not answered at all. Identical scores, opposite
+    // meanings.
+    values_raw: {
+      security_adventure: [],
+      income_impact: [],
+      prestige_fulfilment: [],
+      structure_flexibility: [],
+      solo_team: [0],
+    },
+  };
+
+  it("claims a balance only for the dimension that was answered", async () => {
+    await advanceToPhase("values", ANSWERED_ONE);
+
+    expect(screen.getAllByText("Balanced for now")).toHaveLength(1);
+    expect(screen.getAllByText("Not answered yet")).toHaveLength(2);
+  });
+
+  it("still reads the whole compass when the raw answers are absent", async () => {
+    // A caller with no counts -- a legacy snapshot -- must not have every
+    // dimension blanked out from under it.
+    await advanceToPhase("values");
+
+    expect(screen.getAllByText("Balanced for now")).toHaveLength(3);
+    expect(screen.queryByText("Not answered yet")).toBeNull();
   });
 });

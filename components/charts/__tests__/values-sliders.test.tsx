@@ -65,3 +65,68 @@ describe("ValuesSliders", () => {
     expect(screen.getByText("More dimensions to come")).toBeDefined();
   });
 });
+
+/**
+ * "Balanced for now" is a claim, and 0 is the score that cannot support it on
+ * its own: on a spectrum 0 is the exact centre, so the dimension nobody
+ * answered and the dimension answered dead centre arrive as the same number.
+ * The counts are the only thing that separates them.
+ */
+describe("ValuesSliders with answer counts", () => {
+  const ALL_ZERO = {
+    security_adventure: 0,
+    income_impact: 0,
+    solo_team: 0,
+  };
+
+  it("says nothing about a dimension nobody answered", () => {
+    render(
+      <ValuesSliders
+        scores={ALL_ZERO}
+        rawCounts={{ security_adventure: 0, income_impact: 0, solo_team: 1 }}
+      />
+    );
+
+    // Same three scores as the test above; only the counts differ.
+    expect(screen.getAllByText("Not answered yet")).toHaveLength(2);
+    expect(screen.getAllByText("Balanced for now")).toHaveLength(1);
+  });
+
+  it("keeps calling a genuinely centred answer balanced", () => {
+    render(
+      <ValuesSliders
+        scores={ALL_ZERO}
+        rawCounts={{ security_adventure: 1, income_impact: 1, solo_team: 1 }}
+      />
+    );
+
+    expect(screen.getAllByText("Balanced for now")).toHaveLength(3);
+    expect(screen.queryByText("Not answered yet")).toBeNull();
+  });
+
+  it("assumes answered when no counts are supplied at all", () => {
+    // The dashboard's position until migration 00005 is applied and wired: it
+    // reads persisted scores and has no counts to pass. Blanking every
+    // dimension of a finished profile would be a worse lie than the one this
+    // guards against.
+    render(<ValuesSliders scores={ALL_ZERO} />);
+
+    expect(screen.getAllByText("Balanced for now")).toHaveLength(3);
+    expect(screen.queryByText("Not answered yet")).toBeNull();
+  });
+
+  it("leaves the track empty rather than resting a dot on dead centre", () => {
+    const { container } = render(
+      <ValuesSliders
+        scores={ALL_ZERO}
+        rawCounts={{ security_adventure: 0, income_impact: 0, solo_team: 1 }}
+      />
+    );
+
+    // The dot is the accent-coloured marker; only the answered dimension has
+    // one. A dot parked on the centre line is itself a claim of balance.
+    expect(
+      container.querySelectorAll("[class*='bg-[var(--color-accent)]']")
+    ).toHaveLength(1);
+  });
+});

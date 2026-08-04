@@ -1,9 +1,25 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { hasValuesReading } from "@/lib/scoring/values";
 
 interface ValuesSlidersProps {
   scores: Record<string, number>;
+  /**
+   * How many answers stand behind each dimension, from buildValuesRawCounts.
+   *
+   * Needed because 0 is the one score this chart cannot interpret on its own:
+   * on a spectrum it is the exact centre, so a dimension nobody answered and
+   * a dimension answered dead centre arrive here as the same number, and the
+   * card said "Balanced for now" to both -- a confident claim about the
+   * student on no evidence at all.
+   *
+   * Optional, and omitting it means "assume answered", which is what a caller
+   * that cannot tell must do: the dashboard reads persisted scores and there
+   * is no counts column yet, so it keeps today's behaviour rather than
+   * blanking every dimension of a finished profile. See hasValuesReading.
+   */
+  rawCounts?: Record<string, number>;
 }
 
 const VALUES_DIMENSIONS = [
@@ -34,7 +50,13 @@ export function describeLean(
   return `Leans ${score < 0 ? leftLabel : rightLabel}`;
 }
 
-export default function ValuesSliders({ scores }: ValuesSlidersProps) {
+/** What the card says where there is nothing to say. */
+const NO_READING = "Not answered yet";
+
+export default function ValuesSliders({
+  scores,
+  rawCounts,
+}: ValuesSlidersProps) {
   const prefersReduced = useReducedMotion();
 
   return (
@@ -46,6 +68,7 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
 
       <div className="flex flex-col gap-5 mb-4">
         {VALUES_DIMENSIONS.map((dim, index) => {
+          const answered = hasValuesReading(dim.key, rawCounts);
           const score = scores[dim.key] ?? 0;
           // Map -100..+100 to 0..100% position
           const position = ((score + 100) / 200) * 100;
@@ -59,29 +82,40 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
               <div className="relative h-6 rounded-full bg-white/10">
                 {/* Centre reference -- see charts/mbti-sliders. */}
                 <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/45" />
-                <motion.div
-                  className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--color-accent)] shadow-[0_0_10px_var(--color-glow)]"
-                  // See charts/riasec-bars.
-                  initial={prefersReduced ? false : { left: "50%" }}
-                  animate={{ left: `${position}%` }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 120,
-                    damping: 20,
-                    delay: prefersReduced ? 0 : index * 0.15,
-                  }}
-                />
+                {/* No answer, no dot. A dot resting on the centre line is the
+                    chart's way of saying "dead centre", which is a reading --
+                    the strongest one this scale can give about balance -- so
+                    drawing it for a dimension nobody answered puts the claim
+                    on the track as well as in the caption. An empty track is
+                    already how this card says "nothing here yet"; see the
+                    not-yet-measured dimensions below. */}
+                {answered && (
+                  <motion.div
+                    className="absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--color-accent)] shadow-[0_0_10px_var(--color-glow)]"
+                    // See charts/riasec-bars.
+                    initial={prefersReduced ? false : { left: "50%" }}
+                    animate={{ left: `${position}%` }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 120,
+                      damping: 20,
+                      delay: prefersReduced ? 0 : index * 0.15,
+                    }}
+                  />
+                )}
               </div>
 
               {/* Which side you landed on, in words */}
               <p
                 className={`text-xs mt-1 text-center ${
-                  Math.abs(score) < BALANCED_THRESHOLD
+                  !answered || Math.abs(score) < BALANCED_THRESHOLD
                     ? "text-white/55 italic"
                     : "text-white/60"
                 }`}
               >
-                {describeLean(score, dim.leftLabel, dim.rightLabel)}
+                {answered
+                  ? describeLean(score, dim.leftLabel, dim.rightLabel)
+                  : NO_READING}
               </p>
             </div>
           );
