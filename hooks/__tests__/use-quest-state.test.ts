@@ -398,7 +398,7 @@ describe("other actions", () => {
  * Review finding: the page dispatches SHOW_CLASS_NAMED unconditionally
  * whenever useEmergentClass's namingEventId counter advances, which happens
  * as soon as the block-boundary derivation effect runs -- often while a
- * block_transition interstitial (or, in principle, engagement/discovery) is
+ * block_transition interstitial (or, in principle, engagement) is
  * still on screen. A first naming lands overwhelmingly at the
  * riasec -> riasec_mi boundary, which is exactly the boundary that also
  * carries a narrated block transition. Firing straight into "class_named"

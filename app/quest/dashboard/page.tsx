@@ -125,10 +125,14 @@ export default function Dashboard() {
         }
         if (scoresRes.data) {
           setScores(scoresRes.data as ScoresData);
-        } else if (loadSessionSnapshot(user.id)) {
-          // No scores row, but this device still holds the answers. The save
-          // failed rather than the quest never happening, so offer recovery
-          // instead of telling them to start over.
+        }
+        // A zeroed assessment_scores row is written at character creation and
+        // survives most failure paths, so its absence is not a reliable
+        // signal that a save failed -- checked independently of scoresRes
+        // instead. The render guard below still requires !has_completed_session1
+        // before this flag can surface anything, so a genuinely completed
+        // student is unaffected even if a stale checkpoint lingers.
+        if (loadSessionSnapshot(user.id)) {
           setHasUnsavedCheckpoint(true);
         }
         if (achievementsRes.data) {
