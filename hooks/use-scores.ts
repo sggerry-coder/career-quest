@@ -9,7 +9,7 @@ import {
   detectStraightLining,
   deriveClassLabel,
 } from "@/lib/scoring/riasec";
-import { calculateAllMi } from "@/lib/scoring/mi";
+import { calculateAllMi, miEndorsements } from "@/lib/scoring/mi";
 import {
   calculateAllMbti,
 } from "@/lib/scoring/mbti";
@@ -163,13 +163,12 @@ export function buildSignalsFootprint(
     if (key.startsWith("riasec_")) {
       const type = key.replace("riasec_", "");
       footprint.riasec_additions[type] = [weight >= 2 ? 4 : 3];
-    } else if (key.startsWith("mi_")) {
-      const dim = key.replace("mi_", "");
-      footprint.mi_additions[dim] = [weight];
-    } else {
-      // Direct MI dimension key
-      footprint.mi_additions[key] = [weight];
     }
+  }
+  for (const [dim, endorsement] of Object.entries(
+    miEndorsements(frameworkSignals)
+  )) {
+    footprint.mi_additions[dim] = [endorsement];
   }
 
   return footprint;
@@ -442,13 +441,16 @@ export function useScores() {
               // Signal weights of 1-2 map to moderate-high interest
               weight >= 2 ? 4 : 3,
             ];
-          } else if (key.startsWith("mi_")) {
-            const dim = key.replace("mi_", "");
-            next.mi_raw[dim] = [...(next.mi_raw[dim] || []), weight];
-          } else {
-            // Direct MI dimension key (e.g., "linguistic", "spatial")
-            next.mi_raw[key] = [...(next.mi_raw[key] || []), weight];
           }
+        }
+        // MI signals are stored as endorsements -- each dimension's share of
+        // the option's own weight -- so a warm-up pick and an MI-block pick
+        // count as the same wholehearted answer they each are. Storing the
+        // bare weight made every warm-up pick look like half an answer.
+        for (const [dim, endorsement] of Object.entries(
+          miEndorsements(frameworkSignals)
+        )) {
+          next.mi_raw[dim] = [...(next.mi_raw[dim] || []), endorsement];
         }
 
         // Process strength signal

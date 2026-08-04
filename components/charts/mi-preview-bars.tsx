@@ -19,17 +19,25 @@ const MI_DIMENSIONS = [
 
 export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
   // A dimension reads 0 until it has enough signals to earn a score (see
-  // MIN_MI_SIGNALS in lib/scoring/mi.ts). If every dimension is still 0,
-  // there is no "strongest" to rank -- an empty top-three would just
-  // dress up "no data yet" as a result.
-  const allZero = MI_DIMENSIONS.every((dim) => (scores[dim.key] ?? 0) === 0);
-
-  // Sort by score descending, take top 3
+  // MIN_MI_SIGNALS in lib/scoring/mi.ts), and Session 1's ~10 MI picks are
+  // spread over 8 dimensions -- two of which (musical, naturalistic) appear
+  // in only two options in the whole session. So it is routine for one or
+  // two dimensions to clear the threshold and the rest to sit at 0.
+  //
+  // Taking the top three unconditionally then listed a 0 under the heading
+  // "Your strongest learning styles": a labelled row with an empty bar and
+  // the number 0 beside it. Rank only what has a reading; how many rows
+  // appear is how many the student earned.
   const sorted = [...MI_DIMENSIONS].sort(
     (a, b) => (scores[b.key] ?? 0) - (scores[a.key] ?? 0)
   );
-  const top3 = sorted.slice(0, 3);
-  const remaining = sorted.slice(3);
+  const scored = sorted.filter((dim) => (scores[dim.key] ?? 0) > 0);
+  const top3 = scored.slice(0, 3);
+  const remaining = sorted.filter((dim) => !top3.includes(dim));
+
+  // Nothing has a reading yet -- an empty top-three would dress up "no data
+  // yet" as a result.
+  const allZero = scored.length === 0;
 
   return (
     <div className="w-full">
