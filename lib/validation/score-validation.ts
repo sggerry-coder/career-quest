@@ -29,11 +29,34 @@ const EXPECTED_VALUES = [
   "structure_flexibility",
   "solo_team",
 ];
-const MIN_RESPONSE_COUNT = 10;
+/**
+ * The smallest number of responses that can still *be* a student's answers.
+ *
+ * This was 10, and it meant "a save this thin is probably corrupt". That
+ * stopped being true when skipping became a named choice: "I'm not sure" is
+ * offered on the riasec and riasec_mi blocks -- 19 of Chapter 1's 35 questions
+ * -- and there is no cap on it, so how many responses a save carries is now
+ * something the student decided rather than a sign that anything went wrong.
+ * The old floor turned that decision into "We couldn't save your results" and
+ * threw away every answer they *had* given, which is the worse outcome by a
+ * long way: the scoring layer now treats missing data as missing, so a sparse
+ * profile is accurate, it just has to say it is sparse.
+ *
+ * What is left to defend against is a responses array that is not the
+ * student's answers at all -- a checkpoint whose responses were lost
+ * (isValidSnapshot only requires an array, and RESTORE_STATE defaults a
+ * missing one to []), or any other route that reaches "complete" with nothing
+ * recorded. Zero is the only count the quest itself cannot produce: warm-up
+ * (5), mbti_values (11) and the confirmatory round (5) have no skip, so even a
+ * student who skips everything skippable arrives at the save with 21. It is
+ * also the only count that can never be a choice, which is why it stays right
+ * if canSkip ever widens to every block.
+ */
+const MIN_RESPONSE_COUNT = 1;
 
 /**
  * Validate score data before persisting to Supabase.
- * Catches NaN values, missing framework keys, and suspiciously low response counts.
+ * Catches NaN values, missing framework keys, and an empty response set.
  * @param scores - The four framework score records to validate
  * @param responseCount - Total number of responses collected
  * @returns ValidationResult with valid flag and error descriptions
@@ -67,9 +90,9 @@ export function validateScoresBeforePersist(
     }
   }
 
-  // Check response count threshold
+  // Nothing to save is a broken save, not a quiet one
   if (responseCount < MIN_RESPONSE_COUNT) {
-    errors.push(`Response count ${responseCount} is suspiciously low`);
+    errors.push(`No responses to save (count ${responseCount})`);
   }
 
   return { valid: errors.length === 0, errors };

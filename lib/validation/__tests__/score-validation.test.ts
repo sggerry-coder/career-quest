@@ -87,13 +87,28 @@ describe("validateScoresBeforePersist", () => {
   });
 
   describe("response count", () => {
-    it("rejects suspiciously low response count of 3", () => {
+    // This used to assert that 3 responses were rejected as "suspiciously
+    // low". Skipping is now an explicit, uncapped choice -- "I'm not sure"
+    // records no response -- so a thin save is a student's decision rather
+    // than evidence of corruption, and refusing it lost every answer they
+    // did give. The floor now defends only the case no route through the
+    // quest can produce.
+    it("saves a sparse profile from a student who skipped a lot", () => {
       const result = validateScoresBeforePersist(
         { riasec: validRiasec, mi: validMi, mbti: validMbti, values: validValues },
-        3
+        6
+      );
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("still refuses a save carrying no responses at all", () => {
+      const result = validateScoresBeforePersist(
+        { riasec: validRiasec, mi: validMi, mbti: validMbti, values: validValues },
+        0
       );
       expect(result.valid).toBe(false);
-      expect(result.errors).toContain("Response count 3 is suspiciously low");
+      expect(result.errors).toContain("No responses to save (count 0)");
     });
   });
 
@@ -121,7 +136,7 @@ describe("validateScoresBeforePersist", () => {
         0
       );
       expect(result.valid).toBe(false);
-      // Should have errors for missing keys in all 4 frameworks + low response count
+      // Should have errors for missing keys in all 4 frameworks + no responses
       expect(result.errors.length).toBeGreaterThanOrEqual(5);
     });
   });
