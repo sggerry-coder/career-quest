@@ -1,8 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { CLASS_THEME, themeForCharacterClass } from "@/lib/character/theme-map";
-import { CHARACTER_CLASSES } from "@/lib/character/classes";
-import { themes, type ThemeName } from "@/lib/theme";
+import {
+  CHARACTER_CLASSES,
+  type CharacterClassId,
+} from "@/lib/character/classes";
+import {
+  themes,
+  classDefinitions,
+  getThemeForClass,
+  type ThemeName,
+} from "@/lib/theme";
 
 describe("class palettes", () => {
   it("gives every class its own theme, with no silent fallback", () => {
@@ -27,6 +35,26 @@ describe("class palettes", () => {
     // Paladin brings order: near-square. Bard is fluid: very round.
     expect(themes[themeForCharacterClass("paladin")].borderRadius).toBe("4px");
     expect(themes[themeForCharacterClass("bard")].borderRadius).toBe("20px");
+  });
+
+  it("is the only class -> theme map: narration agrees with it by construction", () => {
+    // theme-map.ts used to be imported by nothing but this file while
+    // applyClassTheme routed through classDefinitions[].theme. Two parallel
+    // tables that agreed by luck.
+    for (const def of classDefinitions) {
+      expect(def.theme, `${def.id} narration theme`).toBe(
+        themeForCharacterClass(def.id)
+      );
+    }
+  });
+
+  it("resolves a class's palette through the map, Wanderer for anything else", () => {
+    for (const id of Object.keys(CHARACTER_CLASSES) as CharacterClassId[]) {
+      expect(getThemeForClass(id).name).toBe(themeForCharacterClass(id));
+    }
+    // A retired id, an empty column, junk -- no colour has been earned.
+    expect(getThemeForClass("sorceress").name).toBe("wanderer-slate");
+    expect(getThemeForClass("").name).toBe("wanderer-slate");
   });
 
   it("syncs theme values between app/globals.css and lib/theme.ts", () => {

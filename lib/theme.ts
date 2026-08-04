@@ -1,3 +1,9 @@
+import { CLASS_THEME, themeForCharacterClass } from "@/lib/character/theme-map";
+import {
+  isCharacterClassId,
+  type CharacterClassId,
+} from "@/lib/character/classes";
+
 export type ThemeName =
   | "purple-teal"
   | "magenta-violet"
@@ -19,7 +25,11 @@ export interface ThemeConfig {
 }
 
 export interface ClassDefinition {
-  id: string;
+  /**
+   * Typed as CharacterClassId, not string: it is the only compile-time
+   * guard against classDefinitions and CHARACTER_CLASSES drifting apart.
+   */
+  id: CharacterClassId;
   name: { quest: string; explorer: string };
   icon: string;
   theme: ThemeName;
@@ -65,10 +75,20 @@ export const themes: Record<ThemeName, ThemeConfig> = {
   "rogue-teal": { name: "rogue-teal", primary: "#0d9488", accent: "#5eead4", glow: "rgba(13,148,136,0.45)", borderRadius: "14px" },
 };
 
+/**
+ * The palette for a class. Routed through themeForCharacterClass so
+ * lib/character/theme-map is the single source of the class -> theme
+ * mapping; classDefinitions[].theme is filled from the same map rather than
+ * being a second, parallel table that agreed only by luck.
+ *
+ * An unrecognised id is a Wanderer, not an Azure Path: not knowing which
+ * class a student is means they have no colour yet.
+ */
 export function getThemeForClass(classId: string): ThemeConfig {
-  const classDef = classDefinitions.find((c) => c.id === classId);
-  if (!classDef) return themes["blue-indigo"];
-  return themes[classDef.theme];
+  const id: CharacterClassId = isCharacterClassId(classId)
+    ? classId
+    : "wanderer";
+  return themes[themeForCharacterClass(id)];
 }
 
 // ---------------------------------------------------------------------------
@@ -164,7 +184,7 @@ export const classDefinitions: ClassDefinition[] = [
     id: "wanderer",
     name: { quest: "Wanderer", explorer: "Still forming" },
     icon: "\u{1F9ED}",
-    theme: "wanderer-slate",
+    theme: CLASS_THEME.wanderer,
     group: "Unclaimed",
     tagline: {
       quest: "No path chosen yet. Every road is still open.",
@@ -190,7 +210,7 @@ export const classDefinitions: ClassDefinition[] = [
     id: "warsmith",
     name: { quest: "Warsmith", explorer: "Maker" },
     icon: "\u{1F528}",
-    theme: "warsmith-copper",
+    theme: CLASS_THEME.warsmith,
     group: "Forge",
     tagline: {
       quest: "What is broken can be made stronger than before.",
@@ -216,7 +236,7 @@ export const classDefinitions: ClassDefinition[] = [
     id: "mage",
     name: { quest: "Mage", explorer: "Investigator" },
     icon: "\u{1F52E}",
-    theme: "purple-teal",
+    theme: CLASS_THEME.mage,
     group: "Arcanum",
     tagline: {
       quest: "Every question is a door. You keep opening them.",
@@ -242,7 +262,7 @@ export const classDefinitions: ClassDefinition[] = [
     id: "bard",
     name: { quest: "Bard", explorer: "Creator" },
     icon: "\u{1F3AD}",
-    theme: "bard-magenta",
+    theme: CLASS_THEME.bard,
     group: "Chorus",
     tagline: {
       quest: "You make the thing that makes people feel something.",
@@ -268,7 +288,7 @@ export const classDefinitions: ClassDefinition[] = [
     id: "guardian",
     name: { quest: "Guardian", explorer: "Helper" },
     icon: "\u{1F6E1}\u{FE0F}",
-    theme: "guardian-jade",
+    theme: CLASS_THEME.guardian,
     group: "Covenant",
     tagline: {
       quest: "You stand where someone else would have fallen.",
@@ -294,7 +314,7 @@ export const classDefinitions: ClassDefinition[] = [
     id: "vanguard",
     name: { quest: "Vanguard", explorer: "Leader" },
     icon: "\u{1F6A9}",
-    theme: "vanguard-gold",
+    theme: CLASS_THEME.vanguard,
     group: "Charge",
     tagline: {
       quest: "Someone has to go first. You already have.",
@@ -320,7 +340,7 @@ export const classDefinitions: ClassDefinition[] = [
     id: "paladin",
     name: { quest: "Paladin", explorer: "Organizer" },
     icon: "\u{2696}\u{FE0F}",
-    theme: "paladin-steel",
+    theme: CLASS_THEME.paladin,
     group: "Order",
     tagline: {
       quest: "Order is not dull. Order is what holds when things break.",
@@ -346,7 +366,7 @@ export const classDefinitions: ClassDefinition[] = [
     id: "rogue",
     name: { quest: "Rogue", explorer: "Explorer" },
     icon: "\u{1F5DD}\u{FE0F}",
-    theme: "rogue-teal",
+    theme: CLASS_THEME.rogue,
     group: "Free Company",
     tagline: {
       quest: "You keep every door unlocked, including the ones nobody uses.",

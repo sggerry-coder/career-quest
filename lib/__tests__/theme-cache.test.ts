@@ -34,12 +34,15 @@ describe("instant theme cache", () => {
     expect(readCachedThemeName()).toBe("purple-teal");
   });
 
-  it("falls back to blue-indigo for unknown classes and still caches", () => {
+  it("falls back to the Wanderer palette for unknown classes and still caches", () => {
+    // Not knowing which class a student is means they have no colour yet,
+    // which is exactly what Wanderer means. The old blue-indigo fallback
+    // handed them the Azure Path instead.
     applyClassTheme("not-a-class");
     expect(document.documentElement.getAttribute("data-theme")).toBe(
-      "blue-indigo"
+      "wanderer-slate"
     );
-    expect(readCachedThemeName()).toBe("blue-indigo");
+    expect(readCachedThemeName()).toBe("wanderer-slate");
   });
 
   it("round-trips a cached theme name and rejects garbage", () => {
