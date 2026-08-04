@@ -10,6 +10,7 @@ import IpsativePicker from "@/components/quest/ipsative-picker";
 import OptionGrid from "@/components/quest/option-grid";
 import ProgressBar from "@/components/quest/progress-bar";
 import BlockTransition from "@/components/quest/block-transition";
+import ClassNamedScreen from "@/components/quest/class-named-screen";
 import EngagementCheckpoint from "@/components/quest/engagement-checkpoint";
 import DiscoveryModePrompt from "@/components/quest/discovery-mode-prompt";
 import SelfMapCapture, { type SelfMapData } from "@/components/selfmap/self-map-capture";
@@ -97,7 +98,7 @@ export default function Session({
   // The class crystallises from the student's answers at block boundaries
   // (never per answer, so it cannot flip like a slot machine). Replaces the
   // Supabase-fetched avatar_class as the source of truth for narration/theme.
-  const { derived: emergentClass } = useEmergentClass({
+  const { derived: emergentClass, namingEventId } = useEmergentClass({
     riasec: scoreState.riasec,
     blockKey: questState.current_block,
     restoredClass,
@@ -105,6 +106,19 @@ export default function Session({
     interestBlockComplete:
       questState.current_block !== "warmup" && questState.current_block !== "riasec",
   });
+
+  // Show the naming moment once, when useEmergentClass raises a fresh naming
+  // event. namingEventId is a monotonic counter rather than a transient flag
+  // precisely so it survives being compared here, a render or more after it
+  // changed -- see useEmergentClass for why a boolean didn't. Ref, not state,
+  // because it exists purely to remember what this effect last reacted to.
+  const lastNamingSeen = useRef(0);
+  useEffect(() => {
+    if (namingEventId > lastNamingSeen.current) {
+      lastNamingSeen.current = namingEventId;
+      dispatch({ type: "SHOW_CLASS_NAMED" });
+    }
+  }, [namingEventId, dispatch]);
 
   useEffect(() => {
     // A provisional class (a Rogue lead shown before the interest block
@@ -677,6 +691,17 @@ export default function Session({
       <BlockTransition
         narrationText={getNarration(transitionNarration)}
         onComplete={handleTransitionComplete}
+      />
+    );
+  }
+
+  // The naming moment: fires once, when the class first crystallises.
+  if (flowPhase === "class_named") {
+    return (
+      <ClassNamedScreen
+        derived={emergentClass}
+        tone={studentTone}
+        onContinue={() => dispatch({ type: "DISMISS_CLASS_NAMED" })}
       />
     );
   }

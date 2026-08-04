@@ -150,10 +150,17 @@ export function useEmergentClass({
   restoredClass,
   interestResponses,
   interestBlockComplete = false,
-}: UseEmergentClassInput): { derived: DerivedClass } {
+}: UseEmergentClassInput): { derived: DerivedClass; namingEventId: number } {
   const [derived, setDerived] = useState<DerivedClass>(() =>
     seedFromRestored(restoredClass)
   );
+  // Monotonic, not a transient boolean: a boolean set during render was tried
+  // before and lost, because React's development double-render discarded the
+  // second pass before any consumer could see it. A number that only ever
+  // increases survives a discarded render -- a consumer just compares it
+  // against what it last saw. Set only inside the block-boundary effect
+  // below, never during render.
+  const [namingEventId, setNamingEventId] = useState(0);
 
   // Folding in a restored class is a pure function of props and state -- it
   // only ever upgrades an unnamed student -- so it happens during render
@@ -233,6 +240,14 @@ export function useEmergentClass({
     }
 
     const raw = deriveCharacterClass(latestRiasec.current);
+    // Captured before currentDerived.current is overwritten below. When a
+    // valid restoredClass exists, it was already folded into
+    // currentDerived.current as an already-named class -- either by the seed
+    // used to initialise this ref, or by the "commit a restored class"
+    // effect above, which runs first within the same commit -- so this is
+    // false only for a student genuinely unnamed going into this boundary,
+    // never for one merely resuming a naming they already had.
+    const wasNamed = currentDerived.current.isNamed;
     const resolved = resolveNext(
       currentDerived.current,
       raw,
@@ -241,6 +256,14 @@ export function useEmergentClass({
 
     currentDerived.current = resolved;
     setDerived(resolved);
+
+    if (resolved.isNamed && !wasNamed) {
+      // A genuine first naming: unnamed going in, named coming out. Fires
+      // once -- deepening an already-named class (wasNamed already true)
+      // never re-triggers it, and a resumed, already-named student never
+      // looks like this transition in the first place.
+      setNamingEventId((n) => n + 1);
+    }
 
     // Apply the theme whenever the resolved primary actually changes, not
     // only on first naming -- and never reapply when it hasn't changed,
@@ -255,5 +278,5 @@ export function useEmergentClass({
     }
   }, [blockKey]);
 
-  return { derived: effective };
+  return { derived: effective, namingEventId };
 }

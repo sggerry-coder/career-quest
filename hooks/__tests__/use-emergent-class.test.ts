@@ -506,4 +506,36 @@ describe("useEmergentClass", () => {
       });
     });
   });
+
+  describe("naming event", () => {
+    it("raises a naming event exactly once, when the student is first named", () => {
+      const { result, rerender } = renderHook(
+        ({ blockKey, interestResponses }) =>
+          useEmergentClass({
+            riasec: { R: 10, I: 20, A: 20, S: 90, E: 20, C: 10 },
+            blockKey,
+            interestResponses,
+          }),
+        { initialProps: { blockKey: "riasec", interestResponses: 3 } }
+      );
+      expect(result.current.namingEventId).toBe(0);
+
+      rerender({ blockKey: "riasec_mi", interestResponses: 14 });
+      expect(result.current.namingEventId).toBe(1);
+
+      // Deepening is not a new naming.
+      rerender({ blockKey: "mbti_values", interestResponses: 20 });
+      expect(result.current.namingEventId).toBe(1);
+    });
+
+    it("raises no naming event for a student who was already named on resume", () => {
+      const { result } = renderHook(() =>
+        useEmergentClass({
+          riasec: {}, blockKey: "riasec", interestResponses: 0, restoredClass: "guardian",
+        })
+      );
+      // They were named in an earlier sitting; replaying the moment would be wrong.
+      expect(result.current.namingEventId).toBe(0);
+    });
+  });
 });

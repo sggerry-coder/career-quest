@@ -15,6 +15,7 @@ import { LIKERT_MIN, LIKERT_MAX } from "@/lib/scoring/likert";
 export type FlowPhase =
   | "questions"
   | "block_transition"
+  | "class_named"
   | "engagement"
   | "discovery_prompt"
   | "selfmap"
@@ -27,6 +28,8 @@ export type QuestAction =
   | { type: "ANSWER_IPSATIVE"; response: ClientResponse; sessionQuestions: Question[] }
   | { type: "DISMISS_ENGAGEMENT" }
   | { type: "DISMISS_BLOCK_TRANSITION" }
+  | { type: "SHOW_CLASS_NAMED" }
+  | { type: "DISMISS_CLASS_NAMED" }
   | { type: "SHOW_DISCOVERY" }
   | { type: "DISMISS_DISCOVERY" }
   | { type: "ENTER_SELFMAP" }
@@ -304,6 +307,18 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
       };
 
     case "DISMISS_BLOCK_TRANSITION":
+      return {
+        ...state,
+        flowPhase: "questions",
+      };
+
+    case "SHOW_CLASS_NAMED":
+      return {
+        ...state,
+        flowPhase: "class_named",
+      };
+
+    case "DISMISS_CLASS_NAMED":
       return {
         ...state,
         flowPhase: "questions",

@@ -38,6 +38,7 @@ export interface SessionSnapshot {
 const VALID_FLOW_PHASES: FlowPhase[] = [
   "questions",
   "block_transition",
+  "class_named",
   "engagement",
   "discovery_prompt",
   "selfmap",
