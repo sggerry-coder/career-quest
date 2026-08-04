@@ -53,7 +53,7 @@ import type { ScoreState } from "@/hooks/use-scores";
  *
  * Refusing to restore is again the honest outcome.
  */
-const SNAPSHOT_VERSION = 3;
+export const SNAPSHOT_VERSION = 3;
 const KEY_PREFIX = "cq-session1-snapshot-";
 
 export interface SessionSelfMap {

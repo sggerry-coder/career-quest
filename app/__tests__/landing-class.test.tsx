@@ -25,6 +25,7 @@ vi.mock("@/lib/theme", async (importOriginal) => {
 });
 
 import Landing from "@/app/page";
+import { SNAPSHOT_VERSION } from "@/lib/persistence/session-snapshot";
 
 beforeEach(() => { h.themeCalls.length = 0; window.localStorage.clear(); });
 afterEach(() => cleanup());
@@ -50,7 +51,9 @@ describe("landing page class", () => {
     window.localStorage.setItem(
       "cq-session1-snapshot-student-1",
       JSON.stringify({
-        version: 2,
+        // Whatever the current checkpoint version is: this test is about the
+        // landing page reading a live checkpoint, not about version gating.
+        version: SNAPSHOT_VERSION,
         savedAt: 1,
         questState: {
           flowPhase: "questions", currentIndex: 12, confirmIndex: 0, responses: [],
