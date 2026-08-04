@@ -35,9 +35,10 @@ import {
  */
 export function resolveFinalClass(
   locked: DerivedClass,
-  riasec: Record<string, number>
+  riasec: Record<string, number>,
+  evidence?: Record<string, number>
 ): DerivedClass {
-  const fromChart = deriveCharacterClass(riasec);
+  const fromChart = deriveCharacterClass(riasec, evidence);
   if (!fromChart.isNamed) return locked;
   return fromChart;
 }

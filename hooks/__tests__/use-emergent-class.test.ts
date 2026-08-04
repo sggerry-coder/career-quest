@@ -458,3 +458,51 @@ describe("useEmergentClass", () => {
     });
   });
 });
+
+/**
+ * A score of 0 means either "rated at the bottom of the scale" or "nobody
+ * asked", and the naming rules read the two in opposite directions: an
+ * unanswered type is a free 100-point lead for whatever the student did
+ * answer. The evidence counts are what keep a hole in the data out of the
+ * ranking.
+ */
+describe("naming a student who skipped most of the interest block", () => {
+  // Two Helper items answered "Strongly Like"; every other type untouched.
+  const onlyHelperAnswered = { R: 0, I: 0, A: 0, S: 100, E: 0, C: 0 };
+  const onlyHelperEvidence = { R: 0, I: 0, A: 0, S: 2, E: 0, C: 0 };
+
+  it("names them from the five types nobody asked about, without evidence", () => {
+    // The behaviour being fixed, pinned so the fix is visibly a change.
+    const { result } = renderHook(() =>
+      useEmergentClass({ riasec: onlyHelperAnswered, blockKey: "riasec_mi" })
+    );
+    expect(result.current.derived.primary).toBe("guardian");
+    expect(result.current.derived.isNamed).toBe(true);
+  });
+
+  it("holds off naming them when the evidence says only one type was answered", () => {
+    const { result } = renderHook(() =>
+      useEmergentClass({
+        riasec: onlyHelperAnswered,
+        riasecEvidence: onlyHelperEvidence,
+        blockKey: "riasec_mi",
+      })
+    );
+    expect(result.current.derived.primary).toBe("wanderer");
+    expect(result.current.derived.isNamed).toBe(false);
+    expect(result.current.namingEventId).toBe(0);
+  });
+
+  it("names them normally once every type has been answered for", () => {
+    const answeredThroughout = { R: 3, I: 3, A: 3, S: 3, E: 3, C: 3 };
+    const { result } = renderHook(() =>
+      useEmergentClass({
+        riasec: onlyHelperAnswered,
+        riasecEvidence: answeredThroughout,
+        blockKey: "riasec_mi",
+      })
+    );
+    expect(result.current.derived.primary).toBe("guardian");
+    expect(result.current.namingEventId).toBe(1);
+  });
+});

@@ -25,6 +25,16 @@ import { applyClassTheme } from "@/lib/theme";
 
 interface UseEmergentClassInput {
   riasec: Record<string, number>;
+  /**
+   * How many interest answers stand behind each type, from
+   * buildRiasecEvidence. Without it a type the student skipped every question
+   * for scores 0 and is ranked as though they had rated it at the bottom of
+   * the scale, so the naming rules find gaps that only exist because nothing
+   * was asked. See deriveClassLabel. Optional: omit it and every type counts,
+   * which is right for a student who answered everything and wrong for one
+   * who did not.
+   */
+  riasecEvidence?: Record<string, number>;
   /** Current question block. Deriving is gated on this changing. */
   blockKey: string;
   /**
@@ -95,6 +105,7 @@ function resolveNext(prev: DerivedClass, raw: DerivedClass): DerivedClass {
 
 export function useEmergentClass({
   riasec,
+  riasecEvidence,
   blockKey,
   restoredClass,
 }: UseEmergentClassInput): { derived: DerivedClass; namingEventId: number } {
@@ -133,8 +144,10 @@ export function useEmergentClass({
   // own effect (never during render) so re-deriving stays gated on blockKey
   // alone and mid-block answers never rename the student.
   const latestRiasec = useRef(riasec);
+  const latestEvidence = useRef(riasecEvidence);
   useEffect(() => {
     latestRiasec.current = riasec;
+    latestEvidence.current = riasecEvidence;
   });
 
   // Commit a restored class that arrives after mount -- the resume decision
@@ -177,7 +190,10 @@ export function useEmergentClass({
       return;
     }
 
-    const raw = deriveCharacterClass(latestRiasec.current);
+    const raw = deriveCharacterClass(
+      latestRiasec.current,
+      latestEvidence.current
+    );
     // Captured before currentDerived.current is overwritten below. When a
     // valid restoredClass exists, it was already folded into
     // currentDerived.current as an already-named class -- either by the seed

@@ -1,5 +1,8 @@
+/** @vitest-environment jsdom */
 import { describe, it, expect } from "vitest";
+import { renderHook, act } from "@testing-library/react";
 import {
+  useScores,
   applyFootprintUndo,
   buildProcessResponseFootprint,
   buildSignalsFootprint,
@@ -176,5 +179,164 @@ describe("empty signal_history undo", () => {
     expect(undone.mi_raw.bodily).toEqual([1]);
     expect(undone.mbti_raw.EI).toEqual([2]);
     expect(undone.signal_history).toEqual([]);
+  });
+});
+
+/**
+ * The same defect driven through the real hook rather than the pure
+ * functions, because the bug lived in the wiring as much as the maths: three
+ * of the four call sites gated the merge on "is there any ipsative data at
+ * all", so answering one ranking pulled every type into the merge -- including
+ * the three types the other ranking covers, which arrived as a 0.
+ */
+describe("skipping a ranking, through the hook", () => {
+  /** The 12 rating items, in the order the session asks them. */
+  const RATING_ANSWERS: Array<[string, number, boolean]> = [
+    ["s1-riasec-R-01", 4, false],
+    ["s1-riasec-R-02", 1, true], // reverse-worded: 1 flips to 4
+    ["s1-riasec-I-01", 3, false],
+    ["s1-riasec-I-02", 3, false],
+    ["s1-riasec-A-01", 3, true], // flips to 2
+    ["s1-riasec-A-02", 3, false],
+    ["s1-riasec-S-01", 2, false],
+    ["s1-riasec-S-02", 2, false],
+    ["s1-riasec-E-01", 3, true], // flips to 2
+    ["s1-riasec-E-02", 2, false],
+    ["s1-riasec-C-01", 1, false],
+    ["s1-riasec-C-02", 4, true], // flips to 1
+  ];
+
+  function answerRatings(result: { current: ReturnType<typeof useScores> }): void {
+    for (const [question_id, response_value, reverse_scored] of RATING_ANSWERS) {
+      act(() => {
+        result.current.processResponse({
+          question_id,
+          response_value,
+          response_label: "answer",
+          framework: "riasec",
+          framework_target: question_id.split("-")[2],
+          answered_at: 0,
+          reverse_scored,
+        });
+      });
+    }
+  }
+
+  it("leaves the skipped ranking's types on their rating score alone", () => {
+    const { result } = renderHook(() => useScores());
+    answerRatings(result);
+
+    // Skip s1-riasec-ipsative-01 (R / A / E) entirely; answer the second.
+    act(() => {
+      result.current.processIpsativeResponse(
+        [
+          { type: "I", rank: 1 },
+          { type: "S", rank: 2 },
+          { type: "C", rank: 3 },
+        ],
+        "s1-riasec-ipsative-02"
+      );
+    });
+
+    const { riasec, class_label } = result.current.scoreState;
+    // R [4,4] → 100, and no ranking touched it, so 100 is the whole score.
+    // It used to arrive here as 100 * 0.7 = 70.
+    expect(riasec.R).toBeCloseTo(100, 4);
+    expect(riasec.A).toBeCloseTo(50, 4); // [2,3] → 50, was 35
+    expect(riasec.E).toBeCloseTo(33.33, 1); // [2,2] → 33.33, was 23.33
+    // The ranked types still merge 70/30.
+    expect(riasec.I).toBeCloseTo(76.67, 1);
+    expect(riasec.S).toBeCloseTo(43.33, 1);
+    // And the student is named for the type they actually lead on.
+    expect(class_label).toBe("MAKER-INVESTIGATOR");
+  });
+
+  it("merges 70/30 for every type once both rankings are answered", () => {
+    const { result } = renderHook(() => useScores());
+    answerRatings(result);
+
+    act(() => {
+      result.current.processIpsativeResponse(
+        [
+          { type: "R", rank: 1 },
+          { type: "A", rank: 2 },
+          { type: "E", rank: 3 },
+        ],
+        "s1-riasec-ipsative-01"
+      );
+    });
+    act(() => {
+      result.current.processIpsativeResponse(
+        [
+          { type: "I", rank: 1 },
+          { type: "S", rank: 2 },
+          { type: "C", rank: 3 },
+        ],
+        "s1-riasec-ipsative-02"
+      );
+    });
+
+    const { riasec } = result.current.scoreState;
+    // R: 100*0.7 + 100*0.3 = 100 (rank 1 → 5, clamped to 4 → 100)
+    expect(riasec.R).toBeCloseTo(100, 4);
+    // A: 50*0.7 + 66.67*0.3 = 35 + 20 = 55
+    expect(riasec.A).toBeCloseTo(55, 1);
+    // E: 33.33*0.7 + 0*0.3 = 23.33 (rank 3 → 1 → 0)
+    expect(riasec.E).toBeCloseTo(23.33, 1);
+  });
+
+  it("does not name a student from the single pair of items they answered", () => {
+    const { result } = renderHook(() => useScores());
+    act(() => {
+      result.current.processResponse({
+        question_id: "s1-riasec-S-01",
+        response_value: 4,
+        response_label: "Strongly Like",
+        framework: "riasec",
+        framework_target: "S",
+        answered_at: 0,
+      });
+    });
+    act(() => {
+      result.current.processResponse({
+        question_id: "s1-riasec-S-02",
+        response_value: 4,
+        response_label: "Strongly Like",
+        framework: "riasec",
+        framework_target: "S",
+        answered_at: 0,
+      });
+    });
+
+    const { riasec, class_label } = result.current.scoreState;
+    expect(riasec.S).toBeCloseTo(100, 4);
+    // Five types at 0 that nobody asked about are not five types they lead.
+    expect(class_label).toBe("SEEKER");
+  });
+
+  it("puts the score back where it was when a ranking is undone", () => {
+    const { result } = renderHook(() => useScores());
+    answerRatings(result);
+    const beforeRanking = result.current.scoreState.riasec.R;
+
+    act(() => {
+      result.current.processIpsativeResponse(
+        [
+          { type: "I", rank: 1 },
+          { type: "S", rank: 2 },
+          { type: "C", rank: 3 },
+        ],
+        "s1-riasec-ipsative-02"
+      );
+    });
+    act(() => {
+      result.current.removeLastResponse();
+    });
+
+    // R was never in that ranking, so undoing it must leave R untouched --
+    // and the re-derivation after an undo must use the same rules as the
+    // forward path, which is what recalculateAllDerived now shares.
+    expect(result.current.scoreState.riasec.R).toBeCloseTo(beforeRanking, 4);
+    expect(result.current.scoreState.riasec.R).toBeCloseTo(100, 4);
   });
 });

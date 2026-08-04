@@ -65,10 +65,18 @@ export interface DerivedClass {
   isNamed: boolean;
 }
 
+/**
+ * @param evidence - Optional answer count per interest type, from
+ *   buildRiasecEvidence. Passed straight through to deriveClassLabel, which
+ *   uses it to keep types nobody was asked about out of the ranking. Omit it
+ *   and every type counts, including the ones scoring 0 because they were
+ *   never answered.
+ */
 export function deriveCharacterClass(
-  riasec: Record<string, number>
+  riasec: Record<string, number>,
+  evidence?: Record<string, number>
 ): DerivedClass {
-  const label = deriveClassLabel(riasec);
+  const label = deriveClassLabel(riasec, evidence);
   const [firstLabel, secondLabel] = label.split("-");
 
   const primary = LABEL_TO_CLASS[firstLabel] ?? "wanderer";
