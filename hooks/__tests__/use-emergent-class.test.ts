@@ -3,6 +3,14 @@ import { describe, it, expect, afterEach, beforeEach } from "vitest";
 import { renderHook, cleanup } from "@testing-library/react";
 import { useEmergentClass } from "@/hooks/use-emergent-class";
 import { THEME_CACHE_KEY } from "@/lib/theme";
+import { MIN_INTEREST_RESPONSES } from "@/lib/character/evidence";
+
+// Most of these tests predate the evidence gate and are about block-boundary
+// timing, locking, and theming rather than the gate itself -- they pass a
+// flat `enoughEvidence` so a first naming is always allowed to happen at the
+// boundary under test, same as before the gate existed. The gate itself is
+// covered by its own tests further down.
+const enoughEvidence = MIN_INTEREST_RESPONSES;
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -28,7 +36,7 @@ const broadenedToRogue = { R: 10, I: 20, A: 55, S: 60, E: 50, C: 10 };
 describe("useEmergentClass", () => {
   it("starts unnamed", () => {
     const { result } = renderHook(() =>
-      useEmergentClass({ riasec: none, blockKey: "warmup" })
+      useEmergentClass({ riasec: none, blockKey: "warmup", interestResponses: 0 })
     );
     expect(result.current.derived.primary).toBe("wanderer");
     expect(result.current.derived.isNamed).toBe(false);
@@ -36,7 +44,8 @@ describe("useEmergentClass", () => {
 
   it("does not re-derive while the block stays the same", () => {
     const { result, rerender } = renderHook(
-      ({ riasec }) => useEmergentClass({ riasec, blockKey: "riasec" }),
+      ({ riasec }) =>
+        useEmergentClass({ riasec, blockKey: "riasec", interestResponses: enoughEvidence }),
       { initialProps: { riasec: none } }
     );
     rerender({ riasec: helper });
@@ -46,7 +55,8 @@ describe("useEmergentClass", () => {
 
   it("names the student at a block boundary", () => {
     const { result, rerender } = renderHook(
-      ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+      ({ riasec, blockKey }) =>
+        useEmergentClass({ riasec, blockKey, interestResponses: enoughEvidence }),
       { initialProps: { riasec: none, blockKey: "warmup" } }
     );
     rerender({ riasec: helper, blockKey: "riasec" });
@@ -60,7 +70,8 @@ describe("useEmergentClass", () => {
 
   it("deepens a class without flipping it", () => {
     const { result, rerender } = renderHook(
-      ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+      ({ riasec, blockKey }) =>
+        useEmergentClass({ riasec, blockKey, interestResponses: enoughEvidence }),
       { initialProps: { riasec: helper, blockKey: "riasec" } }
     );
     rerender({ riasec: helperMage, blockKey: "mbti_values" });
@@ -70,7 +81,8 @@ describe("useEmergentClass", () => {
 
   it("an unnamed student can still be named for the first time at any block boundary", () => {
     const { result, rerender } = renderHook(
-      ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+      ({ riasec, blockKey }) =>
+        useEmergentClass({ riasec, blockKey, interestResponses: enoughEvidence }),
       { initialProps: { riasec: none, blockKey: "warmup" } }
     );
     expect(result.current.derived.isNamed).toBe(false);
@@ -87,7 +99,8 @@ describe("useEmergentClass", () => {
 
   it("locks the primary once named -- a later boundary must not flip it", () => {
     const { result, rerender } = renderHook(
-      ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+      ({ riasec, blockKey }) =>
+        useEmergentClass({ riasec, blockKey, interestResponses: enoughEvidence }),
       { initialProps: { riasec: none, blockKey: "warmup" } }
     );
 
@@ -103,7 +116,8 @@ describe("useEmergentClass", () => {
 
   it("still updates the secondary while the primary stays locked", () => {
     const { result, rerender } = renderHook(
-      ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+      ({ riasec, blockKey }) =>
+        useEmergentClass({ riasec, blockKey, interestResponses: enoughEvidence }),
       { initialProps: { riasec: none, blockKey: "warmup" } }
     );
 
@@ -127,7 +141,9 @@ describe("useEmergentClass", () => {
     document.documentElement.setAttribute("data-theme", "guardian-jade");
     window.localStorage.setItem(THEME_CACHE_KEY, "guardian-jade");
 
-    renderHook(() => useEmergentClass({ riasec: none, blockKey: "warmup" }));
+    renderHook(() =>
+      useEmergentClass({ riasec: none, blockKey: "warmup", interestResponses: enoughEvidence })
+    );
 
     expect(document.documentElement.getAttribute("data-theme")).toBe(
       "guardian-jade"
@@ -147,7 +163,8 @@ describe("useEmergentClass", () => {
     it("holds the primary a resumed student was already named", () => {
       // --- Session one: the student is named Guardian-Bard, then quits.
       const first = renderHook(
-        ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+        ({ riasec, blockKey }) =>
+          useEmergentClass({ riasec, blockKey, interestResponses: enoughEvidence }),
         { initialProps: { riasec: none, blockKey: "warmup" } }
       );
       first.rerender({ riasec: guardianBard, blockKey: "riasec" });
@@ -164,7 +181,7 @@ describe("useEmergentClass", () => {
       // resumed hook sees.
       const second = renderHook(
         ({ riasec, blockKey, restoredClass }) =>
-          useEmergentClass({ riasec, blockKey, restoredClass }),
+          useEmergentClass({ riasec, blockKey, restoredClass, interestResponses: 0 }),
         {
           initialProps: {
             riasec: none,
@@ -189,7 +206,8 @@ describe("useEmergentClass", () => {
       // naming, and the student comes back a Bard. If this ever stops
       // flipping, the test above has stopped proving anything.
       const { result, rerender } = renderHook(
-        ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+        ({ riasec, blockKey }) =>
+          useEmergentClass({ riasec, blockKey, interestResponses: enoughEvidence }),
         { initialProps: { riasec: none, blockKey: "warmup" } }
       );
       rerender({ riasec: bardGuardian, blockKey: "riasec_mi" });
@@ -201,7 +219,7 @@ describe("useEmergentClass", () => {
       // render or more after the hook mounted.
       const { result, rerender } = renderHook(
         ({ riasec, blockKey, restoredClass }) =>
-          useEmergentClass({ riasec, blockKey, restoredClass }),
+          useEmergentClass({ riasec, blockKey, restoredClass, interestResponses: 0 }),
         {
           initialProps: {
             riasec: none,
@@ -221,12 +239,22 @@ describe("useEmergentClass", () => {
 
     it("ignores a wanderer or unrecognised restored class", () => {
       const wanderer = renderHook(() =>
-        useEmergentClass({ riasec: none, blockKey: "warmup", restoredClass: "wanderer" })
+        useEmergentClass({
+          riasec: none,
+          blockKey: "warmup",
+          restoredClass: "wanderer",
+          interestResponses: 0,
+        })
       );
       expect(wanderer.result.current.derived.isNamed).toBe(false);
 
       const nonsense = renderHook(() =>
-        useEmergentClass({ riasec: none, blockKey: "warmup", restoredClass: "sorceress" })
+        useEmergentClass({
+          riasec: none,
+          blockKey: "warmup",
+          restoredClass: "sorceress",
+          interestResponses: 0,
+        })
       );
       expect(nonsense.result.current.derived.isNamed).toBe(false);
     });
@@ -234,7 +262,8 @@ describe("useEmergentClass", () => {
 
   it("does not present a blurred signal (rogue) as a second class", () => {
     const { result, rerender } = renderHook(
-      ({ riasec, blockKey }) => useEmergentClass({ riasec, blockKey }),
+      ({ riasec, blockKey }) =>
+        useEmergentClass({ riasec, blockKey, interestResponses: enoughEvidence }),
       { initialProps: { riasec: none, blockKey: "warmup" } }
     );
 
@@ -248,5 +277,97 @@ describe("useEmergentClass", () => {
     rerender({ riasec: broadenedToRogue, blockKey: "mbti_values" });
     expect(result.current.derived.primary).toBe("guardian");
     expect(result.current.derived.secondary).toBeNull();
+  });
+
+  describe("evidence gate", () => {
+    it("refuses to name a student before there is enough evidence", () => {
+      // Scores that would clearly name a Guardian, but only 3 answers behind them.
+      const { result } = renderHook(() =>
+        useEmergentClass({
+          riasec: { R: 10, I: 20, A: 20, S: 90, E: 20, C: 10 },
+          blockKey: "riasec",
+          interestResponses: 3,
+        })
+      );
+      expect(result.current.derived.primary).toBe("wanderer");
+      expect(result.current.derived.isNamed).toBe(false);
+    });
+
+    it("names the student once the evidence threshold is met", () => {
+      const { result, rerender } = renderHook(
+        ({ blockKey, interestResponses }) =>
+          useEmergentClass({
+            riasec: { R: 10, I: 20, A: 20, S: 90, E: 20, C: 10 },
+            blockKey,
+            interestResponses,
+          }),
+        { initialProps: { blockKey: "riasec", interestResponses: 3 } }
+      );
+      expect(result.current.derived.isNamed).toBe(false);
+
+      rerender({ blockKey: "riasec_mi", interestResponses: 14 });
+      expect(result.current.derived.primary).toBe("guardian");
+      expect(result.current.derived.isNamed).toBe(true);
+    });
+
+    it("still honours a restored class even before the threshold", () => {
+      // A resumed student was already named; the threshold is about first
+      // naming, not about holding a name they already earned.
+      const { result } = renderHook(() =>
+        useEmergentClass({
+          riasec: {},
+          blockKey: "riasec",
+          interestResponses: 0,
+          restoredClass: "guardian",
+        })
+      );
+      expect(result.current.derived.primary).toBe("guardian");
+      expect(result.current.derived.isNamed).toBe(true);
+    });
+
+    it("does not lock Rogue while interest questions are still coming", () => {
+      const flat = { R: 52, I: 55, A: 53, S: 50, E: 51, C: 49 };
+      const { result, rerender } = renderHook(
+        ({ riasec, blockKey, interestBlockComplete }) =>
+          useEmergentClass({ riasec, blockKey, interestResponses: 12, interestBlockComplete }),
+        { initialProps: { riasec: flat, blockKey: "riasec", interestBlockComplete: false } }
+      );
+      expect(result.current.derived.primary).toBe("rogue");
+      expect(result.current.derived.isNamed).toBe(false);
+
+      // A real lead emerging later must still be able to claim them.
+      rerender({
+        riasec: { R: 20, I: 30, A: 25, S: 88, E: 15, C: 10 },
+        blockKey: "riasec_mi",
+        interestBlockComplete: true,
+      });
+      expect(result.current.derived.primary).toBe("guardian");
+      expect(result.current.derived.isNamed).toBe(true);
+    });
+
+    it("locks Rogue once the interest questions are done", () => {
+      const flat = { R: 52, I: 55, A: 53, S: 50, E: 51, C: 49 };
+      const { result } = renderHook(() =>
+        useEmergentClass({
+          riasec: flat, blockKey: "riasec_mi", interestResponses: 14, interestBlockComplete: true,
+        })
+      );
+      expect(result.current.derived.primary).toBe("rogue");
+      expect(result.current.derived.isNamed).toBe(true);
+    });
+
+    it("names a class the interest bars actually support", () => {
+      // At the moment of naming, the class must be the one a student would
+      // read off the chart. "CLASS: WARSMITH" above a chart where Helper is
+      // the tallest bar is the defect this guards.
+      const riasec = { R: 20, I: 30, A: 25, S: 85, E: 15, C: 10 };
+      const { result } = renderHook(() =>
+        useEmergentClass({ riasec, blockKey: "riasec_mi", interestResponses: 14 })
+      );
+
+      const topType = Object.entries(riasec).sort((a, b) => b[1] - a[1])[0][0];
+      const expectedByChart = { R: "warsmith", I: "mage", A: "bard", S: "guardian", E: "vanguard", C: "paladin" }[topType];
+      expect(result.current.derived.primary).toBe(expectedByChart);
+    });
   });
 });

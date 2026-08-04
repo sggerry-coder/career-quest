@@ -28,6 +28,7 @@ import {
   characterClassDisplayName,
   serializeCharacterClass,
 } from "@/lib/character/classes";
+import { countInterestResponses } from "@/lib/character/evidence";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
@@ -100,6 +101,9 @@ export default function Session({
     riasec: scoreState.riasec,
     blockKey: questState.current_block,
     restoredClass,
+    interestResponses: countInterestResponses(scoreState.riasec_raw),
+    interestBlockComplete:
+      questState.current_block !== "warmup" && questState.current_block !== "riasec",
   });
 
   useEffect(() => {

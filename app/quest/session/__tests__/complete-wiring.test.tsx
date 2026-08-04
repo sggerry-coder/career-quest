@@ -77,7 +77,11 @@ const h = vi.hoisted(() => {
 
   const scoreState = {
     riasec: { R: 80, I: 60, A: 40, S: 20, E: 10, C: 5 },
-    riasec_raw: { R: [4], I: [3], A: [3], S: [2], E: [2], C: [1] },
+    // A completed quest (flowPhase "complete") has answered the full interest
+    // block -- 14 Likert items -- well past the evidence gate's threshold.
+    // Six answers here (the pre-gate fixture) would leave a completed
+    // student unnamed, which is not a real scenario.
+    riasec_raw: { R: [4, 4, 4], I: [3, 3, 3], A: [3, 3], S: [2, 2], E: [2, 2], C: [1, 1] },
     riasec_ipsative_raw: { R: [], I: [], A: [], S: [], E: [], C: [] },
     mi: {
       linguistic: 10,

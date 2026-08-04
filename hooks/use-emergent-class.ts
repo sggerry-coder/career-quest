@@ -6,6 +6,7 @@ import {
   isCharacterClassId,
   type DerivedClass,
 } from "@/lib/character/classes";
+import { MIN_INTEREST_RESPONSES } from "@/lib/character/evidence";
 import { applyClassTheme } from "@/lib/theme";
 
 /**
@@ -36,6 +37,29 @@ interface UseEmergentClassInput {
    * Wanderer was never named and so has nothing to hold.
    */
   restoredClass?: string | null;
+  /**
+   * Total interest (RIASEC) answers recorded so far, across all six types.
+   * The evidence gate for a *first* naming: below MIN_INTEREST_RESPONSES the
+   * hook will not name an unnamed student at a block boundary, however
+   * decisive the raw derivation looks -- five warm-up answers used to be
+   * enough to name (and lock) a student before the questions that actually
+   * measure interests had run. An already-named or restored student is never
+   * affected: the gate governs earning a class that has not been earned yet,
+   * it never revokes one that already has.
+   */
+  interestResponses: number;
+  /**
+   * Whether the interest block (riasec + riasec_mi) has finished. Governs
+   * whether a fresh Rogue (deriveCharacterClass's EXPLORER / no-clear-lean
+   * outcome) counts as a first naming. Mid-quest a marginal lead is not
+   * final -- more interest answers are still coming that could resolve it
+   * into a real class -- so Rogue is shown but left unlocked so a later
+   * boundary can still claim the student. Once the interest block is done,
+   * an unresolved lead is a genuine answer and Rogue locks like any other
+   * class. Defaults to false, the safe assumption for callers that have not
+   * said otherwise.
+   */
+  interestBlockComplete?: boolean;
 }
 
 const UNNAMED: DerivedClass = {
@@ -58,9 +82,23 @@ function seedFromRestored(restored?: string | null): DerivedClass {
  * Combine a fresh derivation with what the student was last resolved to,
  * honouring the "may deepen, must not flip" rule.
  */
-function resolveNext(prev: DerivedClass, raw: DerivedClass): DerivedClass {
+function resolveNext(
+  prev: DerivedClass,
+  raw: DerivedClass,
+  interestBlockComplete: boolean
+): DerivedClass {
   if (!prev.isNamed) {
-    // Not yet named -- any result, including a first naming, is allowed.
+    if (raw.primary === "rogue" && !interestBlockComplete) {
+      // A fresh, still-unnamed derivation landed on Rogue while the
+      // interest block isn't finished. Rogue counts as named -- "open to
+      // anything" is a real answer -- but only once there is nothing left
+      // to change its mind: mid-block, a marginal lead is not final, and
+      // locking it here would close the door on a later boundary resolving
+      // it into a real class. Show it, don't lock it.
+      return { primary: "rogue", secondary: null, isNamed: false };
+    }
+    // Not yet named -- any other result, including a first naming, is
+    // allowed.
     return raw;
   }
   if (!raw.isNamed) {
@@ -92,6 +130,8 @@ export function useEmergentClass({
   riasec,
   blockKey,
   restoredClass,
+  interestResponses,
+  interestBlockComplete = false,
 }: UseEmergentClassInput): { derived: DerivedClass } {
   const [derived, setDerived] = useState<DerivedClass>(() =>
     seedFromRestored(restoredClass)
@@ -117,12 +157,17 @@ export function useEmergentClass({
     effective.isNamed ? effective.primary : null
   );
 
-  // Latest scores without making them an effect dependency -- synced in its
-  // own effect (never during render) so re-deriving stays gated on blockKey
-  // alone and mid-block answers never rename the student.
+  // Latest scores, evidence count, and interest-block completion without
+  // making any of them an effect dependency -- synced in their own effect
+  // (never during render) so re-deriving stays gated on blockKey alone and
+  // mid-block answers never rename the student.
   const latestRiasec = useRef(riasec);
+  const latestInterestResponses = useRef(interestResponses);
+  const latestInterestBlockComplete = useRef(interestBlockComplete);
   useEffect(() => {
     latestRiasec.current = riasec;
+    latestInterestResponses.current = interestResponses;
+    latestInterestBlockComplete.current = interestBlockComplete;
   });
 
   // Commit a restored class that arrives after mount -- the resume decision
@@ -146,8 +191,24 @@ export function useEmergentClass({
     if (lastBlock.current === blockKey) return;
     lastBlock.current = blockKey;
 
+    if (
+      latestInterestResponses.current < MIN_INTEREST_RESPONSES &&
+      !currentDerived.current.isNamed
+    ) {
+      // Not enough interest evidence yet to earn a first naming. A
+      // restored or already-named student is untouched by this branch --
+      // currentDerived.current.isNamed is true for them -- so the gate only
+      // ever withholds a naming that has not happened yet; it never revokes
+      // one that has. Try again at the next block boundary.
+      return;
+    }
+
     const raw = deriveCharacterClass(latestRiasec.current);
-    const resolved = resolveNext(currentDerived.current, raw);
+    const resolved = resolveNext(
+      currentDerived.current,
+      raw,
+      latestInterestBlockComplete.current
+    );
 
     currentDerived.current = resolved;
     setDerived(resolved);
