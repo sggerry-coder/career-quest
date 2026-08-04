@@ -118,14 +118,24 @@ export default function QuestionCard({
           {/* Input component slot */}
           <div className="w-full">{children}</div>
 
-          {/* Skip button */}
+          {/* The escape hatch, named for what the student means by it.
+              "Skip this question" invites the student who is bored as much as
+              the one who genuinely cannot answer, and it described the app's
+              old behaviour rather than the student's: the answer was scored as
+              though it had been given. It is now recorded as missing, so the
+              button can say the true thing -- and "I'm not sure" is a
+              legitimate answer to "how much do you like this?", which "skip"
+              never sounded like. No tone variant: nothing else on this card
+              varies by tone (see the undo label and the counter above), and a
+              tone prop threaded here for one string would be the only reason
+              QuestionCard knew what tone was. */}
           {canSkip && (
             <button
               onClick={onSkip}
               className="mt-2 text-sm text-white/65 underline decoration-white/65 transition-colors hover:text-white/85 focus:outline-none focus:ring-2 focus:ring-white/50 rounded px-2 py-1"
               tabIndex={0}
             >
-              Skip this question
+              I&apos;m not sure
             </button>
           )}
         </motion.div>
