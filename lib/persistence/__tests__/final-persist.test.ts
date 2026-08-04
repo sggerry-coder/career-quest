@@ -102,6 +102,10 @@ function makeInput(overrides?: Partial<FinalPersistInput>): FinalPersistInput {
         structure_flexibility: 0,
         solo_team: 0,
       },
+      // security_adventure and solo_team were answered; income_impact was not.
+      // Both of the last two score 0, which is the whole reason the counts are
+      // written at all.
+      values_raw: { security_adventure: [1], income_impact: [], solo_team: [0] },
       strengths: ["Creative Thinking"],
     },
     selfMap: null,
@@ -192,6 +196,15 @@ describe("runFinalPersist", () => {
     expect(scoresCall?.payload).toMatchObject({
       student_id: "student-1",
       mbti_raw_counts: { EI: 3, SN: 3, TF: 1, JP: 2 },
+      // A count for every dimension, including the ones with no answers --
+      // income_impact scores 0 either way, and only this says which 0 it is.
+      values_raw_counts: {
+        security_adventure: 1,
+        income_impact: 0,
+        prestige_fulfilment: 0,
+        structure_flexibility: 0,
+        solo_team: 1,
+      },
     });
 
     const studentCall = h.calls.find((c) => c.table === "students");

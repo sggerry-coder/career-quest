@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { validateScoresBeforePersist } from "@/lib/validation/score-validation";
 import { buildMbtiRawCounts } from "@/lib/scoring/mbti";
+import { buildValuesRawCounts } from "@/lib/scoring/values";
 import {
   classifySupabaseError,
   type PersistResult,
@@ -25,6 +26,7 @@ export interface FinalPersistScores {
   mbti: Record<string, number>;
   mbti_raw: Record<string, number[]>;
   values: Record<string, number>;
+  values_raw: Record<string, number[]>;
   strengths: string[];
 }
 
@@ -153,6 +155,13 @@ export async function runFinalPersist(
             mbti_indicators: scores.mbti,
             mbti_raw_counts: buildMbtiRawCounts(scores.mbti_raw),
             values_compass: scores.values,
+            // Alongside the scores for the same reason as mbti_raw_counts: a
+            // values score of 0 is the exact centre of the spectrum, so the
+            // column alone cannot say whether the dimension was answered dead
+            // centre or never answered at all. The dashboard reads these back
+            // and has nothing else to go on. NULL in legacy rows, which
+            // hasValuesReading reads as "assume answered".
+            values_raw_counts: buildValuesRawCounts(scores.values_raw),
             strengths: scores.strengths,
             updated_at: new Date().toISOString(),
           },

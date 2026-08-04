@@ -300,6 +300,7 @@ export default function Session({
         mbti: scoreState.mbti,
         mbti_raw: scoreState.mbti_raw,
         values: scoreState.values,
+        values_raw: scoreState.values_raw,
         strengths: scoreState.strengths,
       },
       // Merge self-map reflections (clarity, sources, perceived strengths)
