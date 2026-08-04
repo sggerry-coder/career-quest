@@ -34,6 +34,8 @@ export interface FinalPersistInput {
   scores: FinalPersistScores;
   /** Fully merged self_map to write, or null to leave self_map untouched. */
   selfMap: Record<string, unknown> | null;
+  /** The class the student became (CharacterClassId), written to avatar_class. */
+  characterClass: string;
 }
 
 export interface FinalPersistOptions {
@@ -85,7 +87,7 @@ export async function runFinalPersist(
   input: FinalPersistInput,
   options?: FinalPersistOptions
 ): Promise<PersistResult> {
-  const { studentId, responses, scores, selfMap } = input;
+  const { studentId, responses, scores, selfMap, characterClass } = input;
   const retryDelays = options?.retryDelays ?? DEFAULT_RETRY_DELAYS_MS;
 
   if (!studentId) {
@@ -165,6 +167,9 @@ export async function runFinalPersist(
     const studentUpdate: Record<string, unknown> = {
       current_session: 1,
       has_completed_session1: true,
+      // What the student became. avatar_class used to hold what they picked
+      // before the app knew anything about them.
+      avatar_class: characterClass,
     };
     if (selfMap) {
       studentUpdate.self_map = selfMap;

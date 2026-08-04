@@ -17,6 +17,8 @@ import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
 import { applyClassTheme } from "@/lib/theme";
 import { CHARACTER_CLASSES, type CharacterClassId } from "@/lib/character/classes";
+import { earnedRelics } from "@/lib/character/relics";
+import RelicShelf from "@/components/character/relic-shelf";
 import { loadSessionSnapshot } from "@/lib/persistence/session-snapshot";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
@@ -331,6 +333,14 @@ export default function Dashboard() {
             <SelfVsMeasured
               selfMap={student.self_map}
               detectedStrengths={scores.strengths ?? []}
+            />
+          </div>
+
+          {/* === Earned relics: traits shown during the quest, displayed only === */}
+          <div className="mb-6">
+            <RelicShelf
+              relics={earnedRelics(scores.strengths ?? [])}
+              tone={student.tone}
             />
           </div>
         </SectionErrorBoundary>

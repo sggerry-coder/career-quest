@@ -216,6 +216,7 @@ export default function Session({
     }
     return runFinalPersist({
       studentId,
+      characterClass: emergentClass.primary,
       responses: questState.responses,
       scores: {
         riasec: scoreState.riasec,
@@ -232,7 +233,7 @@ export default function Session({
         ? { ...existingSelfMap.current, ...selfMapData.current }
         : null,
     });
-  }, [studentId, scoreState, questState.responses]);
+  }, [studentId, scoreState, questState.responses, emergentClass.primary]);
 
   // Final-save state machine. The completion screen is gated on this, so a
   // failed save can never be mistaken for a finished quest.

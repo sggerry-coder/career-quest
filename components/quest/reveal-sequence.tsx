@@ -9,7 +9,8 @@ import ValuesSliders from "@/components/charts/values-sliders";
 import ClassLabel from "@/components/charts/class-label";
 import EmergingType from "@/components/charts/emerging-type";
 import { deriveEmergingType } from "@/lib/scoring/mbti";
-import { deriveClassLabel } from "@/lib/scoring/riasec";
+import { deriveCharacterClass, characterClassDisplayName } from "@/lib/character/classes";
+import { describeCharacter } from "@/lib/character/description";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 
 interface ScoreState {
@@ -48,7 +49,14 @@ export default function RevealSequence({
 }: RevealSequenceProps) {
   const [phase, setPhase] = useState<RevealPhase>("transition");
 
-  const classLabel = deriveClassLabel(scoreState.riasec);
+  const derived = deriveCharacterClass(scoreState.riasec);
+  const emergentClassName = characterClassDisplayName(derived, tone);
+  const emergentDescription = describeCharacter({
+    derived,
+    tone,
+    mbti: scoreState.mbti,
+    values: scoreState.values,
+  });
   const mbtiRawCounts: Record<string, number> = {};
   for (const key of ["EI", "SN", "TF", "JP"]) {
     mbtiRawCounts[key] = scoreState.mbti_raw?.[key]?.length ?? 0;
@@ -175,9 +183,10 @@ export default function RevealSequence({
               key="class"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex justify-center"
+              className="flex flex-col items-center gap-3"
             >
-              <ClassLabel label={classLabel} />
+              <ClassLabel label={emergentClassName} />
+              <p className="text-sm text-white/60 text-center max-w-xs">{emergentDescription}</p>
             </motion.div>
           )}
 

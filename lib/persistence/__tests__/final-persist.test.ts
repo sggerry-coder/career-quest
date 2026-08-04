@@ -104,6 +104,7 @@ function makeInput(overrides?: Partial<FinalPersistInput>): FinalPersistInput {
       strengths: ["Creative Thinking"],
     },
     selfMap: null,
+    characterClass: "wanderer",
     ...overrides,
   };
 }
@@ -247,6 +248,15 @@ describe("runFinalPersist", () => {
     expect(result.success).toBe(true);
     const studentCall = h.calls.find((c) => c.table === "students");
     expect(studentCall?.payload).toMatchObject({ self_map: selfMap });
+  });
+
+  it("saves the class the student became, so the dashboard is not stuck on Wanderer", async () => {
+    await runFinalPersist(makeInput({ characterClass: "guardian" }), { retryDelays: [] });
+
+    const studentUpdate = h.calls.find(
+      (c) => c.table === "students" && c.method === "update"
+    );
+    expect(studentUpdate?.payload).toMatchObject({ avatar_class: "guardian" });
   });
 
   it("skips the session_responses write when there are no responses", async () => {
