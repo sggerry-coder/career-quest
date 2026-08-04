@@ -231,7 +231,12 @@ describe("session complete wiring", () => {
     await renderCompletePage();
 
     expect(await screen.findByText("Quest Chapter 1 Complete")).toBeDefined();
-    expect(screen.getByText("MAKER")).toBeDefined();
+    // The resolved class in the student's tone -- the same name the reveal
+    // and the dashboard show. This card used to print the raw
+    // deriveClassLabel output ("MAKER"), so three surfaces disagreed about
+    // who the student was.
+    expect(screen.getByText("Warsmith-Mage")).toBeDefined();
+    expect(screen.queryByText("MAKER-INVESTIGATOR")).toBeNull();
     expect(screen.getByText("Your Archetype")).toBeDefined();
     expect(screen.getByText("Creative Thinking")).toBeDefined();
     expect(screen.getByRole("button", { name: "View Dashboard" })).toBeDefined();

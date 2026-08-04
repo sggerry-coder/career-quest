@@ -11,6 +11,7 @@ import {
   DEFAULT_RETRY_DELAYS_MS,
   type FinalPersistInput,
 } from "@/lib/persistence/final-persist";
+import { parseCharacterClass } from "@/lib/character/classes";
 import type { ClientResponse } from "@/lib/types/quest";
 
 // ---------------------------------------------------------------------------
@@ -257,6 +258,27 @@ describe("runFinalPersist", () => {
       (c) => c.table === "students" && c.method === "update"
     );
     expect(studentUpdate?.payload).toMatchObject({ avatar_class: "guardian" });
+  });
+
+  it("saves both halves of a dual class, and the dashboard reads them back", async () => {
+    // avatar_class is a text column, so "guardian-mage" needs no migration.
+    // Persisting only the primary told a Guardian-Mage they were a Guardian
+    // from the moment they left the reveal screen.
+    await runFinalPersist(makeInput({ characterClass: "guardian-mage" }), {
+      retryDelays: [],
+    });
+
+    const studentUpdate = h.calls.find(
+      (c) => c.table === "students" && c.method === "update"
+    );
+    const stored = (studentUpdate?.payload as { avatar_class: string })
+      .avatar_class;
+    expect(stored).toBe("guardian-mage");
+    expect(parseCharacterClass(stored)).toEqual({
+      primary: "guardian",
+      secondary: "mage",
+      isNamed: true,
+    });
   });
 
   it("skips the session_responses write when there are no responses", async () => {

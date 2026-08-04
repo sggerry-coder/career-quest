@@ -77,6 +77,48 @@ export function deriveCharacterClass(
   return { primary, secondary, isNamed: primary !== "wanderer" };
 }
 
+/** What we know about a student we have not earned the right to name. */
+export const UNNAMED_CLASS: DerivedClass = {
+  primary: "wanderer",
+  secondary: null,
+  isNamed: false,
+};
+
+/**
+ * The resolved class as it is stored in students.avatar_class: "guardian",
+ * "guardian-mage", or "wanderer".
+ *
+ * avatar_class is a text column, so a hyphenated dual class needs no
+ * migration. Persisting the primary alone silently destroyed the second half
+ * of every dual class: a student told "Guardian-Mage" at the reveal came back
+ * to a dashboard that said "Guardian" forever.
+ */
+export function serializeCharacterClass(derived: DerivedClass): string {
+  return derived.secondary
+    ? `${derived.primary}-${derived.secondary}`
+    : derived.primary;
+}
+
+/**
+ * Read back what serializeCharacterClass wrote.
+ *
+ * Anything unrecognised -- an empty column, a retired id from before the
+ * emergent system, hand-edited nonsense -- resolves to Wanderer. Not knowing
+ * is a real answer; throwing on the dashboard's critical path is not.
+ */
+export function parseCharacterClass(
+  value: string | null | undefined
+): DerivedClass {
+  const [first, second] = (value ?? "").split("-");
+  if (!isCharacterClassId(first) || first === "wanderer") return UNNAMED_CLASS;
+
+  const secondary =
+    isCharacterClassId(second) && second !== "wanderer" && second !== first
+      ? second
+      : null;
+  return { primary: first, secondary, isNamed: true };
+}
+
 export function characterClassDisplayName(
   derived: DerivedClass,
   tone: "quest" | "explorer"

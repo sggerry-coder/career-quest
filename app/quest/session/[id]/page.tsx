@@ -24,6 +24,10 @@ import { useQuestState } from "@/hooks/use-quest-state";
 import { useScores } from "@/hooks/use-scores";
 import { useFinalPersist } from "@/hooks/use-final-persist";
 import { useEmergentClass } from "@/hooks/use-emergent-class";
+import {
+  characterClassDisplayName,
+  serializeCharacterClass,
+} from "@/lib/character/classes";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
@@ -226,7 +230,9 @@ export default function Session({
     }
     return runFinalPersist({
       studentId,
-      characterClass: emergentClass.primary,
+      // The full resolved class, dual included. Persisting only the primary
+      // told a "Guardian-Mage" they were a "Guardian" ever after.
+      characterClass: serializeCharacterClass(emergentClass),
       responses: questState.responses,
       scores: {
         riasec: scoreState.riasec,
@@ -250,7 +256,7 @@ export default function Session({
         [STRENGTH_COUNTS_KEY]: accumulateStrengths(scoreState.strength_signals),
       },
     });
-  }, [studentId, scoreState, questState.responses, emergentClass.primary]);
+  }, [studentId, scoreState, questState.responses, emergentClass]);
 
   // Final-save state machine. The completion screen is gated on this, so a
   // failed save can never be mistaken for a finished quest.
@@ -758,7 +764,9 @@ export default function Session({
             ) : saveStatus === "saved" ? (
               <CompletionScreen
                 tone={studentTone}
-                classLabel={scoreState.class_label}
+                // The resolved class, same as the reveal and the dashboard --
+                // this card used to show the raw "HELPER-INVESTIGATOR" label.
+                classLabel={characterClassDisplayName(emergentClass, studentTone)}
                 scoreState={{
                   riasec: scoreState.riasec,
                   strengths: scoreState.strengths,

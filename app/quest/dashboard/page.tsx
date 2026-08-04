@@ -14,10 +14,13 @@ import XpBar from "@/components/ui/xp-bar";
 import { badges as allBadgeDefinitions } from "@/data/badges";
 import { calculateXp, getCurrentMilestone, getUnlockedCosmetics } from "@/lib/xp";
 import { deriveEmergingType } from "@/lib/scoring/mbti";
-import { deriveClassLabel } from "@/lib/scoring/riasec";
 import { applyClassTheme } from "@/lib/theme";
 import { chapterLabel } from "@/lib/copy/chapter";
-import { CHARACTER_CLASSES, type CharacterClassId } from "@/lib/character/classes";
+import {
+  CHARACTER_CLASSES,
+  characterClassDisplayName,
+  parseCharacterClass,
+} from "@/lib/character/classes";
 import { relicsFromSelfMap } from "@/lib/character/relics";
 import RelicShelf from "@/components/character/relic-shelf";
 import { loadSessionSnapshot } from "@/lib/persistence/session-snapshot";
@@ -72,15 +75,6 @@ function getFrameClass(unlocked: string[]): string {
   return "";
 }
 
-// Avatar class lookups go through CHARACTER_CLASSES (lib/character/classes.ts)
-// -- the single source of truth for class name/icon -- rather than a local
-// copy. An unrecognised or missing avatar_class resolves to "wanderer".
-function resolveCharacterClass(avatarClass: string): CharacterClassId {
-  return avatarClass in CHARACTER_CLASSES
-    ? (avatarClass as CharacterClassId)
-    : "wanderer";
-}
-
 export default function Dashboard() {
   const [student, setStudent] = useState<StudentData | null>(null);
   const [scores, setScores] = useState<ScoresData | null>(null);
@@ -125,9 +119,9 @@ export default function Dashboard() {
         if (studentRes.data) {
           const studentData = studentRes.data as StudentData;
           setStudent(studentData);
-          if (studentData.avatar_class) {
-            applyClassTheme(studentData.avatar_class);
-          }
+          // The stored class may be a dual ("guardian-mage"); the theme
+          // belongs to the primary half.
+          applyClassTheme(parseCharacterClass(studentData.avatar_class).primary);
         }
         if (scoresRes.data) {
           setScores(scoresRes.data as ScoresData);
@@ -198,14 +192,17 @@ export default function Dashboard() {
     );
   }
 
-  const classId = resolveCharacterClass(student.avatar_class);
-  const className = CHARACTER_CLASSES[classId].name[student.tone];
-  const classIcon = CHARACTER_CLASSES[classId].icon;
+  // One resolution of the class for the whole page. The header badge, the
+  // Ability Scores card and the relic shelf all read from it, so they cannot
+  // disagree about who the student is -- the header used to say "Guardian"
+  // while the card below said "CLASS: HELPER-INVESTIGATOR".
+  const resolvedClass = parseCharacterClass(student.avatar_class);
+  const className = characterClassDisplayName(resolvedClass, student.tone);
+  const classIcon = CHARACTER_CLASSES[resolvedClass.primary].icon;
   const hasCompletedSession1 = student.has_completed_session1;
   const xp = calculateXp(student.current_session, hasCompletedSession1);
   const milestone = getCurrentMilestone(student.current_session);
   const frameClass = getFrameClass(getUnlockedCosmetics(xp));
-  const classLabel = deriveClassLabel(scores.riasec_scores);
   const { display: emergingTypeCode, hasEmerging } = deriveEmergingType(
     scores.mbti_indicators,
     scores.mbti_raw_counts ?? undefined
@@ -258,7 +255,7 @@ export default function Dashboard() {
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
               <RiasecBars
                 scores={scores.riasec_scores}
-                classLabel={classLabel}
+                classLabel={className}
               />
             </div>
 
