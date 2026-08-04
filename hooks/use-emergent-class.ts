@@ -39,13 +39,15 @@ interface UseEmergentClassInput {
   restoredClass?: string | null;
   /**
    * Total interest (RIASEC) answers recorded so far, across all six types.
-   * The evidence gate for a *first* naming: below MIN_INTEREST_RESPONSES the
-   * hook will not name an unnamed student at a block boundary, however
-   * decisive the raw derivation looks -- five warm-up answers used to be
-   * enough to name (and lock) a student before the questions that actually
-   * measure interests had run. An already-named or restored student is never
-   * affected: the gate governs earning a class that has not been earned yet,
-   * it never revokes one that already has.
+   * The evidence gate for a *first* naming while interest questions are
+   * still to come: below MIN_INTEREST_RESPONSES the hook will not name an
+   * unnamed student at a block boundary, however decisive the raw
+   * derivation looks -- five warm-up answers used to be enough to name (and
+   * lock) a student before the questions that actually measure interests
+   * had run. An already-named or restored student is never affected: the
+   * gate governs earning a class that has not been earned yet, it never
+   * revokes one that already has. Once interestBlockComplete is true, this
+   * threshold stops applying -- see there for why.
    */
   interestResponses: number;
   /**
@@ -53,14 +55,27 @@ interface UseEmergentClassInput {
    * block -- have been answered. True from entry into "riasec_mi" onward:
    * despite its name, "riasec_mi" carries no further RIASEC items (it's
    * Multiple Intelligences questions), so once a student has left "riasec"
-   * there are no more interest answers left to arrive. Governs whether a
-   * fresh Rogue (deriveCharacterClass's EXPLORER / no-clear-lean outcome)
-   * counts as a first naming. Mid-"riasec" a marginal lead is not final --
-   * more interest answers are still coming that could resolve it into a real
-   * class -- so Rogue is shown but left unlocked so a later boundary can
-   * still claim the student. Once true, an unresolved lead is a genuine
-   * answer and Rogue locks like any other class. Defaults to false, the safe
-   * assumption for callers that have not said otherwise.
+   * there are no more interest answers left to arrive.
+   *
+   * Governs two things:
+   * 1. Whether MIN_INTEREST_RESPONSES still applies. The threshold exists to
+   *    stop a *premature* naming while more evidence is en route; once
+   *    interestBlockComplete is true, no more is coming before the reveal,
+   *    so continuing to withhold a naming (e.g. a student who skipped 5+ of
+   *    the 14 interest questions, leaving 9 genuine answers with a clear
+   *    lead) would leave a nameable student a permanent Wanderer for no
+   *    reason. deriveCharacterClass already returns an honest Wanderer when
+   *    there truly is no lead, so it's safe to just let it run.
+   * 2. Whether a fresh Rogue (deriveCharacterClass's EXPLORER / no-clear-lean
+   *    outcome) counts as a first naming. Mid-"riasec" a marginal lead is
+   *    not final -- more interest answers are still coming that could
+   *    resolve it into a real class -- so Rogue is shown but left unlocked
+   *    so a later boundary can still claim the student. Once true, an
+   *    unresolved lead is a genuine answer and Rogue locks like any other
+   *    class.
+   *
+   * Defaults to false, the safe assumption for callers that have not said
+   * otherwise.
    */
   interestBlockComplete?: boolean;
 }
@@ -195,14 +210,25 @@ export function useEmergentClass({
     lastBlock.current = blockKey;
 
     if (
+      !latestInterestBlockComplete.current &&
       latestInterestResponses.current < MIN_INTEREST_RESPONSES &&
       !currentDerived.current.isNamed
     ) {
-      // Not enough interest evidence yet to earn a first naming. A
-      // restored or already-named student is untouched by this branch --
-      // currentDerived.current.isNamed is true for them -- so the gate only
-      // ever withholds a naming that has not happened yet; it never revokes
-      // one that has. Try again at the next block boundary.
+      // Not enough interest evidence yet to earn a first naming, and more
+      // is still coming (the interest block isn't finished) -- so waiting
+      // is worth it. A restored or already-named student is untouched by
+      // this branch -- currentDerived.current.isNamed is true for them --
+      // so the gate only ever withholds a naming that has not happened yet;
+      // it never revokes one that has. Try again at the next block
+      // boundary.
+      //
+      // Once the interest block IS finished, this branch is skipped even
+      // below the threshold: a student who skipped most of the 14 interest
+      // questions has nothing more coming before the reveal, so refusing to
+      // name them on 9 good answers achieves nothing but leaving them a
+      // permanent Wanderer. deriveCharacterClass already returns an honest
+      // Wanderer when there truly is no lead (every type under its floor),
+      // so letting it run with whatever evidence exists is safe either way.
       return;
     }
 

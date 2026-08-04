@@ -20,6 +20,14 @@
  * can land mid-interest-block with only some of the 14 answered. Set below
  * 14, a resume with most-but-not-all interest answers can still be named;
  * set above 5, the five (now interest-free) warm-up answers alone can't.
+ *
+ * This threshold only withholds a naming while more interest answers are
+ * still on their way -- see useEmergentClass's `interestBlockComplete`. Once
+ * the interest block itself is finished (whether by answering all 14 or by
+ * skipping some), nothing more is coming before the reveal, so the gate
+ * stops applying: a student who skipped several interest questions but left
+ * a clear lead in the rest is named on what they answered, not held at
+ * Wanderer for an evidence count they can no longer increase.
  */
 export const MIN_INTEREST_RESPONSES = 10;
 

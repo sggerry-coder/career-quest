@@ -151,6 +151,33 @@ function makeScoreState(): ScoreState {
   };
 }
 
+/**
+ * A student who answered 12 of the 14 interest questions -- enough to clear
+ * the evidence gate (MIN_INTEREST_RESPONSES = 10) -- with every RIASEC type
+ * getting exactly two answers, [2, 3] on the 1-4 Likert scale. That
+ * normalises to exactly 50 for every type (see calculateRiasecType), so
+ * deriveClassLabel finds no lead at all and returns "EXPLORER" (Rogue).
+ * Paired with current_block "riasec" (the interest block isn't finished --
+ * 2 questions remain), useEmergentClass must treat this Rogue as
+ * provisional: shown, but isNamed false.
+ */
+function makeProvisionalRogueScoreState(): ScoreState {
+  const tiedAtFifty = [2, 3];
+  return {
+    ...makeScoreState(),
+    riasec: { R: 50, I: 50, A: 50, S: 50, E: 50, C: 50 },
+    riasec_raw: {
+      R: tiedAtFifty,
+      I: tiedAtFifty,
+      A: tiedAtFifty,
+      S: tiedAtFifty,
+      E: tiedAtFifty,
+      C: tiedAtFifty,
+    },
+    class_label: "EXPLORER",
+  };
+}
+
 beforeEach(() => {
   window.localStorage.clear();
   h.pushMock.mockClear();
@@ -296,5 +323,53 @@ describe("mid-session checkpoint resume flow", () => {
       expect(snapshot?.questState.responses).toHaveLength(1);
       expect(snapshot?.questState.currentIndex).toBe(1);
     });
+  });
+
+  /**
+   * Regression test for a review finding: useEmergentClass correctly marks
+   * a mid-quest Rogue lead "provisional" (isNamed: false) while interest
+   * questions are still to come, but the session page used to dispatch
+   * SET_AVATAR_CLASS with emergentClass.primary unconditionally, ignoring
+   * isNamed. questState.avatarClass is checkpointed on every change and
+   * restored on the next resume via seedFromRestored, which honours any
+   * non-wanderer id as already named -- so an unguarded dispatch would let
+   * a provisional Rogue quietly become permanent on its next round-trip
+   * through localStorage, with no further evidence able to change it. This
+   * renders the real Session page (real useQuestState, real useScores, real
+   * snapshot persistence) rather than asserting against the hook in
+   * isolation, because the defect lives entirely in the page's dispatch
+   * effect, not in the hook.
+   */
+  it("never checkpoints a provisional Rogue as if it were a genuine naming", async () => {
+    saveSessionSnapshot(
+      "student-1",
+      buildQuestStateAtIndex(17), // 5 warm-up + 12 of the 14 riasec answers
+      makeProvisionalRogueScoreState(),
+      null
+    );
+
+    await renderSession();
+    const resumeButton = await screen.findByRole("button", { name: "Resume Quest" });
+
+    await act(async () => {
+      fireEvent.click(resumeButton);
+    });
+    // Let any cascading state updates the resume triggers -- the block
+    // boundary re-deriving the class, the avatarClass dispatch decision
+    // that follows it, and the checkpoint effect reacting to that -- fully
+    // settle before reading the persisted snapshot back.
+    await act(async () => {});
+
+    await waitFor(() => {
+      const snapshot = loadSessionSnapshot("student-1");
+      expect(snapshot).not.toBeNull();
+      expect(snapshot?.questState.current_block).toBe("riasec");
+    });
+
+    const snapshot = loadSessionSnapshot("student-1");
+    // The interest block isn't finished (12 of 14 answered), so the Rogue
+    // lead must still be provisional -- and a provisional class must never
+    // reach the checkpoint. avatarClass stays at its pre-resume value.
+    expect(snapshot?.questState.avatarClass).toBe("wanderer");
   });
 });

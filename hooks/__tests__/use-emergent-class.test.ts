@@ -376,6 +376,40 @@ describe("useEmergentClass", () => {
       expect(result.current.derived.primary).toBe(expectedByChart);
     });
 
+    it("names a student below the threshold once the interest block is done", () => {
+      // A student who skipped 5 of the 14 interest questions: only 9
+      // answers, but they left a clear Guardian lead. The threshold exists
+      // to stop a *premature* naming while more answers are still coming --
+      // once the interest block is finished, nothing more will arrive
+      // before the reveal, so 9 good answers should be enough.
+      const { result } = renderHook(() =>
+        useEmergentClass({
+          riasec: { R: 10, I: 20, A: 20, S: 90, E: 20, C: 10 },
+          blockKey: "riasec_mi",
+          interestResponses: 9,
+          interestBlockComplete: true,
+        })
+      );
+      expect(result.current.derived.primary).toBe("guardian");
+      expect(result.current.derived.isNamed).toBe(true);
+    });
+
+    it("still leaves a student with no real lead unnamed once the interest block is done", () => {
+      // Almost nothing answered, and what's there shows no lead at all --
+      // deriveCharacterClass honestly returns Wanderer for this, and the
+      // finished-block bypass must not force a name that isn't there.
+      const { result } = renderHook(() =>
+        useEmergentClass({
+          riasec: none,
+          blockKey: "riasec_mi",
+          interestResponses: 1,
+          interestBlockComplete: true,
+        })
+      );
+      expect(result.current.derived.primary).toBe("wanderer");
+      expect(result.current.derived.isNamed).toBe(false);
+    });
+
     /**
      * A provisional Rogue (isNamed false -- see the two tests above) must
      * never be treated as a genuine naming by the checkpoint. The session
