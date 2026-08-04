@@ -26,6 +26,15 @@ import { applyClassTheme } from "@/lib/theme";
  * pre-check missed this (a stale read, a failed select, a direct call) can
  * recover into the consent screen instead of showing the student a generic,
  * unrecoverable "try again" error.
+ *
+ * The existence check itself can also fail transiently. When it does, this
+ * function does not know whether a previous student's row exists, so it
+ * cannot proceed as a genuinely new student (that could silently overwrite
+ * a row it failed to see) and it cannot show the consent screen either
+ * (there may be nothing to consent to). It refuses and reports
+ * `{ success: false, reason: "existence_check_failed" }` so the caller can
+ * ask the student to try again instead of picking one of those two wrong
+ * defaults.
  */
 
 export interface StudentProfile {
@@ -44,7 +53,11 @@ export interface StudentProfile {
 
 export type ProvisionResult =
   | { success: true; studentId: string; replacedExisting: boolean }
-  | { success: false; reason?: "needs_confirmation"; existingName?: string };
+  | {
+      success: false;
+      reason?: "needs_confirmation" | "existence_check_failed";
+      existingName?: string;
+    };
 
 const ZERO_SCORES = {
   riasec_scores: { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 },
@@ -90,11 +103,26 @@ export async function provisionStudent(
       // exists for this id) -- not "does it have a name" or anything else
       // that could drift out of sync with the caller and reopen the gap
       // this function exists to close.
-      const { data: existing } = await supabase
+      const { data: existing, error: existingCheckError } = await supabase
         .from("students")
         .select("id, name")
         .eq("id", userId)
         .single();
+
+      // Supabase's `.single()` reports "no row" as an error (PGRST116) --
+      // that is the ordinary case for a genuinely new student on this
+      // device and must proceed normally. Any *other* error means the
+      // existence of a previous student is unknown, not that there isn't
+      // one: proceeding would risk silently overwriting a row we simply
+      // failed to see. A missing error alongside missing data (some mocks,
+      // and defensively for real clients) is treated the same as "no row".
+      const rowGenuinelyAbsent =
+        !existing && (!existingCheckError || existingCheckError.code === "PGRST116");
+
+      if (existingCheckError && !rowGenuinelyAbsent) {
+        return { success: false, reason: "existence_check_failed" };
+      }
+
       replacedExisting = Boolean(existing);
 
       // A shared classroom device keeps the previous student's auth session.
@@ -110,11 +138,15 @@ export async function provisionStudent(
       // a bare failure lets the caller recover into that screen right here,
       // instead of the student hitting an indistinguishable "try again"
       // error with no route forward.
+      //
+      // `|| undefined`, not `??`: an existing row can legitimately have an
+      // empty-string name, and an empty string must still fall through to
+      // the caller's fallback display name rather than rendering blank.
       if (replacedExisting && !profile.confirmedReplace) {
         return {
           success: false,
           reason: "needs_confirmation",
-          existingName: existing?.name ?? undefined,
+          existingName: existing?.name || undefined,
         };
       }
     } else {

@@ -53,4 +53,17 @@ describe("ReplaceProfileConfirm", () => {
     );
     expect(screen.getByText(/Delete and start again/i)).toBeDefined();
   });
+
+  it("announces the heading as its accessible name and the warning as its description", () => {
+    // Re-review Finding 3: a plain aria-label on the dialog would override
+    // the heading as its accessible name and silence the "cannot be
+    // recovered" sentence on open. aria-labelledby + aria-describedby
+    // announce both instead.
+    render(<ReplaceProfileConfirm existingName="Priya" tone="quest" onConfirm={() => {}} onCancel={() => {}} />);
+    const dialog = screen.getByRole("alertdialog", {
+      name: /This device is signed in as Priya/i,
+    });
+    expect(dialog.getAttribute("aria-describedby")).toBeTruthy();
+    expect(dialog.hasAttribute("aria-label")).toBe(false);
+  });
 });

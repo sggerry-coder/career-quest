@@ -24,6 +24,11 @@ const h = vi.hoisted(() => {
     existingUserId: null as string | null,
     existingStudentRow: false,
     existingStudentName: "Priya",
+    // When set, the students existence check returns this error instead of
+    // data -- lets tests simulate both Supabase's "no rows" shape
+    // (code: "PGRST116", which must still proceed normally) and a genuine
+    // read failure (any other code, which must refuse everything).
+    existingCheckErrorCode: null as string | null,
     signInFails: false,
     studentUpsertFails: false,
   };
@@ -39,13 +44,23 @@ const h = vi.hoisted(() => {
     return {
       select: () => ({
         eq: () => ({
-          single: async () => ({
-            data:
-              table === "students" && state.existingStudentRow
+          single: async () => {
+            if (table !== "students") {
+              return { data: null, error: null };
+            }
+            if (state.existingCheckErrorCode) {
+              return {
+                data: null,
+                error: { code: state.existingCheckErrorCode, message: "boom" },
+              };
+            }
+            return {
+              data: state.existingStudentRow
                 ? { id: state.existingUserId, name: state.existingStudentName }
                 : null,
-            error: null,
-          }),
+              error: null,
+            };
+          },
         }),
       }),
       upsert: async (payload: unknown) => {
@@ -101,6 +116,7 @@ beforeEach(() => {
   h.state.existingUserId = null;
   h.state.existingStudentRow = false;
   h.state.existingStudentName = "Priya";
+  h.state.existingCheckErrorCode = null;
   h.state.signInFails = false;
   h.state.studentUpsertFails = false;
   h.signInAnonymously.mockClear();
@@ -254,6 +270,63 @@ describe("provisionStudent", () => {
       reason: "needs_confirmation",
       existingName: "Priya",
     });
+    expect(h.calls).toHaveLength(0);
+    expect(h.signInAnonymously).not.toHaveBeenCalled();
+  });
+
+  it("falls back cleanly when the existing row's name is empty, not blank interpolation", async () => {
+    // Task 7 re-review, Finding 1: `?? undefined` preserves an empty
+    // string (it's not nullish), so a row with name: "" used to report
+    // existingName: "" and the recovery path on the character page would
+    // render "This device is signed in as " with nothing after it. Fixed
+    // at the source with `|| undefined` so every caller gets a clean
+    // undefined to fall back from, not just the page's own pre-check.
+    h.state.existingUserId = "student-1";
+    h.state.existingStudentRow = true;
+    h.state.existingStudentName = "";
+
+    const result = await provisionStudent(PROFILE);
+
+    expect(result).toEqual({
+      success: false,
+      reason: "needs_confirmation",
+      existingName: undefined,
+    });
+    expect(h.calls).toHaveLength(0);
+  });
+
+  it("proceeds as a genuinely new student when the existence check reports Supabase's 'no rows' error", async () => {
+    // Task 7 re-review, Finding 2, branch 1: `.single()` reports "no row"
+    // as an error (PGRST116), not as `data: null, error: null`. That is
+    // the ordinary shape for a genuinely new student and must not be
+    // treated as a read failure.
+    h.state.existingUserId = "student-1";
+    h.state.existingCheckErrorCode = "PGRST116";
+
+    const result = await provisionStudent(PROFILE);
+
+    expect(result).toEqual({
+      success: true,
+      studentId: "student-1",
+      replacedExisting: false,
+    });
+    expect(h.signInAnonymously).not.toHaveBeenCalled();
+  });
+
+  it("refuses everything and reports existence_check_failed on a genuine read failure", async () => {
+    // Task 7 re-review, Finding 2, branch 2: any error other than "no
+    // rows" means the existence of a previous student is unknown, not
+    // that there isn't one. Proceeding would risk silently overwriting a
+    // row this call simply failed to see -- the exact class of harm this
+    // task exists to prevent. Must be a strict no-op, and must report
+    // something the UI can act on (not indistinguishable from a normal
+    // write failure).
+    h.state.existingUserId = "student-1";
+    h.state.existingCheckErrorCode = "PGRST500";
+
+    const result = await provisionStudent(PROFILE);
+
+    expect(result).toEqual({ success: false, reason: "existence_check_failed" });
     expect(h.calls).toHaveLength(0);
     expect(h.signInAnonymously).not.toHaveBeenCalled();
   });

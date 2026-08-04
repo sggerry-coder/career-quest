@@ -231,4 +231,38 @@ describe("character creation: replace-profile consent gate", () => {
     expect(await screen.findByText(/Delete and start again/i)).toBeDefined();
     expect(screen.queryByText(/Delete it and start over/i)).toBeNull();
   });
+
+  // Re-review Finding 3: fetching the existing student's tone for the
+  // consent screen must not leak into the *incoming* student's wizard --
+  // they still start at the default and pick for themselves.
+  it("does not leak the existing student's tone into the new student's wizard", async () => {
+    h.existingStudent = { id: "student-1", name: "Priya", tone: "explorer" };
+    render(<CharacterPage />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /delete|start over|replace/i })
+    );
+
+    const questModeButton = await screen.findByRole("radio", { name: /quest mode/i });
+    expect(questModeButton.getAttribute("aria-checked")).toBe("true");
+  });
+
+  // Re-review Finding 2: provisionStudent's existence check can itself
+  // fail transiently. That must not be silently treated as "no previous
+  // student" (which would overwrite one that exists) nor sent to the
+  // consent screen (there may be no one to name). It must land on a
+  // distinguishable, retryable error instead.
+  it("shows a distinguishable retry error, not the consent screen, when the existence check itself fails", async () => {
+    h.provisionStudentMock.mockResolvedValueOnce({
+      success: false,
+      reason: "existence_check_failed",
+    });
+
+    render(<CharacterPage />);
+    await fillOutWizard();
+
+    expect(await screen.findByText(/couldn't confirm this device/i)).toBeDefined();
+    expect(screen.queryByText(/This device is signed in as/)).toBeNull();
+    expect(screen.queryByText(/temporarily sealed/i)).toBeNull();
+  });
 });

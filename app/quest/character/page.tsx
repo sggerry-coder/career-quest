@@ -86,6 +86,11 @@ export default function CharacterCreation() {
     { status: "checking" } | { status: "none" } | { status: "found"; name: string }
   >({ status: "checking" });
   const [replaceConfirmed, setReplaceConfirmed] = useState(false);
+  // The consent screen must speak in the *existing* student's tone, but
+  // that must not leak into the *incoming* student's wizard -- they still
+  // start at the default and pick for themselves. Kept separate from
+  // `tone` (the wizard's own state) for exactly that reason.
+  const [existingStudentTone, setExistingStudentTone] = useState<Tone>("quest");
 
   useEffect(() => {
     let cancelled = false;
@@ -119,7 +124,7 @@ export default function CharacterCreation() {
 
         if (cancelled) return;
         if (!error && student) {
-          setTone(isTone(student.tone) ? student.tone : "quest");
+          setExistingStudentTone(isTone(student.tone) ? student.tone : "quest");
           setExistingStudentCheck({
             status: "found",
             name: (student.name as string) || FALLBACK_EXISTING_NAME,
@@ -203,6 +208,21 @@ export default function CharacterCreation() {
           return;
         }
 
+        if (result.reason === "existence_check_failed") {
+          // provisionStudent could not determine whether a previous
+          // student's row exists, so it refused to touch anything rather
+          // than guess. Distinguishable from a normal write failure so the
+          // student sees an accurate reason to retry, not the sealed-portal
+          // message that implies the save itself failed.
+          setError(
+            tone === "quest"
+              ? "The quest portal couldn't confirm this device... Try again"
+              : "Couldn't verify this device. Please try again."
+          );
+          setIsSubmitting(false);
+          return;
+        }
+
         setError(
           tone === "quest"
             ? "The quest portal is temporarily sealed... Try again"
@@ -256,7 +276,7 @@ export default function CharacterCreation() {
     return (
       <ReplaceProfileConfirm
         existingName={existingStudentCheck.name}
-        tone={tone}
+        tone={existingStudentTone}
         onConfirm={() => setReplaceConfirmed(true)}
         onCancel={() => router.push("/")}
       />

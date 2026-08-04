@@ -39,15 +39,23 @@ export default function ReplaceProfileConfirm({
       className="flex min-h-dvh flex-col items-center justify-center gap-5 px-6 text-center"
       role="alertdialog"
       aria-modal="true"
-      aria-label={`Replace ${existingName}'s quest?`}
+      aria-labelledby="replace-profile-confirm-heading"
+      aria-describedby="replace-profile-confirm-warning"
     >
       <span className="text-4xl" aria-hidden="true">{"\u{26A0}\u{FE0F}"}</span>
 
-      <h1 className="text-xl font-semibold text-white">
+      <h1 id="replace-profile-confirm-heading" className="text-xl font-semibold text-white">
         This device is signed in as {existingName}
       </h1>
 
-      <p className="text-sm text-white/70 max-w-xs">
+      {/*
+        aria-label on the dialog would override this as its accessible
+        name, which would silence the "cannot be recovered" sentence on
+        open -- the one load-bearing fact a screen-reader user must hear
+        before landing on the Cancel button. aria-labelledby +
+        aria-describedby announce both.
+      */}
+      <p id="replace-profile-confirm-warning" className="text-sm text-white/70 max-w-xs">
         Starting a new quest will <strong>delete {existingName}&apos;s answers and
         badges</strong>. They cannot be recovered.
       </p>
