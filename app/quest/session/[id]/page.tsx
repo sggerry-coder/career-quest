@@ -725,7 +725,6 @@ export default function Session({
       <SectionErrorBoundary name="Profile Reveal">
         <RevealSequence
           scoreState={scoreState}
-          className={avatarClassName}
           resolvedClass={emergentClass}
           tone={studentTone}
           onRevealComplete={handleRevealComplete}

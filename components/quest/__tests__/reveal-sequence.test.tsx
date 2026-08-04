@@ -49,7 +49,6 @@ async function renderAndAdvanceToClassLabel(): Promise<void> {
   render(
     <RevealSequence
       scoreState={scoreStateWithBardLeaningRiasec}
-      className="Guardian"
       resolvedClass={lockedGuardian}
       tone="quest"
       onRevealComplete={() => {}}
@@ -117,7 +116,6 @@ async function advanceToPhase(target: string): Promise<void> {
   render(
     <RevealSequence
       scoreState={scoreState}
-      className="Guardian"
       tone="quest"
       resolvedClass={{ primary: "guardian", secondary: null, isNamed: true }}
       onRevealComplete={() => {}}

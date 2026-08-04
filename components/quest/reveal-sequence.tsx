@@ -23,7 +23,6 @@ interface ScoreState {
 
 interface RevealSequenceProps {
   scoreState: ScoreState;
-  className: string;
   /**
    * The class already locked in by useEmergentClass, passed down rather than
    * re-derived here. A fresh deriveCharacterClass(scoreState.riasec) call
@@ -50,7 +49,6 @@ type RevealPhase =
 
 export default function RevealSequence({
   scoreState,
-  className,
   resolvedClass,
   tone,
   onRevealComplete,
@@ -107,9 +105,20 @@ export default function RevealSequence({
           transition={{ delay: 0.2 }}
           className="text-xl font-medium text-white/90 italic"
         >
-          {tone === "quest"
-            ? `Let's see what we've discovered, ${className}!`
-            : `Here are your results, ${className}.`}
+          {/* Greeting built from the resolved class, guarded on isNamed --
+              the same rule EngagementCheckpoint follows. It used to take a
+              separate `className` prop derived from questState.avatarClass,
+              which holds the primary only and defaults to "wanderer". A
+              student who never earned a class was greeted "Here are your
+              results, Still forming."; every dual-class student was greeted
+              by half their name and shown the other half two beats later. */}
+          {resolvedClass.isNamed
+            ? tone === "quest"
+              ? `Let's see what we've discovered, ${emergentClassName}!`
+              : `Here are your results, ${emergentClassName}.`
+            : tone === "quest"
+              ? "Let's see what we've discovered!"
+              : "Here are your results."}
         </motion.p>
       </motion.div>
     );
