@@ -11,6 +11,7 @@ import {
   clearSessionSnapshot,
   snapshotKey,
 } from "@/lib/persistence/session-snapshot";
+import { calculateAllMi, calculateMiDimension } from "@/lib/scoring/mi";
 import type { QuestState } from "@/hooks/use-quest-state";
 import type { ScoreState } from "@/hooks/use-scores";
 
@@ -117,6 +118,81 @@ describe("session snapshot storage", () => {
     window.localStorage.setItem(snapshotKey("student-1"), JSON.stringify(tampered));
 
     expect(loadSessionSnapshot("student-1")).toBeNull();
+  });
+
+  /**
+   * A version 2 checkpoint is not merely "old": its mi_raw holds bare signal
+   * weights, and mi_raw now holds endorsements in [0, 1]. The two look alike
+   * enough to restore without complaint and mean different things.
+   * abe65c6 (SNAPSHOT_VERSION = 2) is an ancestor of origin/main, so these
+   * exist on real devices right now.
+   */
+  describe("a version 2 checkpoint, written before MI endorsements", () => {
+    /** What a v2 snapshot actually looks like on disk. */
+    function writeLegacyV2(): Record<string, number[]> {
+      const legacyMiRaw = {
+        linguistic: [1, 1],
+        logical: [1, 1, 1, 1, 1],
+        spatial: [2, 2],
+        musical: [1, 2],
+        bodily: [1, 1],
+        interpersonal: [],
+        intrapersonal: [],
+        naturalistic: [],
+      };
+      saveSessionSnapshot("student-1", makeQuestState(), makeScoreState(), null);
+      const raw = JSON.parse(window.localStorage.getItem(snapshotKey("student-1"))!);
+      raw.version = 2;
+      raw.scoreState.mi_raw = legacyMiRaw;
+      // v2 predates rating_responses entirely.
+      delete raw.scoreState.rating_responses;
+      window.localStorage.setItem(snapshotKey("student-1"), JSON.stringify(raw));
+      return legacyMiRaw;
+    }
+
+    it("is refused rather than restored", () => {
+      writeLegacyV2();
+      expect(loadSessionSnapshot("student-1")).toBeNull();
+    });
+
+    it("would otherwise flatten the whole learning-styles chart to a tie at 100", () => {
+      // The reason for the bump, asserted rather than described.
+      // calculateMiDimension clamps into [0, 1], so every legacy weight --
+      // 1 or 2 -- reads as a whole endorsement.
+      const legacyMiRaw = writeLegacyV2();
+      const rescored = calculateAllMi(legacyMiRaw);
+
+      expect(rescored).toEqual({
+        linguistic: 100,
+        logical: 100,
+        spatial: 100,
+        musical: 100,
+        bodily: 100,
+        interpersonal: 0,
+        intrapersonal: 0,
+        naturalistic: 0,
+      });
+
+      // Five dimensions tied at the top: "Your strongest learning styles"
+      // would rank them by whichever order they happen to be declared in.
+      const scored = Object.values(rescored).filter((v) => v > 0);
+      expect(scored).toHaveLength(5);
+      expect(new Set(scored).size).toBe(1);
+    });
+
+    it("would otherwise mix two scales inside one dimension", () => {
+      // Answer one more MI question after resuming and the array holds a
+      // legacy weight beside a new endorsement; the mean is neither reading.
+      expect(calculateMiDimension([1, 0.5])).toBe(75);
+    });
+
+    it("would otherwise silently disable straight-lining detection", () => {
+      // No rating_responses in a v2 snapshot, so a resumed student's tapping
+      // pattern would go unrecorded for the rest of the session.
+      writeLegacyV2();
+      const raw = JSON.parse(window.localStorage.getItem(snapshotKey("student-1"))!);
+      expect(raw.scoreState.rating_responses).toBeUndefined();
+    });
   });
 
   it("returns null when quest state is malformed", () => {

@@ -17,8 +17,43 @@ import type { ScoreState } from "@/hooks/use-scores";
  * reinterpret every unsure answer as a positive one. Refusing to restore is
  * the honest outcome: the student starts clean rather than getting a profile
  * built from two different scales.
+ *
+ * Bumped to 3 on 2026-08-04 with the move to MI endorsements. Same failure
+ * mode, different instrument.
+ *
+ * A version 2 checkpoint holds mi_raw as bare signal weights -- 1 from a
+ * warm-up option, 1 or 2 from an MI-block one. Those are now endorsements:
+ * each dimension's share of its option's own weight, always in [0, 1]. The
+ * two scales look alike enough to restore without complaint and mean
+ * different things, which is worse than an outright mismatch.
+ * calculateMiDimension clamps into [0, 1], so every legacy weight of 1 or 2
+ * reads as a whole endorsement and every dimension with at least
+ * MIN_MI_SIGNALS signals rescores to exactly 100:
+ *
+ *   v2 mi_raw { linguistic:[1,1], logical:[1,1,1,1,1], spatial:[2,2],
+ *               musical:[1,2], bodily:[1,1] }
+ *   restored  { linguistic:100, logical:100, spatial:100, musical:100,
+ *               bodily:100, interpersonal:0, intrapersonal:0,
+ *               naturalistic:0 }
+ *
+ * The student saw logical 50 and spatial 100 before they closed the tab and
+ * comes back to a five-way tie at 100. MiPreviewBars then sorts an all-equal
+ * list -- a stable sort, so the order is the order the dimensions happen to
+ * be declared in -- takes the first three and heads them "Your strongest
+ * learning styles". That is a ranking invented by declaration order, and
+ * assessment_scores.mi_scores is upserted from it, so it reaches the
+ * dashboard and stays. Answering on from a v2 checkpoint would also mix the
+ * two scales inside one array ([1, 0.5] averages to 75, which is neither
+ * reading).
+ *
+ * A v2 checkpoint also predates ScoreState.rating_responses, so restoring one
+ * would leave it empty and silently disable straight-lining detection for the
+ * rest of that student's session -- the check would go quiet exactly for the
+ * students who quit and came back.
+ *
+ * Refusing to restore is again the honest outcome.
  */
-const SNAPSHOT_VERSION = 2;
+const SNAPSHOT_VERSION = 3;
 const KEY_PREFIX = "cq-session1-snapshot-";
 
 export interface SessionSelfMap {
