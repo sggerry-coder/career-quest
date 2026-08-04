@@ -7,8 +7,6 @@ import MiPreviewBars from "@/components/charts/mi-preview-bars";
 import MbtiSliders from "@/components/charts/mbti-sliders";
 import ValuesSliders from "@/components/charts/values-sliders";
 import ClassLabel from "@/components/charts/class-label";
-import EmergingType from "@/components/charts/emerging-type";
-import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { characterClassDisplayName, type DerivedClass } from "@/lib/character/classes";
 import { describeCharacter } from "@/lib/character/description";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
@@ -67,11 +65,6 @@ export default function RevealSequence({
     mbti: scoreState.mbti,
     values: scoreState.values,
   });
-  const mbtiRawCounts: Record<string, number> = {};
-  for (const key of ["EI", "SN", "TF", "JP"]) {
-    mbtiRawCounts[key] = scoreState.mbti_raw?.[key]?.length ?? 0;
-  }
-  const { display: emergingType, hasEmerging } = deriveEmergingType(scoreState.mbti, mbtiRawCounts);
 
   // Auto-advance from transition
   useEffect(() => {
@@ -213,9 +206,6 @@ export default function RevealSequence({
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
               <MiPreviewBars scores={scoreState.mi} tone={tone} />
-              {Object.values(scoreState.mi).every(v => v === 0) && (
-                <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
-              )}
             </motion.div>
           )}
 
@@ -237,7 +227,12 @@ export default function RevealSequence({
             </motion.div>
           )}
 
-          {/* Emerging type */}
+          {/* Personality note: no four-letter type card here. Session 1 gives
+              2 answers per dichotomy; deriveEmergingType needs 3, so this
+              card could only ever render underscores and "Still Emerging"
+              as a false climax. The personality reading itself already
+              lives in the class card above (describeCharacter degrades
+              honestly per-clause), so this beat just names the limit. */}
           {(phase === "emerging_type" ||
             phase === "values" ||
             phase === "explanation") && (
@@ -245,9 +240,13 @@ export default function RevealSequence({
               key="emerging"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex justify-center"
+              className="flex justify-center text-center"
             >
-              <EmergingType typeCode={emergingType} descriptor="" hasEmerging={hasEmerging} />
+              <p className="text-xs text-white/30 max-w-xs">
+                {tone === "quest"
+                  ? "A full four-letter type needs more questions than this chapter asks — Chapter 2 goes deeper."
+                  : "A full personality type needs more questions than this part asks."}
+              </p>
             </motion.div>
           )}
 

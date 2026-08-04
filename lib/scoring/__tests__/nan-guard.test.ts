@@ -100,13 +100,15 @@ describe("NaN safety guards", () => {
     });
 
     it("calculateAllMi with single response per dimension produces finite results", () => {
+      // A single signal is below MIN_MI_SIGNALS: every dimension reads 0
+      // (no reading yet) rather than a score built on one data point.
       const result = calculateAllMi({
         linguistic: [1], logical: [2], spatial: [0], musical: [1],
         bodily: [2], interpersonal: [0], intrapersonal: [1], naturalistic: [2],
       });
       assertAllFinite(result, "mi-single-response");
-      expect(result.linguistic).toBe(50);
-      expect(result.logical).toBe(100);
+      expect(result.linguistic).toBe(0);
+      expect(result.logical).toBe(0);
       expect(result.spatial).toBe(0);
     });
 

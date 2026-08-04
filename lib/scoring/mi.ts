@@ -12,15 +12,25 @@ export const MI_DIMENSIONS = [
 export type MiDimension = (typeof MI_DIMENSIONS)[number];
 
 /**
+ * Minimum number of signals required before a dimension is scored at all.
+ * One click used to be enough to put a dimension at a full 100 and land it
+ * top of "your strongest learning styles" -- a single answer is not evidence
+ * of a strongest anything. Below this, the dimension reads as 0 (no
+ * reading yet) rather than a confident score built on one data point.
+ */
+export const MIN_MI_SIGNALS = 2;
+
+/**
  * Normalize raw signal weights for a single MI dimension.
  * Formula: (sum / (count * max_weight)) * 100
- * Returns 0-100. Returns 0 for empty input.
+ * Returns 0-100. Returns 0 for empty input or fewer than MIN_MI_SIGNALS
+ * signals.
  */
 export function calculateMiDimension(
   rawSignals: number[],
   maxWeight: number
 ): number {
-  if (rawSignals.length === 0 || maxWeight === 0) return 0;
+  if (rawSignals.length < MIN_MI_SIGNALS || maxWeight === 0) return 0;
   const count = rawSignals.length;
   const sum = rawSignals.reduce((a, b) => a + b, 0);
   return (sum / (count * maxWeight)) * 100;

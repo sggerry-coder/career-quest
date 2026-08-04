@@ -81,3 +81,67 @@ describe("RevealSequence", () => {
     expect(screen.queryByText(/Bard/)).toBeNull();
   });
 });
+
+// Session 1 gives 2 answers per MBTI dichotomy; deriveEmergingType needs 3
+// before it will print a letter. The reveal used to run deriveEmergingType
+// anyway, so every student saw four underscores and "Still Emerging"
+// presented as a climax -- even one who answered both questions per
+// dichotomy at maximum certainty. The reveal no longer renders that card;
+// this fixture carries clear mbti scores so describeCharacter has something
+// honest to say instead.
+const scoreState = {
+  riasec: { R: 10, I: 20, A: 90, S: 10, E: 10, C: 10 },
+  mi: {},
+  mbti: { EI: -80, SN: -60, TF: -70, JP: -50 },
+  mbti_raw: {
+    EI: [-2, -2],
+    SN: [-2, -1],
+    TF: [-2, -1],
+    JP: [-1, -1],
+  },
+  values: {
+    security_adventure: 0,
+    income_impact: 0,
+    prestige_fulfilment: 0,
+    structure_flexibility: 0,
+    solo_team: 0,
+  },
+  strengths: [],
+  class_label: "",
+};
+
+const PHASES = ["transition", "riasec", "class_label", "mi_preview", "mbti", "emerging_type"];
+
+async function advanceToPhase(target: string): Promise<void> {
+  vi.useFakeTimers();
+  render(
+    <RevealSequence
+      scoreState={scoreState}
+      className="Guardian"
+      tone="quest"
+      resolvedClass={{ primary: "guardian", secondary: null, isNamed: true }}
+      onRevealComplete={() => {}}
+    />
+  );
+  // The transition card auto-advances after 2s.
+  await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
+  vi.useRealTimers();
+  for (let i = PHASES.indexOf("riasec"); i < PHASES.indexOf(target); i += 1) {
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+  }
+}
+
+describe("RevealSequence emerging_type beat", () => {
+  it("never shows an unfillable four-letter card", async () => {
+    // Session 1 gives 2 answers per dichotomy; deriveEmergingType needs 3.
+    // The card could only ever render underscores.
+    await advanceToPhase("emerging_type");
+    expect(screen.queryByText(/Still Emerging/)).toBeNull();
+    expect(screen.queryByText(/_\s+_\s+_\s+_/)).toBeNull();
+  });
+
+  it("shows a personality reading it can actually evidence", async () => {
+    await advanceToPhase("emerging_type");
+    expect(screen.getByText(/thinks things through alone before speaking/)).toBeDefined();
+  });
+});

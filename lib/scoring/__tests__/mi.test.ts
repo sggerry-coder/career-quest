@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calculateMiDimension, calculateAllMi, getTopMi } from "../mi";
+import { MIN_MI_SIGNALS, calculateMiDimension, calculateAllMi, getTopMi } from "../mi";
 
 describe("calculateMiDimension", () => {
   it("normalizes [2, 2] with max_weight 2 to 100", () => {
@@ -14,8 +14,10 @@ describe("calculateMiDimension", () => {
     expect(calculateMiDimension([0], 2)).toBe(0);
   });
 
-  it("normalizes [2] with max_weight 2 to 100", () => {
-    expect(calculateMiDimension([2], 2)).toBe(100);
+  it("does not score a dimension from a single signal, even a maxed one", () => {
+    // One click used to score this dimension a full 100 and put it top of
+    // "your strongest learning styles". A single answer is not evidence.
+    expect(calculateMiDimension([2], 2)).toBe(0);
   });
 
   it("normalizes [1, 2, 1] with max_weight 2 to approximately 66.7", () => {
@@ -28,16 +30,32 @@ describe("calculateMiDimension", () => {
   });
 });
 
+describe("learning styles need more than one click", () => {
+  it("does not score a dimension from a single signal", () => {
+    expect(calculateMiDimension([1], 1)).toBe(0);
+  });
+
+  it("scores once the minimum evidence exists", () => {
+    expect(calculateMiDimension([1, 1], 1)).toBe(100);
+  });
+
+  it("requires at least two signals", () => {
+    expect(MIN_MI_SIGNALS).toBe(2);
+  });
+});
+
 describe("calculateAllMi", () => {
   it("normalizes all 8 dimensions from raw data", () => {
     const raw = {
-      linguistic: [2],
-      logical: [1],
+      linguistic: [2, 2],
+      logical: [1, 1],
       spatial: [2, 1],
       musical: [],
-      bodily: [1],
-      interpersonal: [2],
-      intrapersonal: [0],
+      bodily: [1, 1, 1],
+      interpersonal: [2, 2],
+      intrapersonal: [0, 0],
+      // Single signal: below MIN_MI_SIGNALS, reads 0 rather than a score
+      // built on one click.
       naturalistic: [1],
     };
     const result = calculateAllMi(raw, 2);
@@ -48,7 +66,7 @@ describe("calculateAllMi", () => {
     expect(result.bodily).toBe(50);
     expect(result.interpersonal).toBe(100);
     expect(result.intrapersonal).toBe(0);
-    expect(result.naturalistic).toBe(50);
+    expect(result.naturalistic).toBe(0);
   });
 
   it("handles completely empty raw data", () => {
