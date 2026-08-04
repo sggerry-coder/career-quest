@@ -1,23 +1,36 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { GlossaryHint, GlossaryTerm } from "@/components/ui/glossary-term";
+import type { GlossaryTermId } from "@/data/glossary";
 
 interface MiPreviewBarsProps {
   scores: Record<string, number>;
+  /** See charts/riasec-bars. */
+  explain?: boolean;
 }
 
-const MI_DIMENSIONS = [
-  { key: "linguistic", label: "Linguistic" },
-  { key: "logical", label: "Logical-Mathematical" },
-  { key: "spatial", label: "Spatial" },
-  { key: "musical", label: "Musical" },
-  { key: "bodily", label: "Bodily-Kinesthetic" },
-  { key: "interpersonal", label: "Interpersonal" },
-  { key: "intrapersonal", label: "Intrapersonal" },
-  { key: "naturalistic", label: "Naturalistic" },
-];
+export const MI_DIMENSIONS = [
+  { key: "linguistic", label: "Linguistic", term: "mi-linguistic" },
+  { key: "logical", label: "Logical-Mathematical", term: "mi-logical" },
+  { key: "spatial", label: "Spatial", term: "mi-spatial" },
+  { key: "musical", label: "Musical", term: "mi-musical" },
+  { key: "bodily", label: "Bodily-Kinesthetic", term: "mi-bodily" },
+  { key: "interpersonal", label: "Interpersonal", term: "mi-interpersonal" },
+  { key: "intrapersonal", label: "Intrapersonal", term: "mi-intrapersonal" },
+  { key: "naturalistic", label: "Naturalistic", term: "mi-naturalistic" },
+] as const satisfies ReadonlyArray<{
+  key: string;
+  label: string;
+  term: GlossaryTermId;
+}>;
 
-export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
+const HEADING = "Learning Styles";
+
+export default function MiPreviewBars({
+  scores,
+  explain = false,
+}: MiPreviewBarsProps) {
   const prefersReduced = useReducedMotion();
   // A dimension reads 0 until it has enough signals to earn a score (see
   // MIN_MI_SIGNALS in lib/scoring/mi.ts), and Session 1's ~10 MI picks are
@@ -42,8 +55,14 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
 
   return (
     <div className="w-full">
-      <h3 className="text-sm font-semibold text-white/70 mb-1 uppercase tracking-wider">
-        Learning Styles
+      {/* See charts/riasec-bars for why the hint sits inside the heading and
+          why the heading restates its own name. */}
+      <h3
+        className="text-sm font-semibold text-white/70 mb-1 uppercase tracking-wider"
+        aria-label={explain ? HEADING : undefined}
+      >
+        {HEADING}
+        {explain && <GlossaryHint term="learning-styles" className="ml-1.5" />}
       </h3>
       <p className="text-xs text-white/55 mb-4">
         {/* Singular when only one dimension has a reading -- which is a
@@ -67,9 +86,18 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
               const score = Math.round(scores[dim.key] ?? 0);
               return (
                 <div key={dim.key} className="flex items-center gap-3">
-                  <span className="text-xs text-white/60 w-28 flex-shrink-0 truncate">
-                    {dim.label}
-                  </span>
+                  {explain ? (
+                    <GlossaryTerm
+                      term={dim.term}
+                      className="text-xs text-white/60 w-28 flex-shrink-0 truncate text-left"
+                    >
+                      {dim.label}
+                    </GlossaryTerm>
+                  ) : (
+                    <span className="text-xs text-white/60 w-28 flex-shrink-0 truncate">
+                      {dim.label}
+                    </span>
+                  )}
                   <div className="flex-1 h-4 rounded-full bg-white/10 overflow-hidden">
                     <motion.div
                       className="h-full rounded-full bg-[var(--color-accent)]"
@@ -97,9 +125,20 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
           <div className="flex flex-col gap-2">
             {remaining.map((dim) => (
               <div key={dim.key} className="flex items-center gap-3">
-                <span className="text-xs text-white/55 w-28 flex-shrink-0 truncate">
-                  {dim.label}
-                </span>
+                {/* Unranked, but still named on the screen -- and a student
+                    who has never met "Naturalistic" meets it here first. */}
+                {explain ? (
+                  <GlossaryTerm
+                    term={dim.term}
+                    className="text-xs text-white/55 w-28 flex-shrink-0 truncate text-left"
+                  >
+                    {dim.label}
+                  </GlossaryTerm>
+                ) : (
+                  <span className="text-xs text-white/55 w-28 flex-shrink-0 truncate">
+                    {dim.label}
+                  </span>
+                )}
                 <div className="flex-1 h-3 rounded-full bg-white/5" />
               </div>
             ))}

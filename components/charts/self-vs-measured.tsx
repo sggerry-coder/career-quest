@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { STRENGTHS_GRID } from "@/components/selfmap/self-map-capture";
 import { chapterLabel } from "@/lib/copy/chapter";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
+import { strengthTermId } from "@/data/glossary";
 
 /**
  * Dashboard card comparing how the student saw themselves (self-map
@@ -113,15 +115,24 @@ export default function SelfVsMeasured({
           <p className="text-xs text-white/65 mb-2">Your quest revealed</p>
           <div className="flex flex-wrap gap-2">
             {detectedStrengths.length > 0 ? (
-              detectedStrengths.map((s) => (
-                <span
-                  key={s}
-                  // Accent on the primary tint -- see charts/class-label.
-                  className="rounded-full bg-[var(--color-primary)]/15 px-3 py-1 text-xs font-medium text-[var(--color-accent)]"
-                >
-                  {s}
-                </span>
-              ))
+              detectedStrengths.map((s) => {
+                // Accent on the primary tint -- see charts/class-label.
+                const chip =
+                  "rounded-full bg-[var(--color-primary)]/15 px-3 py-1 text-xs font-medium text-[var(--color-accent)]";
+                // "Ideation" is not a word a fifteen-year-old has met. A name
+                // with no definition behind it stays a plain chip rather than
+                // a button that opens nothing -- see strengthTermId.
+                const term = strengthTermId(s);
+                return term ? (
+                  <GlossaryTerm key={s} term={term} hitArea={false} className={chip}>
+                    {s}
+                  </GlossaryTerm>
+                ) : (
+                  <span key={s} className={chip}>
+                    {s}
+                  </span>
+                );
+              })
             ) : (
               <p className="text-xs text-white/55">Complete {chapterLabel(1, tone)} to find out</p>
             )}

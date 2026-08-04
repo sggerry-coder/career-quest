@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { GlossaryTerm } from "@/components/ui/glossary-term";
 
 interface EmergingTypeProps {
   /** e.g. "I N _ J" */
@@ -59,9 +60,19 @@ export default function EmergingType({
       </motion.p>
       {hasEmerging && (
         <div className="mt-2 flex flex-col items-center gap-1">
-          <span className="rounded-full bg-white/10 border border-white/20 px-3 py-0.5 text-xs font-medium text-white/60">
+          {/* This is the one place the app admits a letter is missing and
+              never says why, so the pill itself is the trigger. No `explain`
+              gate, unlike the four charts: this component is only ever
+              rendered by the dashboard -- the reveal draws its own letters.
+              py-1 rather than py-0.5 takes the pill from a 20px target to
+              24px, the minimum for a thumb. */}
+          <GlossaryTerm
+            term="still-emerging"
+            hitArea={false}
+            className="rounded-full bg-white/10 border border-white/20 px-3 py-1 text-xs font-medium text-white/60"
+          >
             Still Emerging
-          </span>
+          </GlossaryTerm>
           <p className="text-xs text-white/55 max-w-[200px] text-center">
             Some preferences need more data to pin down
           </p>

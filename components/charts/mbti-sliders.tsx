@@ -1,27 +1,50 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { GlossaryHint, GlossaryTerm } from "@/components/ui/glossary-term";
+import type { GlossaryTermId } from "@/data/glossary";
 
 interface MbtiSlidersProps {
   scores: Record<string, number>;
+  /** See charts/riasec-bars. */
+  explain?: boolean;
 }
 
-const MBTI_DICHOTOMIES = [
-  { key: "EI", leftLabel: "Extraversion", rightLabel: "Introversion", leftLetter: "E", rightLetter: "I" },
-  { key: "SN", leftLabel: "Sensing", rightLabel: "Intuition", leftLetter: "S", rightLetter: "N" },
-  { key: "TF", leftLabel: "Thinking", rightLabel: "Feeling", leftLetter: "T", rightLetter: "F" },
-  { key: "JP", leftLabel: "Judging", rightLabel: "Perceiving", leftLetter: "J", rightLetter: "P" },
-];
+export const MBTI_DICHOTOMIES = [
+  { key: "EI", leftLabel: "Extraversion", rightLabel: "Introversion", leftLetter: "E", rightLetter: "I", term: "traits-ei" },
+  { key: "SN", leftLabel: "Sensing", rightLabel: "Intuition", leftLetter: "S", rightLetter: "N", term: "traits-sn" },
+  { key: "TF", leftLabel: "Thinking", rightLabel: "Feeling", leftLetter: "T", rightLetter: "F", term: "traits-tf" },
+  { key: "JP", leftLabel: "Judging", rightLabel: "Perceiving", leftLetter: "J", rightLetter: "P", term: "traits-jp" },
+] as const satisfies ReadonlyArray<{
+  key: string;
+  leftLabel: string;
+  rightLabel: string;
+  leftLetter: string;
+  rightLetter: string;
+  // One definition per line. See charts/values-sliders for why both ends
+  // open the same one.
+  term: GlossaryTermId;
+}>;
 
 const STILL_EMERGING_THRESHOLD = 35;
 
-export default function MbtiSliders({ scores }: MbtiSlidersProps) {
+const HEADING = "Character Traits";
+
+export default function MbtiSliders({
+  scores,
+  explain = false,
+}: MbtiSlidersProps) {
   const prefersReduced = useReducedMotion();
 
   return (
     <div className="w-full">
-      <h3 className="text-sm font-semibold text-white/70 mb-4 uppercase tracking-wider">
-        Character Traits
+      {/* See charts/riasec-bars for why the hint sits inside the heading. */}
+      <h3
+        className="text-sm font-semibold text-white/70 mb-4 uppercase tracking-wider"
+        aria-label={explain ? HEADING : undefined}
+      >
+        {HEADING}
+        {explain && <GlossaryHint term="character-traits" className="ml-1.5" />}
       </h3>
       <div className="flex flex-col gap-5">
         {MBTI_DICHOTOMIES.map((d, index) => {
@@ -36,8 +59,21 @@ export default function MbtiSliders({ scores }: MbtiSlidersProps) {
             <div key={d.key}>
               {/* Pole labels */}
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-white/50">{d.leftLabel} ({d.leftLetter})</span>
-                <span className="text-xs text-white/50">{d.rightLabel} ({d.rightLetter})</span>
+                {explain ? (
+                  <>
+                    <GlossaryTerm term={d.term} className="text-xs text-white/50">
+                      {d.leftLabel} ({d.leftLetter})
+                    </GlossaryTerm>
+                    <GlossaryTerm term={d.term} className="text-xs text-white/50">
+                      {d.rightLabel} ({d.rightLetter})
+                    </GlossaryTerm>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-xs text-white/50">{d.leftLabel} ({d.leftLetter})</span>
+                    <span className="text-xs text-white/50">{d.rightLabel} ({d.rightLetter})</span>
+                  </>
+                )}
               </div>
 
               {/* Track */}

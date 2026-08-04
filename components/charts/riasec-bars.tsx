@@ -2,6 +2,8 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { hasRiasecReading } from "@/lib/scoring/riasec";
+import { GlossaryHint, GlossaryTerm } from "@/components/ui/glossary-term";
+import type { GlossaryTermId } from "@/data/glossary";
 
 interface RiasecBarsProps {
   scores: Record<string, number>;
@@ -27,31 +29,63 @@ interface RiasecBarsProps {
    * row written before that column existed. See hasRiasecReading.
    */
   evidence?: Record<string, number>;
+  /**
+   * Offer a definition for every word on this chart.
+   *
+   * Off by default because this chart is also the reveal's first beat, and the
+   * reveal is a timed sequence the student is being walked through — a popup
+   * there would interrupt an animation that is still running. The dashboard is
+   * where a student sits and reads, so the dashboard opts in.
+   */
+  explain?: boolean;
 }
 
-const RIASEC_TYPES = [
-  { key: "R", label: "Maker", emoji: "\u{1F527}" },
-  { key: "I", label: "Investigator", emoji: "\u{1F52C}" },
-  { key: "A", label: "Creator", emoji: "\u{1F3A8}" },
-  { key: "S", label: "Helper", emoji: "\u{1F91D}" },
-  { key: "E", label: "Leader", emoji: "\u{1F4E2}" },
-  { key: "C", label: "Organizer", emoji: "\u{1F4CB}" },
-];
+export const RIASEC_TYPES = [
+  { key: "R", label: "Maker", emoji: "\u{1F527}", term: "interest-maker" },
+  { key: "I", label: "Investigator", emoji: "\u{1F52C}", term: "interest-investigator" },
+  { key: "A", label: "Creator", emoji: "\u{1F3A8}", term: "interest-creator" },
+  { key: "S", label: "Helper", emoji: "\u{1F91D}", term: "interest-helper" },
+  { key: "E", label: "Leader", emoji: "\u{1F4E2}", term: "interest-leader" },
+  { key: "C", label: "Organizer", emoji: "\u{1F4CB}", term: "interest-organizer" },
+] as const satisfies ReadonlyArray<{
+  key: string;
+  label: string;
+  emoji: string;
+  term: GlossaryTermId;
+}>;
 
 /** What a row says where the student was never asked. */
 const NOT_ASKED = "Not asked";
+
+const HEADING = "Ability Scores";
 
 export default function RiasecBars({
   scores,
   classLabel,
   evidence,
+  explain = false,
 }: RiasecBarsProps) {
   const prefersReduced = useReducedMotion();
 
   return (
     <div className="w-full">
-      <h3 className="text-sm font-semibold text-white/70 mb-4 uppercase tracking-wider">
-        Ability Scores
+      {/*
+        The hint sits inside the heading rather than beside it: a wrapper
+        around the two would change what this heading's parent element is,
+        and that parent is how the dashboard and reveal tests scope
+        themselves to this card. A button's label folds into the accessible
+        name of the heading containing it, so the name is restated here --
+        otherwise this announces as "Ability Scores What Ability Scores
+        means, heading level 3".
+      */}
+      <h3
+        className="text-sm font-semibold text-white/70 mb-4 uppercase tracking-wider"
+        aria-label={explain ? HEADING : undefined}
+      >
+        {HEADING}
+        {explain && (
+          <GlossaryHint term="ability-scores" className="ml-1.5" />
+        )}
       </h3>
       <div className="flex flex-col gap-3">
         {RIASEC_TYPES.map((type, index) => {
@@ -83,9 +117,22 @@ export default function RiasecBars({
                 >
                   {type.emoji}
                 </span>
-                <span className="text-xs text-white/55 w-20 flex-shrink-0">
-                  {type.label}
-                </span>
+                {/* A row with no reading is the row a student is most likely
+                    to want explained -- "Not asked" tells them nothing about
+                    what Organizer even was. The definition is of the type,
+                    not of their score, so it is the same either way. */}
+                {explain ? (
+                  <GlossaryTerm
+                    term={type.term}
+                    className="text-xs text-white/55 w-20 flex-shrink-0 text-left"
+                  >
+                    {type.label}
+                  </GlossaryTerm>
+                ) : (
+                  <span className="text-xs text-white/55 w-20 flex-shrink-0">
+                    {type.label}
+                  </span>
+                )}
                 <div className="flex-1 h-6 rounded-full bg-white/5 flex items-center px-3">
                   <span className="text-xs text-white/55 italic">
                     {NOT_ASKED}
@@ -107,9 +154,18 @@ export default function RiasecBars({
               >
                 {type.emoji}
               </span>
-              <span className="text-xs text-white/50 w-20 flex-shrink-0">
-                {type.label}
-              </span>
+              {explain ? (
+                <GlossaryTerm
+                  term={type.term}
+                  className="text-xs text-white/50 w-20 flex-shrink-0 text-left"
+                >
+                  {type.label}
+                </GlossaryTerm>
+              ) : (
+                <span className="text-xs text-white/50 w-20 flex-shrink-0">
+                  {type.label}
+                </span>
+              )}
               <div className="flex-1 h-6 rounded-full bg-white/10 overflow-hidden relative">
                 <motion.div
                   // The bar *is* the score. A 20% white fill measured 1.41:1
@@ -153,9 +209,19 @@ export default function RiasecBars({
               text, so as text on its own 20% tint it measured 1.85-2.90:1
               across the palettes. The accent is the same class's other
               colour, 5.48-9.16:1 there. */}
-          <span className="rounded-full bg-[var(--color-primary)]/20 px-4 py-1.5 text-sm font-bold text-[var(--color-accent)] uppercase tracking-wider">
-            CLASS: {classLabel}
-          </span>
+          {explain ? (
+            <GlossaryTerm
+              term="class"
+              hitArea={false}
+              className="rounded-full bg-[var(--color-primary)]/20 px-4 py-1.5 text-sm font-bold text-[var(--color-accent)] uppercase tracking-wider"
+            >
+              CLASS: {classLabel}
+            </GlossaryTerm>
+          ) : (
+            <span className="rounded-full bg-[var(--color-primary)]/20 px-4 py-1.5 text-sm font-bold text-[var(--color-accent)] uppercase tracking-wider">
+              CLASS: {classLabel}
+            </span>
+          )}
         </div>
       )}
     </div>

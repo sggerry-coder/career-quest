@@ -25,6 +25,8 @@ import { relicsFromSelfMap } from "@/lib/character/relics";
 import RelicShelf from "@/components/character/relic-shelf";
 import { loadSessionSnapshot } from "@/lib/persistence/session-snapshot";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
+import { GlossaryHint, GlossaryTerm } from "@/components/ui/glossary-term";
+import { strengthTermId } from "@/data/glossary";
 
 interface StudentData {
   name: string;
@@ -236,9 +238,15 @@ export default function Dashboard() {
               <h1 className="text-lg font-bold text-white truncate">
                 {student.name}
               </h1>
-              <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/50 flex-shrink-0">
+              {/* The first word on the page that claims something about the
+                  student, and the only place it appears above the fold. */}
+              <GlossaryTerm
+                term="class"
+                hitArea={false}
+                className="rounded-full bg-white/10 px-2 py-1 text-xs text-white/50 flex-shrink-0"
+              >
                 {className}
-              </span>
+              </GlossaryTerm>
             </div>
             <p className="text-xs text-white/65 mb-1">
               Level {student.age}
@@ -273,16 +281,20 @@ export default function Dashboard() {
                   student, and this is the chart the CLASS badge below is
                   derived from -- a hard 0 on an unasked type made the badge
                   look read off a row the student never answered. */}
+              {/* explain: the dashboard is where a student stops and reads.
+                  The reveal renders these same four charts without it -- a
+                  popup fights a timed sequence. */}
               <RiasecBars
                 scores={scores.riasec_scores}
                 classLabel={className}
                 evidence={scores.riasec_raw_counts ?? undefined}
+                explain
               />
             </div>
 
             {/* Right: MBTI + Emerging type */}
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <MbtiSliders scores={scores.mbti_indicators} />
+              <MbtiSliders scores={scores.mbti_indicators} explain />
               <div className="mt-4 flex justify-center">
                 <EmergingType
                   typeCode={emergingTypeCode}
@@ -297,7 +309,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Left: MI preview */}
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <MiPreviewBars scores={scores.mi_scores} />
+              <MiPreviewBars scores={scores.mi_scores} explain />
             </div>
 
             {/* Right: Values preview */}
@@ -309,6 +321,7 @@ export default function Dashboard() {
               <ValuesSliders
                 scores={scores.values_compass}
                 rawCounts={scores.values_raw_counts ?? undefined}
+                explain
               />
             </div>
           </div>
@@ -342,18 +355,32 @@ export default function Dashboard() {
           {/* === Strengths section === */}
           {scores.strengths && scores.strengths.length > 0 && (
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5 mb-6">
-              <h3 className="text-sm font-semibold text-white/70 mb-3 uppercase tracking-wider">
+              {/* See charts/riasec-bars for why the hint sits inside the
+                  heading and why the heading restates its own name. */}
+              <h3
+                className="text-sm font-semibold text-white/70 mb-3 uppercase tracking-wider"
+                aria-label="Detected Strengths"
+              >
                 Detected Strengths
+                <GlossaryHint term="strengths" className="ml-1.5" />
               </h3>
               <div className="flex flex-wrap gap-2">
-                {scores.strengths.map((s) => (
-                  <span
-                    key={s}
-                    className="rounded-full bg-[var(--color-accent)]/15 px-3 py-1 text-xs font-medium text-[var(--color-accent)]"
-                  >
-                    {s}
-                  </span>
-                ))}
+                {scores.strengths.map((s) => {
+                  const chip =
+                    "rounded-full bg-[var(--color-accent)]/15 px-3 py-1 text-xs font-medium text-[var(--color-accent)]";
+                  // A name from an older scoring run may not be one of today's
+                  // eight; it stays a plain chip. See strengthTermId.
+                  const term = strengthTermId(s);
+                  return term ? (
+                    <GlossaryTerm key={s} term={term} hitArea={false} className={chip}>
+                      {s}
+                    </GlossaryTerm>
+                  ) : (
+                    <span key={s} className={chip}>
+                      {s}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
