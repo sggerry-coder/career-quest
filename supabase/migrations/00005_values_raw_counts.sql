@@ -11,9 +11,11 @@
 -- and NULL lets hasValuesReading fall back to "assume answered" instead of
 -- silently blanking every dimension of a finished profile.
 --
--- Nothing writes or reads this column yet. final-persist must not be changed
--- to write it until this migration has been applied to the live database --
--- writing an unknown column fails the whole save, for every student.
+-- The wiring has since landed on both sides: final-persist writes the counts
+-- (buildValuesRawCounts) and the dashboard selects them back. That is only
+-- safe because this migration is applied first -- writing an unknown column
+-- fails the whole save, for every student -- so it stays a precondition of
+-- deploying that code, not a warning that anything is still unwired.
 
 ALTER TABLE public.assessment_scores
   ADD COLUMN values_raw_counts jsonb;
