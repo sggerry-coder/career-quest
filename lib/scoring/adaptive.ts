@@ -25,9 +25,28 @@ const MAX_MI_TOTAL = 1;
 const TOTAL_QUESTIONS = 5;
 
 /**
+ * Ambiguity for a dimension nobody answered.
+ *
+ * 0, the most ambiguous value there is, so it sorts to the front. The gap
+ * formula cannot be used on it: an unanswered dimension scores 0, which puts
+ * it at the bottom of the ranking with a *large* gap to the type above, and a
+ * large gap reads as "already settled". So the five confirmatory questions
+ * were steered away from precisely the dimensions with no data and towards
+ * ones the student had already answered twice — the student who skipped the
+ * two Creator items was never asked about Creator again.
+ *
+ * Nothing else can reach 0 by accident: a gap of exactly 0 means two answered
+ * types are tied, which deserves the same priority anyway.
+ */
+const UNANSWERED_AMBIGUITY = 0;
+
+/**
  * Calculate ambiguity for RIASEC: for adjacent pairs sorted by score,
  * ambiguity = gap / sqrt(response_count_for_lower_type).
  * Lower ambiguity = more ambiguous = higher priority.
+ *
+ * A type with no responses is ranked by UNANSWERED_AMBIGUITY instead of by a
+ * gap measured against its fabricated 0.
  */
 function calculateRiasecAmbiguities(
   scores: Record<string, number>,
@@ -46,21 +65,23 @@ function calculateRiasecAmbiguities(
     const lower = sorted[i + 1];
     const gap = higher.score - lower.score;
     const denominator = Math.sqrt(Math.max(lower.count, 1));
-    const ambiguity = gap / denominator;
 
     // Add entry for the lower-scored type (needs more data to resolve)
     entries.push({
       framework: "riasec",
       target: lower.type,
-      ambiguity,
+      ambiguity: lower.count === 0 ? UNANSWERED_AMBIGUITY : gap / denominator,
     });
   }
 
-  // Also add the top type with high ambiguity (it's already clear)
+  // Also add the top type. Already clear, so it is never chosen -- unless it
+  // is only on top because every type scored 0 and nobody answered for it,
+  // in which case "clear" is the one thing it is not.
   entries.push({
     framework: "riasec",
     target: sorted[0].type,
-    ambiguity: Infinity,
+    ambiguity:
+      sorted[0].count === 0 ? UNANSWERED_AMBIGUITY : Infinity,
   });
 
   return entries;
@@ -69,6 +90,11 @@ function calculateRiasecAmbiguities(
 /**
  * Calculate ambiguity for MBTI: ambiguity = abs(score) / sqrt(response_count).
  * Lower = more ambiguous.
+ *
+ * Needs no unanswered special case: a dichotomy with no responses scores 0,
+ * and abs(0) is already the most ambiguous value this formula produces. The
+ * distance-from-centre shape gets it right where the RIASEC gap shape gets it
+ * backwards.
  */
 function calculateMbtiAmbiguities(
   scores: Record<string, number>,
@@ -113,7 +139,7 @@ function calculateMiAmbiguities(
     entries.push({
       framework: "mi",
       target: lower.dim,
-      ambiguity: gap / denominator,
+      ambiguity: lower.count === 0 ? UNANSWERED_AMBIGUITY : gap / denominator,
     });
   }
 

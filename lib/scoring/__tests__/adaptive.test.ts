@@ -244,3 +244,82 @@ describe("selectAdaptiveQuestions", () => {
     expect(jpCount).toBeGreaterThanOrEqual(1);
   });
 });
+
+/**
+ * The confirmatory round exists to resolve what the instrument left unclear.
+ * Nothing is less clear than a dimension with no answers at all — but an
+ * unanswered type scores 0, which drops it to the bottom of the ranking with
+ * a wide gap to the type above, and a wide gap is how "already settled"
+ * looks. So the five questions were steered away from the holes in the data
+ * and towards dimensions the student had already answered twice.
+ */
+describe("confirmatory questions go to the dimensions with no answers", () => {
+  // Six types cleanly separated by 10 points each, all answered twice --
+  // except A, whose two rating items the student skipped.
+  const riasecScores = { R: 100, I: 90, A: 0, S: 80, E: 70, C: 60 };
+  const riasecRaw = {
+    R: [4, 4],
+    I: [4, 3],
+    A: [],
+    S: [3, 3],
+    E: [3, 2],
+    C: [2, 2],
+  };
+  // Four dichotomies sitting dead on the centre: maximally ambiguous, so
+  // they crowd out anything the RIASEC side ranks as settled.
+  const mbtiScores = { EI: 0, SN: 0, TF: 0, JP: 0 };
+  const mbtiRaw = { EI: [0, 0], SN: [0, 0], TF: [0, 0], JP: [0, 0] };
+
+  const pool = [
+    makeRiasecQuestion("r-R", "R"),
+    makeRiasecQuestion("r-I", "I"),
+    makeRiasecQuestion("r-A", "A"),
+    makeRiasecQuestion("r-S", "S"),
+    makeRiasecQuestion("r-E", "E"),
+    makeRiasecQuestion("r-C", "C"),
+    makeMbtiQuestion("m-EI", "EI"),
+    makeMbtiQuestion("m-SN", "SN"),
+    makeMbtiQuestion("m-TF", "TF"),
+    makeMbtiQuestion("m-JP", "JP"),
+  ];
+
+  const input = {
+    riasecScores,
+    riasecRaw,
+    miScores: {},
+    miRaw: {},
+    mbtiScores,
+    mbtiRaw,
+    pool,
+  };
+
+  it("asks about the type the student skipped", () => {
+    // Ranked by the gap formula, A scored (60 - 0) / sqrt(1) = 60 -- the
+    // least ambiguous thing on the board, behind four MBTI ties at 0 and
+    // four RIASEC gaps at 10/sqrt(2) = 7.07. It was never asked about again.
+    const selected = selectAdaptiveQuestions(input);
+    const targets = selected.map((q) => q.framework_target);
+    expect(targets).toContain("A");
+  });
+
+  it("asks about it first, ahead of dimensions that already have answers", () => {
+    const selected = selectAdaptiveQuestions(input);
+    expect(selected[0].framework).toBe("riasec");
+    expect(selected[0].framework_target).toBe("A");
+  });
+
+  it("still returns the full five questions", () => {
+    expect(selectAdaptiveQuestions(input)).toHaveLength(5);
+  });
+
+  it("leaves an answered profile's ordering alone", () => {
+    // Same scores, but A was answered and genuinely came out at 0. It is
+    // settled, not missing, and must stay at the back.
+    const answered = selectAdaptiveQuestions({
+      ...input,
+      riasecRaw: { ...riasecRaw, A: [1, 1] },
+    });
+    expect(answered[0].framework).toBe("mbti");
+    expect(answered.map((q) => q.framework_target)).not.toContain("A");
+  });
+});
