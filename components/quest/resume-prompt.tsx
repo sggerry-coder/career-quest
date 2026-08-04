@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { chapterLabel } from "@/lib/copy/chapter";
 
 interface ResumePromptProps {
   tone: "quest" | "explorer";
@@ -27,7 +28,7 @@ export default function ResumePrompt({
       ? `Your quest paused with ${questionsAnswered} ${
           questionsAnswered === 1 ? "answer" : "answers"
         } already recorded. Pick up where you left off?`
-      : `You were part-way through Session 1 (${questionsAnswered} ${
+      : `You were part-way through ${chapterLabel(1, tone)} (${questionsAnswered} ${
           questionsAnswered === 1 ? "answer" : "answers"
         } saved). Pick up where you left off?`;
 

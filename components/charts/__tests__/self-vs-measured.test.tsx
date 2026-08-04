@@ -61,6 +61,7 @@ describe("SelfVsMeasured", () => {
           perceived_strengths: ["puzzles", "building"],
         }}
         detectedStrengths={["Analytical", "Empathy"]}
+        tone="quest"
       />
     );
 
@@ -78,6 +79,7 @@ describe("SelfVsMeasured", () => {
       <SelfVsMeasured
         selfMap={{ clarity: 3, perceived_strengths: ["puzzles", "building"] }}
         detectedStrengths={["Analytical"]}
+        tone="quest"
       />
     );
 
@@ -91,6 +93,7 @@ describe("SelfVsMeasured", () => {
       <SelfVsMeasured
         selfMap={{ clarity: 2, perceived_strengths: ["creating"] }}
         detectedStrengths={["Creativity"]}
+        tone="quest"
       />
     );
     expect(screen.getByText(/2\/5 clarity/)).toBeDefined();
@@ -98,7 +101,7 @@ describe("SelfVsMeasured", () => {
 
   it("renders nothing when there is no data at all", () => {
     const { container } = render(
-      <SelfVsMeasured selfMap={null} detectedStrengths={[]} />
+      <SelfVsMeasured selfMap={null} detectedStrengths={[]} tone="quest" />
     );
     expect(container.firstChild).toBeNull();
   });

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { STRENGTHS_GRID } from "@/components/selfmap/self-map-capture";
+import { chapterLabel } from "@/lib/copy/chapter";
 
 /**
  * Dashboard card comparing how the student saw themselves (self-map
@@ -15,6 +16,7 @@ interface SelfVsMeasuredProps {
     perceived_strengths?: string[];
   } | null;
   detectedStrengths: string[];
+  tone: "quest" | "explorer";
 }
 
 /**
@@ -57,6 +59,7 @@ export function clarityLine(clarity: number | undefined): string | null {
 export default function SelfVsMeasured({
   selfMap,
   detectedStrengths,
+  tone,
 }: SelfVsMeasuredProps): React.JSX.Element | null {
   const perceived = selfMap?.perceived_strengths ?? [];
   if (perceived.length === 0 && detectedStrengths.length === 0) return null;
@@ -119,7 +122,7 @@ export default function SelfVsMeasured({
                 </span>
               ))
             ) : (
-              <p className="text-xs text-white/30">Complete Session 1 to find out</p>
+              <p className="text-xs text-white/30">Complete {chapterLabel(1, tone)} to find out</p>
             )}
           </div>
         </div>

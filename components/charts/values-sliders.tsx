@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { chapterLabel } from "@/lib/copy/chapter";
 
 interface ValuesSlidersProps {
   scores: Record<string, number>;
+  tone: "quest" | "explorer";
 }
 
 const VALUES_DIMENSIONS = [
@@ -34,7 +36,7 @@ export function describeLean(
   return `Leans ${score < 0 ? leftLabel : rightLabel}`;
 }
 
-export default function ValuesSliders({ scores }: ValuesSlidersProps) {
+export default function ValuesSliders({ scores, tone }: ValuesSlidersProps) {
   return (
     <div className="w-full">
       <h3 className="text-sm font-semibold text-white/70 mb-1 uppercase tracking-wider">
@@ -96,7 +98,7 @@ export default function ValuesSliders({ scores }: ValuesSlidersProps) {
           </div>
         ))}
         <p className="text-xs text-white/20 italic">
-          More dimensions in Session 2
+          More dimensions in {chapterLabel(2, tone)}
         </p>
       </div>
     </div>

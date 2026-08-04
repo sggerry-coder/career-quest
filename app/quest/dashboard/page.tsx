@@ -16,6 +16,7 @@ import { calculateXp, getCurrentMilestone, getUnlockedCosmetics } from "@/lib/xp
 import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { deriveClassLabel } from "@/lib/scoring/riasec";
 import { applyClassTheme } from "@/lib/theme";
+import { chapterLabel } from "@/lib/copy/chapter";
 import { CHARACTER_CLASSES, type CharacterClassId } from "@/lib/character/classes";
 import { earnedRelics } from "@/lib/character/relics";
 import RelicShelf from "@/components/character/relic-shelf";
@@ -156,6 +157,8 @@ export default function Dashboard() {
     );
   }
 
+  const tone = student?.tone ?? "quest";
+
   if (!student || !scores) {
     // Two very different situations shared one dead end before: never started,
     // and finished but the save failed. Only the second has answers to rescue.
@@ -182,7 +185,7 @@ export default function Dashboard() {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-4 text-center">
         <h2 className="text-xl font-semibold text-white mb-2">No results yet</h2>
-        <p className="text-sm text-white/50 mb-6">Complete Session 1 to see your profile. Start your quest!</p>
+        <p className="text-sm text-white/50 mb-6">Complete {chapterLabel(1, tone)} to see your profile. Start your quest!</p>
         <Link
           href="/"
           className="rounded-xl bg-[var(--color-primary)] px-6 py-3 text-white font-medium min-h-[44px]"
@@ -274,12 +277,12 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {/* Left: MI preview */}
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <MiPreviewBars scores={scores.mi_scores} />
+              <MiPreviewBars scores={scores.mi_scores} tone={tone} />
             </div>
 
             {/* Right: Values preview */}
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <ValuesSliders scores={scores.values_compass} />
+              <ValuesSliders scores={scores.values_compass} tone={tone} />
             </div>
           </div>
 
@@ -293,7 +296,7 @@ export default function Dashboard() {
                 </h3>
               </div>
               <p className="text-xs text-white/20">
-                Deepens in Session 2
+                Deepens in {chapterLabel(2, tone)}
               </p>
             </div>
             <div className="rounded-2xl bg-white/5 border border-white/5 p-5 opacity-40">
@@ -304,7 +307,7 @@ export default function Dashboard() {
                 </h3>
               </div>
               <p className="text-xs text-white/20">
-                Deepens in Session 2
+                Deepens in {chapterLabel(2, tone)}
               </p>
             </div>
           </div>
@@ -333,6 +336,7 @@ export default function Dashboard() {
             <SelfVsMeasured
               selfMap={student.self_map}
               detectedStrengths={scores.strengths ?? []}
+              tone={tone}
             />
           </div>
 
@@ -363,7 +367,7 @@ export default function Dashboard() {
                 {hasCompletedSession1 ? "\u{2713}" : "\u{25CF}"}
               </span>
               <span className="text-sm text-white/70">
-                Session 1: Discovery Quest
+                {chapterLabel(1, tone)}: Discovery Quest
               </span>
               <span
                 className={`ml-auto text-xs ${
@@ -384,7 +388,7 @@ export default function Dashboard() {
                   {"\u{1F512}"}
                 </span>
                 <span className="text-sm text-white/30">
-                  Session {session.num}: {session.name}
+                  {chapterLabel(session.num, tone)}: {session.name}
                 </span>
                 <span className="ml-auto text-xs text-white/20">Locked</span>
               </div>
@@ -399,7 +403,7 @@ export default function Dashboard() {
             disabled
             className="rounded-xl bg-white/10 px-8 py-3 font-medium text-white/30 cursor-not-allowed min-h-[44px]"
           >
-            Begin Session 2 — Coming soon
+            Begin {chapterLabel(2, tone)} — Coming soon
           </button>
         </div>
       </div>

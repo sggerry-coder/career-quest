@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { chapterLabel } from "@/lib/copy/chapter";
 
 /**
  * The celebration. Mounting this screen *means the results are saved* — the
@@ -97,8 +98,7 @@ export default function CompletionScreen({
     })();
   }, []);
 
-  const heading =
-    tone === "quest" ? "Quest Chapter 1 Complete" : "Session 1 Complete";
+  const heading = `${tone === "quest" ? "Quest " : ""}${chapterLabel(1, tone)} Complete`;
   const subheading =
     tone === "quest"
       ? "Your profile has been forged!"

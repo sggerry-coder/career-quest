@@ -30,6 +30,7 @@ import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
 import { classDefinitions, cacheTone, readCachedTone } from "@/lib/theme";
 import { createClient } from "@/lib/supabase/client";
 import { runFinalPersist } from "@/lib/persistence/final-persist";
+import { chapterLabel } from "@/lib/copy/chapter";
 import {
   saveSessionSnapshot,
   loadSessionSnapshot,
@@ -769,7 +770,7 @@ export default function Session({
           This chapter isn&apos;t unlocked yet
         </h1>
         <p className="text-sm text-white/50 mb-6">
-          Your quest continues in Session 1 for now &mdash; more chapters are
+          Your quest continues in {chapterLabel(1, studentTone)} for now &mdash; more chapters are
           coming soon.
         </p>
         <Link

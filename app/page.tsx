@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { classes } from "@/data/classes";
 import { applyClassTheme } from "@/lib/theme";
+import { chapterLabel } from "@/lib/copy/chapter";
 import type { Student } from "@/lib/types/student";
 
 type LandingState =
@@ -212,7 +213,7 @@ export default function Home() {
                 {classDef
                   ? classDef.name[displayTone]
                   : "Adventurer"}{" "}
-                &middot; {student.has_completed_session1 ? "Session 1 Complete" : `Session ${student.current_session || 1}`}
+                &middot; {student.has_completed_session1 ? `${chapterLabel(1, displayTone)} Complete` : chapterLabel(student.current_session || 1, displayTone)}
               </p>
             </div>
           </div>
@@ -262,8 +263,8 @@ export default function Home() {
                 }}
               >
                 {displayTone === "quest"
-                  ? "This replaces your current adventurer — your Chapter 1 results will be lost."
-                  : "This replaces your current profile — your Session 1 results will be lost."}
+                  ? `This replaces your current adventurer — your ${chapterLabel(1, displayTone)} results will be lost.`
+                  : `This replaces your current profile — your ${chapterLabel(1, displayTone)} results will be lost.`}
               </p>
               <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
                 <button

@@ -44,6 +44,7 @@ describe("ValuesSliders", () => {
     render(
       <ValuesSliders
         scores={{ security_adventure: -66, income_impact: 100, solo_team: 0 }}
+        tone="quest"
       />
     );
 
@@ -53,11 +54,17 @@ describe("ValuesSliders", () => {
   });
 
   it("does not invent readings for the dimensions not measured yet", () => {
-    render(<ValuesSliders scores={{}} />);
+    render(<ValuesSliders scores={{}} tone="quest" />);
 
     // Prestige/Fulfilment and Structure/Flexibility have no Session 1
     // questions, so they stay greyed with no reading of their own.
     expect(screen.getAllByText("Balanced for now")).toHaveLength(3);
-    expect(screen.getByText("More dimensions in Session 2")).toBeDefined();
+    expect(screen.getByText("More dimensions in Chapter 2")).toBeDefined();
+  });
+
+  it("switches to Part wording in explorer tone", () => {
+    render(<ValuesSliders scores={{}} tone="explorer" />);
+
+    expect(screen.getByText("More dimensions in Part 2")).toBeDefined();
   });
 });

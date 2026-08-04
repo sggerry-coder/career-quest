@@ -12,6 +12,7 @@ import { deriveEmergingType } from "@/lib/scoring/mbti";
 import { characterClassDisplayName, type DerivedClass } from "@/lib/character/classes";
 import { describeCharacter } from "@/lib/character/description";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
+import { chapterLabel } from "@/lib/copy/chapter";
 
 interface ScoreState {
   riasec: Record<string, number>;
@@ -211,7 +212,7 @@ export default function RevealSequence({
               animate={{ opacity: 1, y: 0 }}
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
-              <MiPreviewBars scores={scoreState.mi} />
+              <MiPreviewBars scores={scoreState.mi} tone={tone} />
               {Object.values(scoreState.mi).every(v => v === 0) && (
                 <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
               )}
@@ -258,7 +259,7 @@ export default function RevealSequence({
               animate={{ opacity: 1, y: 0 }}
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
             >
-              <ValuesSliders scores={scoreState.values} />
+              <ValuesSliders scores={scoreState.values} tone={tone} />
               {Object.values(scoreState.values).every(v => v === 0) && (
                 <p className="text-xs text-white/30 text-center mt-1">Answer more questions to refine</p>
               )}
@@ -277,7 +278,7 @@ export default function RevealSequence({
                 These charts show your initial profile. The Ability Scores
                 reveal your interests, Character Traits show your personality
                 tendencies, and Learning Styles highlight how you learn best.
-                Session 2 will deepen these results.
+                {chapterLabel(2, tone)} will deepen these results.
               </p>
             </motion.div>
           )}

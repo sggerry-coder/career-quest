@@ -1,9 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { chapterLabel } from "@/lib/copy/chapter";
 
 interface MiPreviewBarsProps {
   scores: Record<string, number>;
+  tone: "quest" | "explorer";
 }
 
 const MI_DIMENSIONS = [
@@ -17,7 +19,7 @@ const MI_DIMENSIONS = [
   { key: "naturalistic", label: "Naturalistic" },
 ];
 
-export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
+export default function MiPreviewBars({ scores, tone }: MiPreviewBarsProps) {
   // Sort by score descending, take top 3
   const sorted = [...MI_DIMENSIONS].sort(
     (a, b) => (scores[b.key] ?? 0) - (scores[a.key] ?? 0)
@@ -75,7 +77,7 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
           </div>
         ))}
         <p className="text-xs text-white/20 mt-1 italic">
-          More detail in Session 2
+          More detail in {chapterLabel(2, tone)}
         </p>
       </div>
     </div>
