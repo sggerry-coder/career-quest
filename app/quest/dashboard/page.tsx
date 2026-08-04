@@ -155,7 +155,9 @@ export default function Dashboard() {
 
   const tone = student?.tone ?? "quest";
 
-  if (!student || !scores) {
+  // A zeroed assessment_scores row is created at character creation, so its
+  // existence never meant the student has results. Completion does.
+  if (!student || !scores || !student.has_completed_session1) {
     // Two very different situations shared one dead end before: never started,
     // and finished but the save failed. Only the second has answers to rescue.
     if (hasUnsavedCheckpoint) {

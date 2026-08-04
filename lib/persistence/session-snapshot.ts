@@ -40,7 +40,6 @@ const VALID_FLOW_PHASES: FlowPhase[] = [
   "block_transition",
   "class_named",
   "engagement",
-  "discovery_prompt",
   "selfmap",
   "reveal",
   "confirmatory",

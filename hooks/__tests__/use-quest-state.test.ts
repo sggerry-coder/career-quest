@@ -35,13 +35,11 @@ function makeInitialState(overrides?: Partial<QuestState>): QuestState {
     transitionNarration: "",
     adaptiveQuestions: [],
     confirmIndex: 0,
-    consecutiveMild: 0,
     current_block: "warmup",
     questions_answered: 0,
     responses: [],
     selected_adaptive_ids: [],
     persistence_failed: false,
-    discovery_mode_active: false,
     last_response_undoable: false,
     engagementShown: false,
     avatarClass: "wanderer",
@@ -248,56 +246,6 @@ describe("UNDO", () => {
   });
 });
 
-describe("discovery mode", () => {
-  it("triggers after 3 consecutive neutral riasec Likert responses", () => {
-    // Build state where last 2 riasec responses were neutral (value 3)
-    // We are about to answer the 3rd consecutive neutral
-    const baseState = stateAtIndex(7, { engagementShown: true }); // index 7 is riasec
-    // Override responses so last 2 riasec are neutral
-    const responses = [...baseState.responses];
-    responses[5] = makeResponse("s1-riasec-R-01", 3, "riasec", "R");
-    responses[6] = makeResponse("s1-riasec-R-02", 3, "riasec", "R");
-
-    const state: QuestState = {
-      ...baseState,
-      responses,
-      consecutiveMild: 2,
-    };
-
-    const q = session1CoreQuestions[7]; // riasec likert
-    const action: QuestAction = {
-      type: "ANSWER_QUESTION",
-      response: makeResponse(q.id, 3, "riasec", q.framework_target),
-      question: q,
-      sessionQuestions: session1CoreQuestions,
-    };
-
-    const next = questReducer(state, action);
-
-    expect(next.discovery_mode_active).toBe(true);
-  });
-
-  it("does not trigger if already active", () => {
-    const state = stateAtIndex(7, {
-      engagementShown: true,
-      discovery_mode_active: true,
-      consecutiveMild: 2,
-    });
-    const q = session1CoreQuestions[7];
-    const action: QuestAction = {
-      type: "ANSWER_QUESTION",
-      response: makeResponse(q.id, 3, "riasec", q.framework_target),
-      question: q,
-      sessionQuestions: session1CoreQuestions,
-    };
-
-    const next = questReducer(state, action);
-
-    // Still true but no extra side effects
-    expect(next.discovery_mode_active).toBe(true);
-  });
-});
-
 describe("confirmatory round", () => {
   const fakeAdaptive: Question[] = [
     {
@@ -405,23 +353,6 @@ describe("other actions", () => {
     const next = questReducer(state, { type: "ENTER_SELFMAP" });
 
     expect(next.flowPhase).toBe("selfmap");
-  });
-
-  it("SHOW_DISCOVERY sets flowPhase to discovery_prompt", () => {
-    const state = makeInitialState({ discovery_mode_active: true });
-
-    const next = questReducer(state, { type: "SHOW_DISCOVERY" });
-
-    expect(next.flowPhase).toBe("discovery_prompt");
-  });
-
-  it("DISMISS_DISCOVERY sets flowPhase back to questions", () => {
-    const state = makeInitialState({ flowPhase: "discovery_prompt" });
-
-    const next = questReducer(state, { type: "DISMISS_DISCOVERY" });
-
-    expect(next.flowPhase).toBe("questions");
-    expect(next.discovery_mode_active).toBe(true);
   });
 
   it("DISMISS_BLOCK_TRANSITION sets flowPhase back to questions", () => {
@@ -536,20 +467,6 @@ describe("naming event queuing behind an interstitial", () => {
     expect(dismissed.flowPhase).toBe("class_named");
   });
 
-  it("queues behind a discovery prompt the same way", () => {
-    const queued = questReducer(
-      makeInitialState({ flowPhase: "discovery_prompt" }),
-      { type: "SHOW_CLASS_NAMED" }
-    );
-    expect(queued.flowPhase).toBe("discovery_prompt");
-    expect(queued.classNamedPending).toBe(true);
-
-    const dismissed = questReducer(queued, { type: "DISMISS_DISCOVERY" });
-    expect(dismissed.flowPhase).toBe("class_named");
-    // The discovery dismissal's own side effect still applies.
-    expect(dismissed.discovery_mode_active).toBe(true);
-  });
-
   it("an ordinary dismissal with nothing queued still just returns to questions", () => {
     const state = makeInitialState({
       flowPhase: "block_transition",
@@ -609,8 +526,6 @@ describe("RESTORE_STATE (P1.1 checkpoint resume)", () => {
   it("preserves reducer invariants from a mid-riasec snapshot", () => {
     const snapshot = stateAtIndex(10, {
       engagementShown: false,
-      consecutiveMild: 2,
-      discovery_mode_active: false,
       avatarClass: "mage",
     });
 
@@ -624,7 +539,6 @@ describe("RESTORE_STATE (P1.1 checkpoint resume)", () => {
     expect(next.questions_answered).toBe(10);
     expect(next.responses).toHaveLength(10);
     expect(next.current_block).toBe("riasec");
-    expect(next.consecutiveMild).toBe(2);
     expect(next.engagementShown).toBe(false);
     expect(next.avatarClass).toBe("mage");
     // Restored answers are never undoable; direction resets forward

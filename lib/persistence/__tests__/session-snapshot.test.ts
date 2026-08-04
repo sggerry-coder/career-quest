@@ -22,7 +22,6 @@ function makeQuestState(overrides?: Partial<QuestState>): QuestState {
     transitionNarration: "",
     adaptiveQuestions: [],
     confirmIndex: 0,
-    consecutiveMild: 1,
     current_block: "riasec",
     questions_answered: 10,
     responses: Array.from({ length: 10 }, (_, i) => ({
@@ -35,7 +34,6 @@ function makeQuestState(overrides?: Partial<QuestState>): QuestState {
     })),
     selected_adaptive_ids: [],
     persistence_failed: false,
-    discovery_mode_active: false,
     last_response_undoable: true,
     engagementShown: true,
     avatarClass: "mage",

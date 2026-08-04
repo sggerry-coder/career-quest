@@ -12,7 +12,6 @@ import ProgressBar from "@/components/quest/progress-bar";
 import BlockTransition from "@/components/quest/block-transition";
 import ClassNamedScreen from "@/components/quest/class-named-screen";
 import EngagementCheckpoint from "@/components/quest/engagement-checkpoint";
-import DiscoveryModePrompt from "@/components/quest/discovery-mode-prompt";
 import SelfMapCapture, { type SelfMapData } from "@/components/selfmap/self-map-capture";
 import RevealSequence from "@/components/quest/reveal-sequence";
 import CompletionScreen from "@/components/quest/completion-screen";
@@ -526,11 +525,6 @@ export default function Session({
     dispatch({ type: "DISMISS_ENGAGEMENT" });
   }, [dispatch]);
 
-  // Handle discovery mode activation
-  const handleDiscoveryContinue = useCallback((): void => {
-    dispatch({ type: "DISMISS_DISCOVERY" });
-  }, [dispatch]);
-
   // Handle self-map completion -- keep the reflection data for final persist
   const handleSelfMapComplete = useCallback(
     (data: SelfMapData): void => {
@@ -713,17 +707,6 @@ export default function Session({
         characterName={emergentClass.isNamed ? avatarClassName : null}
         tone={studentTone}
         onContinue={handleEngagementContinue}
-      />
-    );
-  }
-
-  // Discovery mode prompt
-  if (flowPhase === "discovery_prompt") {
-    return (
-      <DiscoveryModePrompt
-        characterName={emergentClass.isNamed ? avatarClassName : null}
-        tone={studentTone}
-        onContinue={handleDiscoveryContinue}
       />
     );
   }

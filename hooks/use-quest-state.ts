@@ -6,7 +6,6 @@ import type {
   Question,
   QuestionBlock,
 } from "@/lib/types/quest";
-import { LIKERT_MIN, LIKERT_MAX } from "@/lib/scoring/likert";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -17,7 +16,6 @@ export type FlowPhase =
   | "block_transition"
   | "class_named"
   | "engagement"
-  | "discovery_prompt"
   | "selfmap"
   | "reveal"
   | "confirmatory"
@@ -30,8 +28,6 @@ export type QuestAction =
   | { type: "DISMISS_BLOCK_TRANSITION" }
   | { type: "SHOW_CLASS_NAMED" }
   | { type: "DISMISS_CLASS_NAMED" }
-  | { type: "SHOW_DISCOVERY" }
-  | { type: "DISMISS_DISCOVERY" }
   | { type: "ENTER_SELFMAP" }
   | { type: "ENTER_REVEAL" }
   | { type: "ENTER_CONFIRMATORY"; adaptiveQuestions: Question[] }
@@ -49,20 +45,18 @@ export interface QuestState {
   transitionNarration: string;
   adaptiveQuestions: Question[];
   confirmIndex: number;
-  consecutiveMild: number;
   current_block: QuestionBlock;
   questions_answered: number;
   responses: ClientResponse[];
   selected_adaptive_ids: string[];
   persistence_failed: boolean;
-  discovery_mode_active: boolean;
   last_response_undoable: boolean;
   engagementShown: boolean;
   avatarClass: string;
   /**
    * True when useEmergentClass raised a naming event while an interstitial
-   * (block transition, engagement checkpoint, discovery prompt) other than
-   * "questions" was on screen. Showing the naming screen right then would
+   * (block transition, engagement checkpoint) other than "questions" was
+   * on screen. Showing the naming screen right then would
    * cut the interstitial off mid-flight -- its narration, its 1500ms visible
    * timer, its exit animation -- so the flag defers it instead: every
    * DISMISS_* action that would otherwise return flowPhase to "questions"
@@ -80,7 +74,6 @@ export interface QuestState {
 // ---------------------------------------------------------------------------
 
 const ENGAGEMENT_OFFSET = 7;
-const CONSECUTIVE_MILD_THRESHOLD = 3;
 
 const INITIAL_STATE: QuestState = {
   flowPhase: "questions",
@@ -89,13 +82,11 @@ const INITIAL_STATE: QuestState = {
   transitionNarration: "",
   adaptiveQuestions: [],
   confirmIndex: 0,
-  consecutiveMild: 0,
   current_block: "warmup",
   questions_answered: 0,
   responses: [],
   selected_adaptive_ids: [],
   persistence_failed: false,
-  discovery_mode_active: false,
   last_response_undoable: false,
   engagementShown: false,
   avatarClass: "wanderer",
@@ -111,30 +102,6 @@ const INITIAL_STATE: QuestState = {
  */
 function findBlockStartIndex(block: string, questions: Question[]): number {
   return questions.findIndex((q) => q.block === block);
-}
-
-/** True for the two inner points of the scale — a lean, but not a strong one. */
-export function isMildAnswer(value: number): boolean {
-  return value > LIKERT_MIN && value < LIKERT_MAX;
-}
-
-/**
- * Detect if discovery mode should trigger: 3+ consecutive riasec ratings with
- * no strong feeling either way.
- *
- * Was "3 answers of exactly 3 (Neutral)". The scale lost its midpoint on
- * 2026-08-03, which would have made that condition unreachable and the whole
- * discovery-mode branch dead. The nearest honest equivalent on a four-point
- * scale is a run of mild answers.
- */
-function shouldTriggerDiscoveryMode(responses: ClientResponse[]): boolean {
-  const riasecResponses = responses.filter(
-    (r) => r.framework === "riasec"
-  );
-  if (riasecResponses.length < CONSECUTIVE_MILD_THRESHOLD) return false;
-
-  const lastThree = riasecResponses.slice(-CONSECUTIVE_MILD_THRESHOLD);
-  return lastThree.every((r) => isMildAnswer(r.response_value));
 }
 
 /**
@@ -249,28 +216,6 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
       const newResponses = [...state.responses, action.response];
       const questionsAnswered = state.questions_answered + 1;
 
-      // Discovery mode detection — a run of answers with no strong feeling
-      let discoveryMode = state.discovery_mode_active;
-      let consecutiveMild = state.consecutiveMild;
-      if (
-        !discoveryMode &&
-        action.question.block === "riasec" &&
-        action.question.question_type === "likert"
-      ) {
-        if (isMildAnswer(action.response.response_value)) {
-          consecutiveMild = state.consecutiveMild + 1;
-        } else {
-          consecutiveMild = 0;
-        }
-        if (consecutiveMild >= CONSECUTIVE_MILD_THRESHOLD) {
-          discoveryMode = true;
-        }
-        // Also check via full response history as fallback
-        if (!discoveryMode && shouldTriggerDiscoveryMode(newResponses)) {
-          discoveryMode = true;
-        }
-      }
-
       const flow = computeFlowTransition(
         nextIndex,
         action.question,
@@ -288,8 +233,6 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
         current_block: flow.current_block,
         responses: newResponses,
         questions_answered: questionsAnswered,
-        discovery_mode_active: discoveryMode,
-        consecutiveMild,
         last_response_undoable: true,
         direction: "right",
       };
@@ -366,19 +309,6 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
       return {
         ...state,
         flowPhase: "questions",
-      };
-
-    case "SHOW_DISCOVERY":
-      return {
-        ...state,
-        flowPhase: "discovery_prompt",
-      };
-
-    case "DISMISS_DISCOVERY":
-      return {
-        ...state,
-        ...resolveDismissal(state),
-        discovery_mode_active: true,
       };
 
     case "ENTER_SELFMAP":
@@ -486,7 +416,6 @@ export function questReducer(state: QuestState, action: QuestAction): QuestState
         currentIndex: Math.max(0, restored.currentIndex ?? 0),
         confirmIndex: Math.max(0, restored.confirmIndex ?? 0),
         questions_answered: Math.max(0, restored.questions_answered ?? 0),
-        consecutiveMild: Math.max(0, restored.consecutiveMild ?? 0),
         responses: restored.responses ?? [],
         adaptiveQuestions: restored.adaptiveQuestions ?? [],
         // A restored answer is never undoable: score-state footprints for it

@@ -69,7 +69,6 @@ const h = vi.hoisted(() => {
     responses,
     selected_adaptive_ids: [],
     persistence_failed: false,
-    discovery_mode_active: false,
     last_response_undoable: false,
     engagementShown: true,
     avatarClass: "mage",
