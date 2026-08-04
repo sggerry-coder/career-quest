@@ -293,6 +293,38 @@ describe("useEmergentClass", () => {
       expect(result.current.derived.isNamed).toBe(true);
     });
 
+    /**
+     * The gate withholds *first namings* only. Widening it to every student
+     * would look harmless -- a restored student keeps their primary either
+     * way, because seedFromRestored carries it -- but seedFromRestored
+     * deliberately drops the secondary and relies on the next boundary to
+     * re-derive it. Block a named student from re-deriving inside the
+     * interest block and a resumed Guardian-Bard is a plain Guardian for the
+     * rest of it; resume straight into the reveal and the secondary is gone
+     * for good, which is what gets written to avatar_class.
+     */
+    it("re-derives a restored student's secondary inside the interest block", () => {
+      const { result, rerender } = renderHook(
+        ({ blockKey, restoredClass }) =>
+          useEmergentClass({ riasec: guardianBard, blockKey, restoredClass }),
+        {
+          initialProps: {
+            blockKey: "warmup",
+            restoredClass: null as string | null,
+          },
+        }
+      );
+
+      // The Resume tap lands the checkpoint and moves the block in one
+      // commit, and the block it moves to is still inside the interest block.
+      rerender({ blockKey: "riasec", restoredClass: "guardian" });
+
+      expect(result.current.derived.primary).toBe("guardian");
+      expect(result.current.derived.secondary).toBe("bard");
+      // And it is still not a fresh naming -- they were named last sitting.
+      expect(result.current.namingEventId).toBe(0);
+    });
+
     it("still honours a restored class even inside the interest block", () => {
       // A resumed student was already named; the gate is about first
       // naming, not about holding a name they already earned.

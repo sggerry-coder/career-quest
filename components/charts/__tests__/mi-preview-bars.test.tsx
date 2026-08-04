@@ -57,13 +57,23 @@ describe("MiPreviewBars", () => {
     expect(scoredRows(container)).toHaveLength(3);
   });
 
-  it("shows one when only one has a reading", () => {
+  it("shows one when only one has a reading, and says so in the singular", () => {
     const { container } = render(
       <MiPreviewBars scores={{ ...noScores, musical: 100 }} />
     );
     const rows = scoredRows(container);
     expect(rows).toHaveLength(1);
     expect(within(rows[0]).getByText("Musical")).toBeDefined();
+    expect(
+      screen.getByText("Your strongest learning style (preliminary)")
+    ).toBeDefined();
+  });
+
+  it("stays plural when more than one has a reading", () => {
+    render(<MiPreviewBars scores={{ ...noScores, musical: 100, logical: 60 }} />);
+    expect(
+      screen.getByText("Your strongest learning styles (preliminary)")
+    ).toBeDefined();
   });
 
   it("says there is no reading yet rather than ranking nothing", () => {

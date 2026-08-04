@@ -45,7 +45,13 @@ export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
         Learning Styles
       </h3>
       <p className="text-xs text-white/30 mb-4">
-        Your strongest learning styles (preliminary)
+        {/* Singular when only one dimension has a reading -- which is a
+            routine outcome now that unscored ones are no longer padded into
+            the list, and "styles" above a single row is a small lie about
+            how much was measured. */}
+        {top3.length === 1
+          ? "Your strongest learning style (preliminary)"
+          : "Your strongest learning styles (preliminary)"}
       </p>
 
       {allZero ? (

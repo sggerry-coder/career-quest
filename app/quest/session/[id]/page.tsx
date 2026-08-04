@@ -32,7 +32,7 @@ import { resolveFinalClass } from "@/lib/character/final-class";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
-import { classDefinitions, cacheTone, readCachedTone } from "@/lib/theme";
+import { applyClassTheme, classDefinitions, cacheTone, readCachedTone } from "@/lib/theme";
 import { accumulateStrengths } from "@/lib/scoring/strengths";
 import { STRENGTH_COUNTS_KEY } from "@/lib/character/relics";
 import { createClient } from "@/lib/supabase/client";
@@ -106,12 +106,26 @@ export default function Session({
   // What gets saved, and what the completion screen prints. The confirmatory
   // round answers RIASEC items after the class was locked, so the chart the
   // student ends on is not always the chart their class was read off --
-  // see resolveFinalClass. Derived once more here, at the point where no
-  // further answer can arrive.
+  // see resolveFinalClass. Strictly gated on "complete": mid-quest this is
+  // the locked class and nothing else, because a re-derivation that ran on
+  // every answer would be the per-answer flicker the lock exists to prevent.
   const finalClass = useMemo(
-    () => resolveFinalClass(emergentClass, scoreState.riasec),
-    [emergentClass, scoreState.riasec]
+    () =>
+      flowPhase === "complete"
+        ? resolveFinalClass(emergentClass, scoreState.riasec)
+        : emergentClass,
+    [flowPhase, emergentClass, scoreState.riasec]
   );
+
+  // The palette follows the name the student is reading. useEmergentClass
+  // themes the locked class, which is right for the whole quest -- but when
+  // the final derivation changes the class, the completion screen prints the
+  // new name over the old class's colours and only the dashboard repaints.
+  // The same contradiction the branch spent itself removing, in colour.
+  useEffect(() => {
+    if (!finalClass.isNamed) return;
+    applyClassTheme(finalClass.primary);
+  }, [finalClass.isNamed, finalClass.primary]);
 
   // Show the naming moment once, when useEmergentClass raises a fresh naming
   // event. namingEventId is a monotonic counter rather than a transient flag

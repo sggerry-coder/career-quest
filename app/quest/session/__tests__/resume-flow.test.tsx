@@ -152,16 +152,15 @@ function makeScoreState(): ScoreState {
 }
 
 /**
- * A student who answered 12 of the 14 interest questions -- enough to clear
- * the evidence gate (MIN_INTEREST_RESPONSES = 10) -- with every RIASEC type
- * getting exactly two answers, [2, 3] on the 1-4 Likert scale. That
- * normalises to exactly 50 for every type (see calculateRiasecType), so
- * deriveClassLabel finds no lead at all and returns "EXPLORER" (Rogue).
- * Paired with current_block "riasec" (the interest block isn't finished --
- * 2 questions remain), useEmergentClass must treat this Rogue as
- * provisional: shown, but isNamed false.
+ * A student who answered 12 of the 14 interest questions -- which the retired
+ * response-count gate treated as enough -- with every RIASEC type getting
+ * exactly two answers, [2, 3] on the 1-4 Likert scale. That normalises to
+ * exactly 50 for every type (see calculateRiasecType), so deriveClassLabel
+ * finds no lead at all and returns "EXPLORER" (Rogue). Paired with
+ * current_block "riasec", where the two ipsative rankings are still to come,
+ * useEmergentClass must not name them at all.
  */
-function makeProvisionalRogueScoreState(): ScoreState {
+function makeMidInterestBlockScoreState(): ScoreState {
   const tiedAtFifty = [2, 3];
   return {
     ...makeScoreState(),
@@ -326,25 +325,26 @@ describe("mid-session checkpoint resume flow", () => {
   });
 
   /**
-   * Regression test for a review finding: useEmergentClass correctly marks
-   * a mid-quest Rogue lead "provisional" (isNamed: false) while interest
-   * questions are still to come, but the session page used to dispatch
-   * SET_AVATAR_CLASS with emergentClass.primary unconditionally, ignoring
-   * isNamed. questState.avatarClass is checkpointed on every change and
-   * restored on the next resume via seedFromRestored, which honours any
-   * non-wanderer id as already named -- so an unguarded dispatch would let
-   * a provisional Rogue quietly become permanent on its next round-trip
-   * through localStorage, with no further evidence able to change it. This
-   * renders the real Session page (real useQuestState, real useScores, real
-   * snapshot persistence) rather than asserting against the hook in
-   * isolation, because the defect lives entirely in the page's dispatch
-   * effect, not in the hook.
+   * C1a, at the page level: a student who quit inside the interest block and
+   * comes back must not be named from the answers they happen to have.
+   * Resuming dispatches RESTORE_STATE, which moves current_block in the same
+   * commit as the restored scores and so fires useEmergentClass's derivation
+   * effect mid-block. This student has 12 of the 14 interest items answered,
+   * all tied at 50 -- the retired response-count gate cleared at 10 and named
+   * them there, locking a reading taken before the two ipsative rankings (30%
+   * of every merged score) had been asked.
+   *
+   * The checkpoint is where it became permanent: questState.avatarClass is
+   * written on every change and restored via seedFromRestored, which honours
+   * any non-wanderer id as already named. So this asserts the whole path --
+   * real useQuestState, real useScores, real snapshot persistence -- and not
+   * just the hook: avatarClass must still read "wanderer" after the resume.
    */
-  it("never checkpoints a provisional Rogue as if it were a genuine naming", async () => {
+  it("never checkpoints a class named on partial interest evidence", async () => {
     saveSessionSnapshot(
       "student-1",
       buildQuestStateAtIndex(17), // 5 warm-up + 12 of the 14 riasec answers
-      makeProvisionalRogueScoreState(),
+      makeMidInterestBlockScoreState(),
       null
     );
 
@@ -367,9 +367,9 @@ describe("mid-session checkpoint resume flow", () => {
     });
 
     const snapshot = loadSessionSnapshot("student-1");
-    // The interest block isn't finished (12 of 14 answered), so the Rogue
-    // lead must still be provisional -- and a provisional class must never
-    // reach the checkpoint. avatarClass stays at its pre-resume value.
+    // The interest block isn't finished (12 of 14 answered), so no naming
+    // may happen yet -- and nothing but a naming may reach the checkpoint.
+    // avatarClass stays at its pre-resume value.
     expect(snapshot?.questState.avatarClass).toBe("wanderer");
   });
 });
