@@ -13,6 +13,15 @@ import { chapterLabel } from "@/lib/copy/chapter";
 interface CompletionScreenProps {
   tone: "quest" | "explorer";
   classLabel: string;
+  /**
+   * The class the reveal showed, before the confirmatory round. When it
+   * differs from classLabel the change is named here: the confirmatory
+   * questions feed the interest type closest to overtaking the leader, so
+   * they can genuinely change the reading, and a student who was told
+   * "Guardian" must not simply find "Vanguard-Guardian" on the dashboard.
+   * Omit, or pass the same string, when nothing moved.
+   */
+  previousClassLabel?: string;
   scoreState: {
     riasec: Record<string, number>;
     strengths: string[];
@@ -65,6 +74,7 @@ export function computeProfileDeltas(
 export default function CompletionScreen({
   tone,
   classLabel,
+  previousClassLabel,
   scoreState,
   riasecSnapshot = null,
   onViewDashboard,
@@ -116,6 +126,16 @@ export default function CompletionScreen({
     tone === "quest"
       ? "Your final answers held firm — a steady hand makes a clear prophecy."
       : "Your final answers were consistent — that makes your profile more reliable.";
+
+  // The confirmatory round can move the interest chart far enough that it no
+  // longer reads as the class the reveal showed. Say so plainly rather than
+  // letting the dashboard be the first place the student notices.
+  const classChanged =
+    previousClassLabel !== undefined && previousClassLabel !== classLabel;
+  const classChangeText =
+    tone === "quest"
+      ? `Those last answers redrew your class: ${previousClassLabel} → ${classLabel}.`
+      : `Those last answers changed your closest match: ${previousClassLabel} → ${classLabel}.`;
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-4">
@@ -204,7 +224,7 @@ export default function CompletionScreen({
       </motion.div>
 
       {/* Confirmatory before/after delta card (P1.3) */}
-      {riasecSnapshot && (
+      {(riasecSnapshot || classChanged) && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -214,6 +234,9 @@ export default function CompletionScreen({
           <p className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
             {sharpenedHeading}
           </p>
+          {classChanged && (
+            <p className="text-sm text-white/80 mb-2">{classChangeText}</p>
+          )}
           {profileDeltas.length > 0 ? (
             <ul className="flex flex-col gap-1.5">
               {profileDeltas.map((d) => (
@@ -232,7 +255,7 @@ export default function CompletionScreen({
                 </li>
               ))}
             </ul>
-          ) : (
+          ) : classChanged ? null : (
             <p className="text-sm text-white/60">{steadyText}</p>
           )}
         </motion.div>

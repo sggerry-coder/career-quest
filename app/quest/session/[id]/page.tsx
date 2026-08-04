@@ -28,6 +28,7 @@ import {
   characterClassDisplayName,
   serializeCharacterClass,
 } from "@/lib/character/classes";
+import { resolveFinalClass } from "@/lib/character/final-class";
 import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
@@ -101,6 +102,16 @@ export default function Session({
     blockKey: questState.current_block,
     restoredClass,
   });
+
+  // What gets saved, and what the completion screen prints. The confirmatory
+  // round answers RIASEC items after the class was locked, so the chart the
+  // student ends on is not always the chart their class was read off --
+  // see resolveFinalClass. Derived once more here, at the point where no
+  // further answer can arrive.
+  const finalClass = useMemo(
+    () => resolveFinalClass(emergentClass, scoreState.riasec),
+    [emergentClass, scoreState.riasec]
+  );
 
   // Show the naming moment once, when useEmergentClass raises a fresh naming
   // event. namingEventId is a monotonic counter rather than a transient flag
@@ -252,7 +263,7 @@ export default function Session({
       studentId,
       // The full resolved class, dual included. Persisting only the primary
       // told a "Guardian-Mage" they were a "Guardian" ever after.
-      characterClass: serializeCharacterClass(emergentClass),
+      characterClass: serializeCharacterClass(finalClass),
       responses: questState.responses,
       scores: {
         riasec: scoreState.riasec,
@@ -276,7 +287,7 @@ export default function Session({
         [STRENGTH_COUNTS_KEY]: accumulateStrengths(scoreState.strength_signals),
       },
     });
-  }, [studentId, scoreState, questState.responses, emergentClass]);
+  }, [studentId, scoreState, questState.responses, finalClass]);
 
   // Final-save state machine. The completion screen is gated on this, so a
   // failed save can never be mistaken for a finished quest.
@@ -781,9 +792,19 @@ export default function Session({
             ) : saveStatus === "saved" ? (
               <CompletionScreen
                 tone={studentTone}
-                // The resolved class, same as the reveal and the dashboard --
-                // this card used to show the raw "HELPER-INVESTIGATOR" label.
-                classLabel={characterClassDisplayName(emergentClass, studentTone)}
+                // The class as the final chart supports it -- the same string
+                // that was just written to avatar_class, so this card, the
+                // dashboard badge and the dashboard's own bars all agree.
+                // (It used to show the raw "HELPER-INVESTIGATOR" label.)
+                classLabel={characterClassDisplayName(finalClass, studentTone)}
+                // What the reveal called them a few taps ago. Only differs
+                // when the confirmatory round moved the chart far enough to
+                // change the reading -- and then the student is told, rather
+                // than finding a different name on the dashboard.
+                previousClassLabel={characterClassDisplayName(
+                  emergentClass,
+                  studentTone
+                )}
                 scoreState={{
                   riasec: scoreState.riasec,
                   strengths: scoreState.strengths,
