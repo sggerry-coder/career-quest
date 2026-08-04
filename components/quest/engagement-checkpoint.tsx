@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface EngagementCheckpointProps {
   /**
@@ -39,6 +40,7 @@ export default function EngagementCheckpoint({
   onContinue,
 }: EngagementCheckpointProps) {
   const displayMessage = message || defaultMessage(characterName, tone);
+  const headingRef = useScreenChange<HTMLHeadingElement>(displayMessage);
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
@@ -48,8 +50,17 @@ export default function EngagementCheckpoint({
         transition={{ duration: 0.3 }}
         className="flex max-w-sm flex-col items-center gap-6 text-center"
       >
-        <span className="text-5xl">{"\u{2728}"}</span>
-        <p className="text-lg font-medium text-white/90">{displayMessage}</p>
+        <span className="text-5xl" aria-hidden="true">
+          {"\u{2728}"}
+        </span>
+        {/* A heading, not a paragraph: it is the only thing this screen says,
+            and it has to be a focus target when the screen swaps in. */}
+        <h1
+          ref={headingRef}
+          className="text-lg font-medium text-white/90 focus:outline-none"
+        >
+          {displayMessage}
+        </h1>
         <button
           onClick={onContinue}
           className="rounded-xl bg-[var(--color-primary)] px-8 py-3 font-medium text-white shadow-[0_0_20px_var(--color-glow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 min-h-[44px]"

@@ -10,6 +10,7 @@ import ClassLabel from "@/components/charts/class-label";
 import { characterClassDisplayName, type DerivedClass } from "@/lib/character/classes";
 import { describeCharacter } from "@/lib/character/description";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface ScoreState {
   riasec: Record<string, number>;
@@ -55,6 +56,23 @@ type RevealPhase =
   | "explanation"
   | "confirmatory_intro";
 
+/**
+ * What each beat is called. The reveal *appends* rather than swaps, so without
+ * a name per beat a screen reader is told nothing when Continue adds a chart
+ * below the fold — the button stays put and the page simply grew.
+ */
+const BEAT_NAMES: Record<RevealPhase, string> = {
+  transition: "Your results",
+  riasec: "Ability Scores",
+  class_label: "Your class",
+  mi_preview: "Learning Styles",
+  mbti: "Character Traits",
+  emerging_type: "About your personality type",
+  values: "Values Compass",
+  explanation: "What these charts mean",
+  confirmatory_intro: "Sharpen your results",
+};
+
 export default function RevealSequence({
   scoreState,
   resolvedClass,
@@ -62,6 +80,13 @@ export default function RevealSequence({
   onRevealComplete,
 }: RevealSequenceProps) {
   const [phase, setPhase] = useState<RevealPhase>("transition");
+
+  // One target per beat: whichever element belongs to the phase we just moved
+  // to takes focus, so the student is put on the new chart rather than left on
+  // a Continue button with fresh content silently added above it.
+  const beatRef = useScreenChange<HTMLElement>(phase);
+  /** Attach the focus target to the beat that has just appeared. */
+  const beat = (p: RevealPhase) => (phase === p ? { ref: beatRef } : {});
 
   const emergentClassName = characterClassDisplayName(resolvedClass, tone);
   const emergentDescription = describeCharacter({
@@ -108,10 +133,11 @@ export default function RevealSequence({
         className="flex min-h-dvh flex-col items-center justify-center px-8 text-center"
       >
         <motion.p
+          {...beat("transition")}
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-xl font-medium text-white/90 italic"
+          className="text-xl font-medium text-white/90 italic focus:outline-none"
         >
           {/* Greeting built from the resolved class, guarded on isNamed --
               the same rule EngagementCheckpoint follows. It used to take a
@@ -142,7 +168,10 @@ export default function RevealSequence({
           className="max-w-sm flex flex-col items-center gap-6"
         >
           <span className="text-5xl">{"\u{1F3AF}"}</span>
-          <h2 className="text-xl font-semibold text-white">
+          <h2
+            {...beat("confirmatory_intro")}
+            className="text-xl font-semibold text-white focus:outline-none"
+          >
             Want to sharpen your results?
           </h2>
           <p className="text-sm text-white/60">
@@ -178,9 +207,12 @@ export default function RevealSequence({
             phase === "explanation") && (
             <motion.div
               key="riasec"
+              {...beat("riasec")}
+              role="group"
+              aria-label={BEAT_NAMES.riasec}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
+              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5 focus:outline-none"
             >
               {/* classLabel omitted: the animated ClassLabel below is the
                   reveal beat for it, and passing it here printed it twice. */}
@@ -206,9 +238,12 @@ export default function RevealSequence({
             phase === "explanation") && (
             <motion.div
               key="class"
+              {...beat("class_label")}
+              role="group"
+              aria-label={BEAT_NAMES.class_label}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-3"
+              className="flex flex-col items-center gap-3 focus:outline-none"
             >
               <ClassLabel label={emergentClassName} />
               <p className="text-sm text-white/60 text-center max-w-xs">{emergentDescription}</p>
@@ -223,9 +258,12 @@ export default function RevealSequence({
             phase === "explanation") && (
             <motion.div
               key="mi"
+              {...beat("mi_preview")}
+              role="group"
+              aria-label={BEAT_NAMES.mi_preview}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
+              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5 focus:outline-none"
             >
               <MiPreviewBars scores={scoreState.mi} />
             </motion.div>
@@ -238,9 +276,12 @@ export default function RevealSequence({
             phase === "explanation") && (
             <motion.div
               key="mbti"
+              {...beat("mbti")}
+              role="group"
+              aria-label={BEAT_NAMES.mbti}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
+              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5 focus:outline-none"
             >
               <MbtiSliders scores={scoreState.mbti} />
               {Object.values(scoreState.mbti).every(v => v === 0) && (
@@ -260,9 +301,12 @@ export default function RevealSequence({
             phase === "explanation") && (
             <motion.div
               key="emerging"
+              {...beat("emerging_type")}
+              role="group"
+              aria-label={BEAT_NAMES.emerging_type}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex justify-center text-center"
+              className="flex justify-center text-center focus:outline-none"
             >
               <p className="text-xs text-white/55 max-w-xs">
                 {tone === "quest"
@@ -276,9 +320,12 @@ export default function RevealSequence({
           {(phase === "values" || phase === "explanation") && (
             <motion.div
               key="values"
+              {...beat("values")}
+              role="group"
+              aria-label={BEAT_NAMES.values}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5"
+              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5 focus:outline-none"
             >
               <ValuesSliders scores={scoreState.values} />
               {Object.values(scoreState.values).every(v => v === 0) && (
@@ -291,9 +338,12 @@ export default function RevealSequence({
           {phase === "explanation" && (
             <motion.div
               key="explanation"
+              {...beat("explanation")}
+              role="group"
+              aria-label={BEAT_NAMES.explanation}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5 text-center"
+              className="w-full rounded-2xl bg-white/5 border border-white/10 p-5 text-center focus:outline-none"
             >
               <p className="text-sm text-white/60 leading-relaxed">
                 These charts show your initial profile. The Ability Scores

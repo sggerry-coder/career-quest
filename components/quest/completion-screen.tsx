@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { chapterLabel } from "@/lib/copy/chapter";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 /**
  * The celebration. Mounting this screen *means the results are saved* — the
@@ -109,6 +110,7 @@ export default function CompletionScreen({
   }, []);
 
   const heading = `${tone === "quest" ? "Quest " : ""}${chapterLabel(1, tone)} Complete`;
+  const headingRef = useScreenChange<HTMLHeadingElement>(heading);
   const subheading =
     tone === "quest"
       ? "Your profile has been forged!"
@@ -182,7 +184,8 @@ export default function CompletionScreen({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: "easeOut", delay: 0.8 }}
-        className="text-2xl font-semibold text-white text-center"
+        ref={headingRef}
+        className="text-2xl font-semibold text-white text-center focus:outline-none"
       >
         {heading}
       </motion.h1>

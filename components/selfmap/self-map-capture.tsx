@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 export interface SelfMapData {
   clarity: number;
@@ -39,6 +40,9 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
   const [clarity, setClarity] = useState(3);
   const [sources, setSources] = useState<string[]>([]);
   const [strengths, setStrengths] = useState<string[]>([]);
+  // Three screens behind one AnimatePresence: Next unmounts the control the
+  // student just pressed, so each step has to claim focus when it arrives.
+  const headingRef = useScreenChange<HTMLHeadingElement>(`selfmap-step-${step}`);
 
   const handleSourceToggle = (value: string) => {
     if (value === "none") {
@@ -97,7 +101,10 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
 
           {step === 0 && (
             <>
-              <h2 className="text-lg font-semibold text-white text-center">
+              <h2
+                ref={headingRef}
+                className="text-lg font-semibold text-white text-center focus:outline-none"
+              >
                 Before we reveal your results...
               </h2>
               <p className="text-sm text-white/70 text-center">
@@ -142,7 +149,10 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
 
           {step === 1 && (
             <>
-              <h2 className="text-lg font-semibold text-white text-center">
+              <h2
+                ref={headingRef}
+                className="text-lg font-semibold text-white text-center focus:outline-none"
+              >
                 Where have your career ideas come from so far?
               </h2>
               <div className="flex flex-wrap justify-center gap-2 w-full">
@@ -171,7 +181,10 @@ export default function SelfMapCapture({ onComplete }: SelfMapCaptureProps) {
 
           {step === 2 && (
             <>
-              <h2 className="text-lg font-semibold text-white text-center">
+              <h2
+                ref={headingRef}
+                className="text-lg font-semibold text-white text-center focus:outline-none"
+              >
                 What do you think you&apos;re naturally good at?
               </h2>
               <p className="text-xs text-white/65">Pick up to 3</p>

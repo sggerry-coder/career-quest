@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface SavingResultsProps {
   tone: "quest" | "explorer";
@@ -21,6 +22,7 @@ export default function SavingResults({
 }: SavingResultsProps): React.JSX.Element {
   const heading =
     tone === "quest" ? "Sealing your results…" : "Saving your results…";
+  const headingRef = useScreenChange<HTMLHeadingElement>(heading);
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-5 px-4">
@@ -30,13 +32,12 @@ export default function SavingResults({
         transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
         aria-hidden="true"
       />
-      <p
-        className="text-base font-medium text-white/80 text-center"
-        role="status"
-        aria-live="polite"
+      <h1
+        ref={headingRef}
+        className="text-base font-medium text-white/80 text-center focus:outline-none"
       >
         {heading}
-      </p>
+      </h1>
       <p className="text-xs text-white/65 text-center max-w-xs">
         Hang on a moment &mdash; don&apos;t close this page.
       </p>

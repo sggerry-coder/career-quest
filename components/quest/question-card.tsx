@@ -2,6 +2,7 @@
 
 import { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface QuestionCardProps {
   questionText: string;
@@ -45,6 +46,11 @@ export default function QuestionCard({
   onSkip,
   children,
 }: QuestionCardProps) {
+  // Every answer swaps the card underneath the student. The control they just
+  // used is unmounted by AnimatePresence, so without this focus falls to
+  // <body> and the next Tab restarts at the top of the page.
+  const headingRef = useScreenChange<HTMLHeadingElement>(questionText);
+
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center px-4 py-8">
       {/* Top bar: undo + block info + time */}
@@ -101,7 +107,10 @@ export default function QuestionCard({
             <p className="text-sm text-white/50 mb-2">
               {questionIndex + 1} of {totalQuestions}
             </p>
-            <h2 className="text-xl font-semibold leading-relaxed text-white md:text-2xl">
+            <h2
+              ref={headingRef}
+              className="text-xl font-semibold leading-relaxed text-white md:text-2xl focus:outline-none"
+            >
               {questionText}
             </h2>
           </div>

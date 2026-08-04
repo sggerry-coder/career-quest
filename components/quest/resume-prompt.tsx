@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { chapterLabel } from "@/lib/copy/chapter";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface ResumePromptProps {
   tone: "quest" | "explorer";
@@ -23,6 +24,7 @@ export default function ResumePrompt({
 }: ResumePromptProps): React.JSX.Element {
   const heading =
     tone === "quest" ? "Welcome back, adventurer!" : "Welcome back!";
+  const headingRef = useScreenChange<HTMLHeadingElement>(heading);
   const body =
     tone === "quest"
       ? `Your quest paused with ${questionsAnswered} ${
@@ -43,7 +45,12 @@ export default function ResumePrompt({
         <span className="text-5xl" aria-hidden="true">
           {"\u{1F4CD}"}
         </span>
-        <h1 className="text-xl font-semibold text-white">{heading}</h1>
+        <h1
+          ref={headingRef}
+          className="text-xl font-semibold text-white focus:outline-none"
+        >
+          {heading}
+        </h1>
         <p className="text-sm text-white/60">{body}</p>
         <div className="flex flex-col gap-3 w-full">
           <button

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface BlockTransitionProps {
   narrationText: string;
@@ -13,6 +14,8 @@ export default function BlockTransition({
   onComplete,
 }: BlockTransitionProps) {
   const [visible, setVisible] = useState(true);
+  // The interstitial covers the whole viewport, so it is the screen now.
+  const skipRef = useScreenChange<HTMLDivElement>(narrationText);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -44,10 +47,16 @@ export default function BlockTransition({
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") handleTap();
           }}
+          ref={skipRef}
           role="button"
           tabIndex={0}
-          aria-label="Tap to skip transition"
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-[#0f0a1e] to-[#1a1035] px-8 cursor-pointer"
+          /* No aria-label. It said "Tap to skip transition" over a screen whose
+             visible text says "Tap to continue", and — worse — an aria-label on
+             a role="button" *replaces* its contents as the accessible name, so
+             the narration this screen exists to deliver was never read out at
+             all. Named by its own contents, it announces the narration and then
+             the instruction, which is what a sighted student sees. */
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-[#0f0a1e] to-[#1a1035] px-8 cursor-pointer focus:outline-none"
         >
           <motion.p
             initial={{ y: 30, opacity: 0 }}

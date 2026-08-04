@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { ErrorCategory } from "@/lib/validation/error-classification";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface SaveFailedScreenProps {
   errorType: ErrorCategory;
@@ -33,6 +34,9 @@ export default function SaveFailedScreen({
   onLeave,
 }: SaveFailedScreenProps): React.JSX.Element {
   const isAuth = errorType === "auth";
+  // This screen replaces the celebration. role="alert" already interrupts, but
+  // it leaves a keyboard student with focus on nothing.
+  const headingRef = useScreenChange<HTMLHeadingElement>(`save-failed:${errorType}`);
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-4">
@@ -48,7 +52,10 @@ export default function SaveFailedScreen({
           {"\u{26A0}\u{FE0F}"}
         </span>
 
-        <h1 className="text-xl font-semibold text-white">
+        <h1
+          ref={headingRef}
+          className="text-xl font-semibold text-white focus:outline-none"
+        >
           We couldn&apos;t save your results
         </h1>
 

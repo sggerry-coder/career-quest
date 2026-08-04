@@ -217,7 +217,9 @@ async function runConfirmatoryRound(): Promise<void> {
   for (const q of CONFIRMATORY_QUESTIONS) {
     await screen.findByText(q.question_text);
     await act(async () => {
-      fireEvent.click(screen.getByRole("radio", { name: "Strongly Like" }));
+      // The rating scale now names each point by the digit the student can
+      // see as well as its wording -- see components/quest/likert-slider.
+      fireEvent.click(screen.getByRole("radio", { name: "4 — Strongly Like" }));
     });
   }
 

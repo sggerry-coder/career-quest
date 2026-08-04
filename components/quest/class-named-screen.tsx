@@ -7,6 +7,7 @@ import {
   type DerivedClass,
 } from "@/lib/character/classes";
 import { classDefinitions } from "@/lib/theme";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface ClassNamedScreenProps {
   derived: DerivedClass;
@@ -28,6 +29,8 @@ export default function ClassNamedScreen({
   onContinue,
 }: ClassNamedScreenProps): React.JSX.Element {
   const name = characterClassDisplayName(derived, tone);
+  // The naming moment replaces the question the student just answered.
+  const headingRef = useScreenChange<HTMLHeadingElement>(name);
   const def = classDefinitions.find((c) => c.id === derived.primary);
   const tagline = def?.tagline[tone] ?? "";
   const icon = CHARACTER_CLASSES[derived.primary].icon;
@@ -48,7 +51,8 @@ export default function ClassNamedScreen({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
-        className="text-2xl font-semibold text-white"
+        ref={headingRef}
+        className="text-2xl font-semibold text-white focus:outline-none"
       >
         {tone === "quest" ? `You are a ${name}.` : `Your profile: ${name}`}
       </motion.h1>

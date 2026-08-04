@@ -215,7 +215,9 @@ describe("a naming event coinciding with a block transition", () => {
     // Dismiss the transition the way a student would: tap it.
     await act(async () => {
       fireEvent.click(
-        screen.getByRole("button", { name: "Tap to skip transition" })
+        // The interstitial is named by its own contents now: an aria-label
+        // on a role="button" was replacing the narration it exists to say.
+        screen.getByRole("button", { name: /Tap to continue/ })
       );
     });
 

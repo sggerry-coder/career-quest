@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface BadgeUnlockProps {
   badgeName: string;
@@ -24,6 +25,9 @@ export default function BadgeUnlock({
   onComplete,
 }: BadgeUnlockProps) {
   const [visible, setVisible] = useState(true);
+  // The overlay is the whole screen while it is up, and it replaces the last
+  // question. Without this the student is left focused on a removed button.
+  const overlayRef = useScreenChange<HTMLDivElement>(badgeName);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -49,14 +53,18 @@ export default function BadgeUnlock({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm"
+          ref={overlayRef}
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm focus:outline-none"
           onClick={() => setVisible(false)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") setVisible(false);
           }}
           role="button"
           tabIndex={0}
-          aria-label="Badge unlocked. Press to continue"
+          /* No aria-label: it read "Badge unlocked. Press to continue" and
+             replaced the contents as the accessible name, so the badge the
+             student had just earned was never said. Named by its contents, it
+             announces the badge and how to dismiss it. */
         >
           {/* Glow pulse background */}
           <motion.div
@@ -97,6 +105,9 @@ export default function BadgeUnlock({
               Badge Unlocked!
             </p>
             <p className="text-lg font-bold text-white">{badgeName}</p>
+            {/* The overlay was always dismissable by tap or key and never said
+                so. It is also the accessible name's second half now. */}
+            <p className="mt-3 text-xs text-white/55">Tap to continue</p>
           </motion.div>
         </motion.div>
       )}
