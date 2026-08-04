@@ -97,6 +97,33 @@ export function buildRiasecEvidence(
 }
 
 /**
+ * Whether a type has any interest answer behind it at all.
+ *
+ * The counterpart of hasValuesReading, and the same trap in a different
+ * shape. On this scale 0 is the bottom rather than the centre, so it looks
+ * safer than a values 0 — but "rated at the bottom" and "never asked" still
+ * arrive as the same number, and the chart printed both as a labelled row
+ * with an empty bar and a hard 0. That is a claim about the student, and on
+ * the type nobody asked about it is a false one. It matters more here than
+ * anywhere: the class badge is read straight off these six rows, so a student
+ * can see a name derived from evidence the chart is misrepresenting.
+ *
+ * No evidence at all reads as "assume answered", exactly as hasValuesReading
+ * does, and for the same reason: a caller that cannot tell must not blank a
+ * finished profile. The dashboard is that caller until the counts are
+ * persisted (migration 00006). A missing key *within* an evidence record is
+ * an absence that buildRiasecEvidence recorded — it always emits all six —
+ * so that reads as no answer.
+ */
+export function hasRiasecReading(
+  type: string,
+  evidence?: Record<string, number>
+): boolean {
+  if (!evidence) return true;
+  return (evidence[type] ?? 0) > 0;
+}
+
+/**
  * Merge the two interest instruments into one score per type:
  * 70% rating items, 30% forced ranking.
  *

@@ -3,6 +3,7 @@ import {
   calculateAllRiasec,
   calculateAllRiasecOrNull,
   buildRiasecEvidence,
+  hasRiasecReading,
   mergeIpsativeScores,
   deriveClassLabel,
 } from "../riasec";
@@ -327,6 +328,54 @@ describe("mergeIpsativeScores with a missing side", () => {
     for (const value of Object.values(merged)) {
       expect(Number.isFinite(value)).toBe(true);
       expect(value).toBe(0);
+    }
+  });
+});
+
+/**
+ * The same question the class derivation asks, asked by a chart instead.
+ * deriveClassLabel drops an unevidenced type from the ranking; the bars have
+ * to drop the number. Both need one predicate, and it has to behave the same
+ * way hasValuesReading does about a caller that cannot tell.
+ */
+describe("hasRiasecReading", () => {
+  const EVIDENCE = { R: 3, I: 3, A: 2, S: 3, E: 2, C: 0 };
+
+  it("separates a type that was rated from one that was never asked", () => {
+    // A scored 0 on two "strongly dislike" ratings; C was never asked. Same
+    // number in the scores, opposite meaning.
+    expect(hasRiasecReading("A", EVIDENCE)).toBe(true);
+    expect(hasRiasecReading("C", EVIDENCE)).toBe(false);
+  });
+
+  it("counts a single answer as a reading", () => {
+    expect(hasRiasecReading("R", { R: 1 })).toBe(true);
+  });
+
+  it("assumes asked when no evidence is supplied at all", () => {
+    // The dashboard's position until migration 00006 is applied and wired:
+    // it reads back persisted scores and has no counts to read. Blanking six
+    // rows of a finished profile would be a worse lie than the one this
+    // guards against — the same call hasValuesReading makes.
+    expect(hasRiasecReading("C")).toBe(true);
+    expect(hasRiasecReading("C", undefined)).toBe(true);
+  });
+
+  it("treats a key missing from a real evidence record as unasked", () => {
+    // buildRiasecEvidence always emits all six, so a gap inside one of its
+    // records is an absence it recorded, not an absence of records.
+    expect(hasRiasecReading("C", { R: 2 })).toBe(false);
+  });
+
+  it("agrees with buildRiasecEvidence on the fixture that names nobody", () => {
+    const evidence = buildRiasecEvidence(
+      { R: [], I: [], A: [], S: [4, 4], E: [], C: [] },
+      { R: [], I: [], A: [], S: [], E: [], C: [] }
+    );
+
+    expect(hasRiasecReading("S", evidence)).toBe(true);
+    for (const type of ["R", "I", "A", "E", "C"]) {
+      expect(hasRiasecReading(type, evidence)).toBe(false);
     }
   });
 });
