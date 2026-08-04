@@ -4,14 +4,36 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-import { classes } from "@/data/classes";
 import { applyClassTheme } from "@/lib/theme";
 import { chapterLabel } from "@/lib/copy/chapter";
+import {
+  parseCharacterClass,
+  characterClassDisplayName,
+  CHARACTER_CLASSES,
+  type DerivedClass,
+} from "@/lib/character/classes";
+import { loadSessionSnapshot } from "@/lib/persistence/session-snapshot";
 import type { Student } from "@/lib/types/student";
+
+/**
+ * The class to greet a returning student by.
+ *
+ * A mid-quest class lives only in the checkpoint until the final save, so
+ * reading the database alone greets a named student as "Wanderer" — or, in
+ * plain tone, the non-sentence "Still forming" — and then turns them back
+ * into their class the moment they resume.
+ */
+function resolveGreetingClass(storedClass: string | null, studentId: string) {
+  const stored = parseCharacterClass(storedClass);
+  if (stored.isNamed) return stored;
+  const snapshot = loadSessionSnapshot(studentId);
+  const inProgress = snapshot?.questState?.avatarClass ?? null;
+  return parseCharacterClass(inProgress);
+}
 
 type LandingState =
   | { status: "loading" }
-  | { status: "returning"; student: Student }
+  | { status: "returning"; student: Student; resolvedClass: DerivedClass }
   | { status: "new"; introCard: number };
 
 const introCards = [
@@ -36,23 +58,25 @@ export default function Home() {
       try {
         const supabase = createClient();
         const {
-          data: { session },
-        } = await supabase.auth.getSession();
+          data: { user },
+        } = await supabase.auth.getUser();
 
-        if (session?.user) {
+        if (user) {
           // Check for student record
           const { data: student } = await supabase
             .from("students")
             .select("*")
-            .eq("id", session.user.id)
+            .eq("id", user.id)
             .single();
 
           if (student) {
             const returningStudent = student as Student;
-            if (returningStudent.avatar_class) {
-              applyClassTheme(returningStudent.avatar_class);
-            }
-            setState({ status: "returning", student: returningStudent });
+            const resolvedClass = resolveGreetingClass(
+              returningStudent.avatar_class,
+              user.id
+            );
+            applyClassTheme(resolvedClass.primary);
+            setState({ status: "returning", student: returningStudent, resolvedClass });
             return;
           }
         }
@@ -132,8 +156,12 @@ export default function Home() {
 
   // Returning user
   if (state.status === "returning") {
-    const { student } = state;
-    const classDef = classes.find((c) => c.id === student.avatar_class);
+    const { student, resolvedClass } = state;
+    const classIcon = CHARACTER_CLASSES[resolvedClass.primary].icon;
+    const classDisplayName = characterClassDisplayName(
+      resolvedClass,
+      student.tone ?? "quest"
+    );
     const displayTone = student.tone ?? "quest";
 
     return (
@@ -185,15 +213,13 @@ export default function Home() {
               borderRadius: "var(--cq-radius)",
             }}
           >
-            {classDef && (
-              <span
-                style={{ fontSize: "2rem" }}
-                role="img"
-                aria-label={classDef.name[displayTone]}
-              >
-                {classDef.icon}
-              </span>
-            )}
+            <span
+              style={{ fontSize: "2rem" }}
+              role="img"
+              aria-label={classDisplayName}
+            >
+              {classIcon}
+            </span>
             <div style={{ textAlign: "left" }}>
               <p
                 style={{
@@ -210,9 +236,7 @@ export default function Home() {
                   color: "var(--cq-text-secondary)",
                 }}
               >
-                {classDef
-                  ? classDef.name[displayTone]
-                  : "Adventurer"}{" "}
+                {classDisplayName}{" "}
                 &middot; {student.has_completed_session1 ? `${chapterLabel(1, displayTone)} Complete` : chapterLabel(student.current_session || 1, displayTone)}
               </p>
             </div>

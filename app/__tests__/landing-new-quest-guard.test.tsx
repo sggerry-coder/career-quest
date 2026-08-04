@@ -20,9 +20,9 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     auth: {
-      getSession: () =>
+      getUser: () =>
         Promise.resolve({
-          data: { session: { user: { id: "student-1" } } },
+          data: { user: { id: "student-1" } },
         }),
     },
     from: () => ({
