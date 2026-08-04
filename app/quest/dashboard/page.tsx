@@ -18,7 +18,7 @@ import { deriveClassLabel } from "@/lib/scoring/riasec";
 import { applyClassTheme } from "@/lib/theme";
 import { chapterLabel } from "@/lib/copy/chapter";
 import { CHARACTER_CLASSES, type CharacterClassId } from "@/lib/character/classes";
-import { earnedRelics } from "@/lib/character/relics";
+import { relicsFromSelfMap } from "@/lib/character/relics";
 import RelicShelf from "@/components/character/relic-shelf";
 import { loadSessionSnapshot } from "@/lib/persistence/session-snapshot";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
@@ -35,6 +35,8 @@ interface StudentData {
     sources: string[];
     perceived_strengths: string[];
     curiosities: string[];
+    /** Per-strength demonstration counts; the relic shelf's only input. */
+    strength_counts?: Record<string, number>;
   } | null;
 }
 
@@ -340,10 +342,13 @@ export default function Dashboard() {
             />
           </div>
 
-          {/* === Earned relics: traits shown during the quest, displayed only === */}
+          {/* === Earned relics: traits shown during the quest, displayed only ===
+              Built from the per-strength counts persisted in self_map, not
+              from `strengths` -- that column is the deduped top five, so
+              every entry appears once and the threshold of 2 is unreachable. */}
           <div className="mb-6">
             <RelicShelf
-              relics={earnedRelics(scores.strengths ?? [])}
+              relics={relicsFromSelfMap(student.self_map)}
               tone={student.tone}
             />
           </div>

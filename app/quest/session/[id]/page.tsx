@@ -28,6 +28,8 @@ import { session1CoreQuestions } from "@/data/questions/session-1-core";
 import { session1AdaptivePool } from "@/data/questions/session-1-adaptive";
 import { selectAdaptiveQuestions } from "@/lib/scoring/adaptive";
 import { classDefinitions, cacheTone, readCachedTone } from "@/lib/theme";
+import { accumulateStrengths } from "@/lib/scoring/strengths";
+import { STRENGTH_COUNTS_KEY } from "@/lib/character/relics";
 import { createClient } from "@/lib/supabase/client";
 import { runFinalPersist } from "@/lib/persistence/final-persist";
 import { chapterLabel } from "@/lib/copy/chapter";
@@ -229,10 +231,17 @@ export default function Session({
       },
       // Merge self-map reflections (clarity, sources, perceived strengths)
       // into the existing self_map without dropping character-creation data
-      // such as curiosities
-      selfMap: selfMapData.current
-        ? { ...existingSelfMap.current, ...selfMapData.current }
-        : null,
+      // such as curiosities.
+      //
+      // strength_counts is written unconditionally: relics are earned from
+      // how many times a trait was demonstrated, and the persisted
+      // `strengths` column is the deduped top five, which cannot express
+      // that. Without this the dashboard's relic shelf is always empty.
+      selfMap: {
+        ...existingSelfMap.current,
+        ...(selfMapData.current ?? {}),
+        [STRENGTH_COUNTS_KEY]: accumulateStrengths(scoreState.strength_signals),
+      },
     });
   }, [studentId, scoreState, questState.responses, emergentClass.primary]);
 
