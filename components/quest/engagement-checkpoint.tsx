@@ -3,18 +3,42 @@
 import { motion } from "framer-motion";
 
 interface EngagementCheckpointProps {
-  className: string;
+  /**
+   * The student's class name, or null while they are still a Wanderer.
+   *
+   * This checkpoint fires inside the interest block, which is before the
+   * first naming for every student, so null is the common case rather than
+   * an edge case. Addressing them by their placeholder produced "Nice
+   * progress, Wanderer!" for 100% of students and, in explorer tone, the
+   * ungrammatical "Nice progress, Still forming!".
+   */
+  characterName: string | null;
+  tone: "quest" | "explorer";
   message?: string;
   onContinue: () => void;
 }
 
+function defaultMessage(
+  characterName: string | null,
+  tone: "quest" | "explorer"
+): string {
+  if (tone === "explorer") {
+    return characterName
+      ? `Nice progress, ${characterName}. You're about halfway.`
+      : "Nice progress. You're about halfway.";
+  }
+  return characterName
+    ? `Nice progress, ${characterName}! Halfway there...`
+    : "Nice progress! Halfway there...";
+}
+
 export default function EngagementCheckpoint({
-  className,
+  characterName,
+  tone,
   message,
   onContinue,
 }: EngagementCheckpointProps) {
-  const displayMessage =
-    message || `Nice progress, ${className}! Halfway there...`;
+  const displayMessage = message || defaultMessage(characterName, tone);
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-4">
@@ -32,7 +56,7 @@ export default function EngagementCheckpoint({
           aria-label="Continue quest"
           tabIndex={0}
         >
-          Keep going!
+          {tone === "quest" ? "Keep going!" : "Keep going"}
         </button>
       </motion.div>
     </div>

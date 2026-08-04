@@ -3,12 +3,36 @@
 import { motion } from "framer-motion";
 
 interface DiscoveryModePromptProps {
-  className: string;
+  /**
+   * The student's class name, or null while they are still a Wanderer.
+   * Discovery mode triggers on indecision in the interest block, before any
+   * student has been named, so the name-less wording is the normal one --
+   * "Let's try a different approach, Still forming." was not a sentence.
+   */
+  characterName: string | null;
+  tone: "quest" | "explorer";
   onContinue: () => void;
 }
 
+function bodyText(
+  characterName: string | null,
+  tone: "quest" | "explorer"
+): string {
+  if (tone === "explorer") {
+    const opening = characterName
+      ? `Let's try this a different way, ${characterName}.`
+      : "Let's try this a different way.";
+    return `${opening} Instead of rating activities, you'll choose between two options — no middle ground.`;
+  }
+  const opening = characterName
+    ? `Let's try a different approach, ${characterName}.`
+    : "Let's try a different approach.";
+  return `${opening} Instead of rating activities, you'll pick between two options. No sitting on the fence!`;
+}
+
 export default function DiscoveryModePrompt({
-  className,
+  characterName,
+  tone,
   onContinue,
 }: DiscoveryModePromptProps) {
   return (
@@ -21,11 +45,10 @@ export default function DiscoveryModePrompt({
       >
         <span className="text-5xl">{"\u{1F914}"}</span>
         <h2 className="text-xl font-semibold text-white">
-          Tough to decide?
+          {tone === "quest" ? "Tough to decide?" : "Hard to choose?"}
         </h2>
         <p className="text-sm text-white/70 leading-relaxed">
-          Let&apos;s try a different approach, {className}. Instead of rating
-          activities, you&apos;ll pick between two options. No sitting on the fence!
+          {bodyText(characterName, tone)}
         </p>
         <button
           onClick={onContinue}
@@ -33,7 +56,7 @@ export default function DiscoveryModePrompt({
           aria-label="Continue with discovery mode"
           tabIndex={0}
         >
-          Let&apos;s try it!
+          {tone === "quest" ? "Let's try it!" : "Sounds good"}
         </button>
       </motion.div>
     </div>

@@ -670,7 +670,8 @@ export default function Session({
   if (flowPhase === "engagement") {
     return (
       <EngagementCheckpoint
-        className={avatarClassName}
+        characterName={emergentClass.isNamed ? avatarClassName : null}
+        tone={studentTone}
         onContinue={handleEngagementContinue}
       />
     );
@@ -680,7 +681,8 @@ export default function Session({
   if (flowPhase === "discovery_prompt") {
     return (
       <DiscoveryModePrompt
-        className={avatarClassName}
+        characterName={emergentClass.isNamed ? avatarClassName : null}
+        tone={studentTone}
         onContinue={handleDiscoveryContinue}
       />
     );
