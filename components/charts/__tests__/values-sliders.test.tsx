@@ -105,10 +105,10 @@ describe("ValuesSliders with answer counts", () => {
   });
 
   it("assumes answered when no counts are supplied at all", () => {
-    // The dashboard's position until migration 00005 is applied and wired: it
-    // reads persisted scores and has no counts to pass. Blanking every
-    // dimension of a finished profile would be a worse lie than the one this
-    // guards against.
+    // Every student who finished before migration 00005 has NULL in
+    // values_raw_counts, and the dashboard passes that straight through as
+    // undefined. Blanking every dimension of a finished profile would be a
+    // worse lie than the one this guards against.
     render(<ValuesSliders scores={ALL_ZERO} />);
 
     expect(screen.getAllByText("Balanced for now")).toHaveLength(3);

@@ -15,9 +15,10 @@ interface ValuesSlidersProps {
    * student on no evidence at all.
    *
    * Optional, and omitting it means "assume answered", which is what a caller
-   * that cannot tell must do: the dashboard reads persisted scores and there
-   * is no counts column yet, so it keeps today's behaviour rather than
-   * blanking every dimension of a finished profile. See hasValuesReading.
+   * that cannot tell must do: the dashboard passes what it read back, and that
+   * is NULL for every student who finished before the counts column existed.
+   * Those profiles keep the behaviour they have always had rather than being
+   * blanked wholesale. See hasValuesReading.
    */
   rawCounts?: Record<string, number>;
 }

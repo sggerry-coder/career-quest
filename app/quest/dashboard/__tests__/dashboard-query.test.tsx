@@ -5,6 +5,8 @@
  * - students are queried by primary key id, never a user_id column (A2)
  * - persisted mbti_raw_counts feed deriveEmergingType so the
  *   minimum-response emerging rule works for returning students (A3)
+ * - persisted values_raw_counts feed the Values Compass so a dimension nobody
+ *   answered is not reported as balanced
  * - a populated dashboard renders instead of the empty state
  */
 import React from "react";
@@ -40,11 +42,20 @@ const h = vi.hoisted(() => {
     mbti_indicators: { EI: 80, SN: 80, TF: 80, JP: 80 },
     mbti_raw_counts: { EI: 2, SN: 3, TF: 3, JP: 3 },
     values_compass: {
-      security_adventure: 10,
+      security_adventure: 66,
       income_impact: 0,
       prestige_fulfilment: 0,
       structure_flexibility: 0,
       solo_team: 0,
+    },
+    // income_impact was never asked; solo_team was answered dead centre. The
+    // two arrive as the same 0 and must not read the same way.
+    values_raw_counts: {
+      security_adventure: 1,
+      income_impact: 0,
+      prestige_fulfilment: 0,
+      structure_flexibility: 0,
+      solo_team: 1,
     },
     strengths: ["Creative Thinking"],
   };
@@ -122,6 +133,42 @@ describe("dashboard data wiring", () => {
     // so the Still Emerging pill must show
     expect(screen.getByText("Still Emerging")).toBeDefined();
     expect(screen.getAllByText("_").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("passes persisted values_raw_counts to the Values Compass", async () => {
+    render(<Dashboard />);
+    await screen.findByText("Aria");
+
+    // Only income_impact has no answers behind it.
+    expect(screen.getAllByText("Not answered yet")).toHaveLength(1);
+    expect(screen.getByText("Leans Adventure")).toBeDefined();
+    // solo_team is a real 0: answered, and genuinely centred.
+    expect(screen.getAllByText("Balanced for now")).toHaveLength(1);
+  });
+
+  it("leaves a legacy row with no values_raw_counts reading exactly as it did", async () => {
+    // Every student who finished before migration 00005 has NULL here. Their
+    // compass must look the same as it always has -- blanking a finished
+    // profile because the app has no counts for it would be the worse lie.
+    h.scoresRow.values_raw_counts = null;
+    try {
+      render(<Dashboard />);
+      await screen.findByText("Aria");
+
+      expect(screen.queryByText("Not answered yet")).toBeNull();
+      expect(screen.getByText("Leans Adventure")).toBeDefined();
+      // Both zeros read as balanced, which is what this page said before the
+      // column existed.
+      expect(screen.getAllByText("Balanced for now")).toHaveLength(2);
+    } finally {
+      h.scoresRow.values_raw_counts = {
+        security_adventure: 1,
+        income_impact: 0,
+        prestige_fulfilment: 0,
+        structure_flexibility: 0,
+        solo_team: 1,
+      };
+    }
   });
 
   it("falls back to score-only detection when mbti_raw_counts is null (legacy rows)", async () => {

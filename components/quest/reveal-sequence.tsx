@@ -336,12 +336,11 @@ export default function RevealSequence({
               animate={{ opacity: 1, y: 0 }}
               className="w-full rounded-2xl bg-white/5 border border-white/10 p-5 focus:outline-none"
             >
-              {/* Counts, not just scores: this screen is the only one that
-                  can tell an unanswered dimension from a balanced one, since
-                  the dashboard reads back persisted scores and no counts
-                  column exists yet (migration 00005 is written but unapplied).
+              {/* Counts, not just scores: an unanswered dimension and a
+                  balanced one both score 0, and only a count separates them.
                   Built here rather than lifted into ScoreState so the reveal
-                  stays presentational about it. */}
+                  stays presentational about it. The dashboard now shows the
+                  same reading from values_raw_counts (migration 00005). */}
               <ValuesSliders
                 scores={scoreState.values}
                 rawCounts={

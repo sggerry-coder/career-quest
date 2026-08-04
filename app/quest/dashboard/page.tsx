@@ -51,6 +51,10 @@ interface ScoresData {
   // deriveEmergingType then falls back to score-only detection.
   mbti_raw_counts: Record<string, number> | null;
   values_compass: Record<string, number>;
+  // Null for rows persisted before migration 00005 added the column;
+  // hasValuesReading then falls back to "assume answered", which is exactly
+  // what this page did before the column existed.
+  values_raw_counts: Record<string, number> | null;
   strengths: string[];
 }
 
@@ -106,7 +110,7 @@ export default function Dashboard() {
           supabase
             .from("assessment_scores")
             .select(
-              "riasec_scores, mi_scores, mbti_indicators, mbti_raw_counts, values_compass, strengths"
+              "riasec_scores, mi_scores, mbti_indicators, mbti_raw_counts, values_compass, values_raw_counts, strengths"
             )
             .eq("student_id", user.id)
             .single(),
@@ -287,7 +291,14 @@ export default function Dashboard() {
 
             {/* Right: Values preview */}
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-              <ValuesSliders scores={scores.values_compass} />
+              {/* The counts persisted with the scores, so this card can say
+                  "Not answered yet" where the reveal says it. Without them the
+                  two screens disagreed about the same student: an unanswered
+                  dimension scores 0, and 0 read as "Balanced for now" here. */}
+              <ValuesSliders
+                scores={scores.values_compass}
+                rawCounts={scores.values_raw_counts ?? undefined}
+              />
             </div>
           </div>
 
