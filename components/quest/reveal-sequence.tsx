@@ -9,12 +9,28 @@ import ValuesSliders from "@/components/charts/values-sliders";
 import ClassLabel from "@/components/charts/class-label";
 import { characterClassDisplayName, type DerivedClass } from "@/lib/character/classes";
 import { buildValuesRawCounts } from "@/lib/scoring/values";
+import { buildRiasecEvidence } from "@/lib/scoring/riasec";
 import { describeCharacter } from "@/lib/character/description";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
 import { useScreenChange } from "@/hooks/use-screen-change";
 
 interface ScoreState {
   riasec: Record<string, number>;
+  /**
+   * The raw interest answers, one array per type, and the raw rankings
+   * beside them. Both instruments count towards whether a type was asked at
+   * all, and `riasec` cannot carry that: a type nobody was asked about
+   * merges to 0, the same number as a type rated at the bottom. The reveal
+   * still holds the raw arrays, so it is the one screen that can tell them
+   * apart without a schema change -- see buildRiasecEvidence.
+   *
+   * Optional together, and absent means "assume asked", the same fallback
+   * values_raw takes. Supplying the ratings without the rankings would
+   * undercount the three types a skipped ranking covers, so the live path
+   * (useScores) always carries both.
+   */
+  riasec_raw?: Record<string, number[]>;
+  riasec_ipsative_raw?: Record<string, number[]>;
   mi: Record<string, number>;
   mbti: Record<string, number>;
   mbti_raw?: Record<string, number[]>;
@@ -95,6 +111,25 @@ export default function RevealSequence({
   const beatRef = useScreenChange<HTMLElement>(phase);
   /** Attach the focus target to the beat that has just appeared. */
   const beat = (p: RevealPhase) => (phase === p ? { ref: beatRef } : {});
+
+  // Which interest types have an answer behind them. Built here rather than
+  // lifted onto ScoreState for the same reason the values counts are (see the
+  // values beat below): the reveal stays presentational about it.
+  const riasecEvidence = scoreState.riasec_raw
+    ? buildRiasecEvidence(
+        scoreState.riasec_raw,
+        scoreState.riasec_ipsative_raw ?? {}
+      )
+    : undefined;
+  // The caveat under the bars only ever fired when *all six* types were 0,
+  // so the partial case -- the precise case skipping creates -- was silent.
+  // A student who skipped one interest type saw five scored rows, one blank
+  // one, and a class badge, with nothing on the screen connecting them.
+  const unaskedInterestTypes = riasecEvidence
+    ? Object.values(riasecEvidence).filter((count) => count === 0).length
+    : 0;
+  const someInterestsUnasked =
+    unaskedInterestTypes > 0 && unaskedInterestTypes < 6;
 
   const emergentClassName = characterClassDisplayName(resolvedClass, tone);
   const emergentDescription = describeCharacter({
@@ -225,12 +260,32 @@ export default function RevealSequence({
             >
               {/* classLabel omitted: the animated ClassLabel below is the
                   reveal beat for it, and passing it here printed it twice. */}
-              <RiasecBars scores={scoreState.riasec} />
+              {/* Evidence, not just scores: a type nobody was asked about
+                  merges to 0 and used to draw as an empty bar with a hard 0
+                  beside it, indistinguishable from a type rated at the
+                  bottom. The class badge two beats down is read off exactly
+                  these rows. The dashboard cannot do this yet -- it reads
+                  back persisted scores and has no counts to read until
+                  migration 00006 is applied and wired. */}
+              <RiasecBars
+                scores={scoreState.riasec}
+                evidence={riasecEvidence}
+              />
               {scoreState.acquiescence_flag ? (
                 <p className="text-xs text-white/60 text-center mt-2">
                   {tone === "quest"
                     ? "You picked the same answer nearly every time, so these bars can't tell your interests apart yet — worth another run when you've got more time."
                     : "You chose the same answer nearly every time, so these scores can't separate your interests yet — worth answering again when you have more time."}
+                </p>
+              ) : someInterestsUnasked ? (
+                /* More specific than the all-zero line below, and it takes
+                   precedence: "answer more questions" does not tell a student
+                   that the name they are about to be given came from part of
+                   the instrument. */
+                <p className="text-xs text-white/55 text-center mt-2">
+                  {tone === "quest"
+                    ? "Some interests never came up, so they're left blank instead of scored — your class comes from the ones you answered."
+                    : "Some interest areas weren't answered, so they're left blank rather than scored as low. Your result uses only the ones you answered."}
                 </p>
               ) : Object.values(scoreState.riasec).every(v => v === 0) ? (
                 <p className="text-xs text-white/55 text-center mt-1">Answer more questions to refine</p>
