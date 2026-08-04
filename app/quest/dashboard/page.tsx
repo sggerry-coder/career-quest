@@ -301,7 +301,7 @@ export default function Dashboard() {
                 </h3>
               </div>
               <p className="text-xs text-white/20">
-                Deepens in {chapterLabel(2, tone)}
+                More to come
               </p>
             </div>
             <div className="rounded-2xl bg-white/5 border border-white/5 p-5 opacity-40">
@@ -312,7 +312,7 @@ export default function Dashboard() {
                 </h3>
               </div>
               <p className="text-xs text-white/20">
-                Deepens in {chapterLabel(2, tone)}
+                More to come
               </p>
             </div>
           </div>

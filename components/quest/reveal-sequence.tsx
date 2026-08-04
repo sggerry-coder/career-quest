@@ -10,7 +10,6 @@ import ClassLabel from "@/components/charts/class-label";
 import { characterClassDisplayName, type DerivedClass } from "@/lib/character/classes";
 import { describeCharacter } from "@/lib/character/description";
 import { SectionErrorBoundary } from "@/components/ui/section-error-boundary";
-import { chapterLabel } from "@/lib/copy/chapter";
 
 interface ScoreState {
   riasec: Record<string, number>;
@@ -244,7 +243,7 @@ export default function RevealSequence({
             >
               <p className="text-xs text-white/30 max-w-xs">
                 {tone === "quest"
-                  ? "A full four-letter type needs more questions than this chapter asks — Chapter 2 goes deeper."
+                  ? "A full four-letter type needs more questions than this chapter asks — more chapters are planned to go deeper."
                   : "A full personality type needs more questions than this part asks."}
               </p>
             </motion.div>
@@ -277,7 +276,7 @@ export default function RevealSequence({
                 These charts show your initial profile. The Ability Scores
                 reveal your interests, Character Traits show your personality
                 tendencies, and Learning Styles highlight how you learn best.
-                {chapterLabel(2, tone)} will deepen these results.
+                More chapters are planned — they&apos;ll build on this.
               </p>
             </motion.div>
           )}

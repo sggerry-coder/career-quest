@@ -59,12 +59,15 @@ describe("ValuesSliders", () => {
     // Prestige/Fulfilment and Structure/Flexibility have no Session 1
     // questions, so they stay greyed with no reading of their own.
     expect(screen.getAllByText("Balanced for now")).toHaveLength(3);
-    expect(screen.getByText("More dimensions in Chapter 2")).toBeDefined();
+    expect(screen.getByText("More dimensions to come")).toBeDefined();
   });
 
-  it("switches to Part wording in explorer tone", () => {
+  it("shows the same honest wording regardless of tone", () => {
+    // Chapter 2 is not built, so this line no longer names it -- there is
+    // nothing left to vary by tone (see Task 8: stop promising a Chapter 2
+    // that does not exist).
     render(<ValuesSliders scores={{}} tone="explorer" />);
 
-    expect(screen.getByText("More dimensions in Part 2")).toBeDefined();
+    expect(screen.getByText("More dimensions to come")).toBeDefined();
   });
 });

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { chapterLabel } from "@/lib/copy/chapter";
 
 interface MiPreviewBarsProps {
   scores: Record<string, number>;
@@ -19,7 +18,7 @@ const MI_DIMENSIONS = [
   { key: "naturalistic", label: "Naturalistic" },
 ];
 
-export default function MiPreviewBars({ scores, tone }: MiPreviewBarsProps) {
+export default function MiPreviewBars({ scores }: MiPreviewBarsProps) {
   // A dimension reads 0 until it has enough signals to earn a score (see
   // MIN_MI_SIGNALS in lib/scoring/mi.ts). If every dimension is still 0,
   // there is no "strongest" to rank -- an empty top-three would just
@@ -92,7 +91,7 @@ export default function MiPreviewBars({ scores, tone }: MiPreviewBarsProps) {
         </>
       )}
       <p className="text-xs text-white/20 mt-1 italic">
-        More detail in {chapterLabel(2, tone)}
+        More detail to come
       </p>
     </div>
   );
